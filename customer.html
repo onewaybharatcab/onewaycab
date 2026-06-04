@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Dashboard | One-Way Bhaarat</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--sf:#F47B00;--sf2:#FF9D2F;--sf3:#A85200;--sfg:rgba(244,123,0,0.28);--gd:#E8BD3A;--gr:#1DAD10;--gr3:#49CF3E;--rd:#DC2626;--nv:#040C1E;--nv2:#061428;--nv3:#0B1F3A;--nv4:#1C3E6A;--wh:#fff;--fa:rgba(255,255,255,0.06);--r6:6px;--r12:12px;--r20:20px;--r28:28px;--rp:100px}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Nunito',sans-serif;background:var(--nv);color:var(--wh);display:flex;min-height:100vh;-webkit-font-smoothing:antialiased}
+.sidebar{width:230px;background:var(--nv2);min-height:100vh;position:fixed;top:0;left:0;z-index:50;display:flex;flex-direction:column;border-right:1px solid rgba(255,255,255,0.05)}
+.sb-top{padding:20px;border-bottom:1px solid rgba(255,255,255,0.06);text-align:center}
+.sb-av{width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,var(--sf),var(--sf3));display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:var(--wh);margin:0 auto 10px;box-shadow:0 4px 16px var(--sfg)}
+.sb-name{font-weight:700;color:var(--wh);font-size:15px}
+.sb-mob{font-size:11px;color:rgba(255,255,255,0.35);margin-top:2px}
+.sb-badge{display:inline-flex;align-items:center;gap:4px;background:rgba(244,123,0,0.12);border:1px solid rgba(244,123,0,0.2);color:var(--sf2);border-radius:var(--rp);padding:3px 12px;font-size:10px;font-weight:700;margin-top:8px}
+.sb-nav{flex:1;padding:12px 0;overflow-y:auto}
+.ni{display:flex;align-items:center;gap:10px;padding:10px 18px;color:rgba(255,255,255,0.5);cursor:pointer;transition:all .2s;border-left:2px solid transparent;font-size:13px;font-weight:600}
+.ni:hover{background:rgba(255,255,255,0.04);color:var(--wh)}
+.ni.act{background:rgba(244,123,0,0.1);color:var(--wh);border-left-color:var(--sf)}
+.ni-ic{font-size:16px;width:20px;text-align:center;flex-shrink:0}
+.ni-badge{margin-left:auto;background:var(--sf);color:var(--wh);font-size:9px;font-weight:700;padding:2px 7px;border-radius:100px}
+.sb-foot{padding:14px 18px;border-top:1px solid rgba(255,255,255,0.06)}
+.sb-foot a{display:flex;align-items:center;gap:8px;color:rgba(255,255,255,0.4);text-decoration:none;font-size:13px;transition:color .2s}
+.sb-foot a:hover{color:var(--sf2)}
+.main{margin-left:230px;flex:1;display:flex;flex-direction:column}
+.topbar{background:var(--nv2);border-bottom:1px solid rgba(255,255,255,0.05);padding:0 24px;height:58px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:40}
+.tb-title{font-family:'Cinzel',serif;font-size:15px;font-weight:700;color:var(--wh)}
+.btn-book-top{background:linear-gradient(135deg,var(--sf),var(--sf3));color:var(--wh);padding:8px 18px;border-radius:var(--r6);font-size:13px;font-weight:700;text-decoration:none;display:flex;align-items:center;gap:6px;box-shadow:0 4px 12px var(--sfg);transition:all .2s}
+.btn-book-top:hover{transform:translateY(-1px);box-shadow:0 8px 20px var(--sfg)}
+.content{padding:24px;flex:1}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
+.sc{background:var(--nv3);border:1px solid rgba(255,255,255,0.06);border-radius:var(--r20);padding:18px;display:flex;align-items:center;gap:12px}
+.sc-icon{width:40px;height:40px;border-radius:var(--r12);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.ic-o{background:rgba(244,123,0,0.12);border:1px solid rgba(244,123,0,0.2)}
+.ic-g{background:rgba(29,173,16,0.1);border:1px solid rgba(29,173,16,0.2)}
+.ic-b{background:rgba(28,62,106,0.3);border:1px solid rgba(28,62,106,0.5)}
+.ic-gd{background:rgba(232,189,58,0.1);border:1px solid rgba(232,189,58,0.2)}
+.sc-lbl{font-size:11px;color:rgba(255,255,255,0.4);font-weight:600}
+.sc-val{font-family:'Cinzel',serif;font-size:22px;font-weight:700;color:var(--wh)}
+.sec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.sec-title{font-family:'Cinzel',serif;font-size:15px;font-weight:700;color:var(--wh)}
+.btn-sm{padding:7px 16px;border-radius:var(--r6);font-size:12px;font-weight:700;cursor:pointer;border:none;font-family:'Nunito',sans-serif;transition:all .2s;text-decoration:none;display:inline-flex;align-items:center;gap:5px}
+.btn-sf{background:linear-gradient(135deg,var(--sf),var(--sf3));color:var(--wh)}
+.btn-sf:hover{transform:translateY(-1px);box-shadow:0 6px 16px var(--sfg)}
+.btn-ol{background:var(--fa);color:rgba(255,255,255,0.6);border:1px solid rgba(255,255,255,0.1)}
+.blist{display:flex;flex-direction:column;gap:12px;margin-bottom:22px}
+.bcard{background:var(--nv3);border:1px solid rgba(255,255,255,0.06);border-radius:var(--r20);padding:18px 20px;transition:all .25s}
+.bcard:hover{border-color:rgba(244,123,0,0.25);box-shadow:0 4px 20px rgba(4,12,30,0.4)}
+.bcard.upcoming{border-color:rgba(244,123,0,0.3);background:rgba(244,123,0,0.04)}
+.btop{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px}
+.bid{font-size:11px;font-family:monospace;background:rgba(28,62,106,0.3);color:#93c5fd;padding:3px 10px;border-radius:var(--r6);font-weight:700}
+.bdate{font-size:12px;color:rgba(255,255,255,0.35)}
+.sbadge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:var(--rp);font-size:11px;font-weight:700}
+.sb-conf{background:rgba(29,173,16,0.12);color:var(--gr3)}
+.sb-comp{background:rgba(59,130,246,0.12);color:#93c5fd}
+.sb-pend{background:rgba(234,179,8,0.12);color:#fbbf24}
+.sb-canc{background:rgba(220,38,38,0.12);color:#f87171}
+.broute{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.bcity{font-size:16px;font-weight:700;color:var(--wh)}
+.barr{color:var(--sf2);font-size:18px}
+.bmeta{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:rgba(255,255,255,0.45)}
+.bacts{display:flex;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.05);flex-wrap:wrap}
+.ab{padding:6px 14px;border-radius:var(--r6);font-size:12px;font-weight:700;cursor:pointer;border:none;font-family:'Nunito',sans-serif;transition:all .2s}
+.ab-v{background:rgba(28,62,106,0.3);color:#93c5fd}.ab-i{background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.6)}.ab-t{background:rgba(29,173,16,0.12);color:var(--gr3)}.ab-c{background:rgba(220,38,38,0.1);color:#f87171}
+/* Wallet */
+.wallet-card{background:linear-gradient(135deg,rgba(28,62,106,0.4),rgba(4,12,30,0.6));border:1px solid rgba(28,62,106,0.5);border-radius:var(--r28);padding:24px;margin-bottom:18px}
+.wl{font-size:10px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:4px}
+.wa{font-family:'Cinzel',serif;font-size:36px;font-weight:700;color:var(--sf2)}
+.wsub{font-size:12px;color:rgba(255,255,255,0.35);margin-bottom:18px}
+.wbtns{display:flex;gap:10px}
+.wbtn{padding:9px 20px;border-radius:var(--r12);font-size:13px;font-weight:700;cursor:pointer;border:none;font-family:'Nunito',sans-serif;transition:all .2s}
+.wb-add{background:linear-gradient(135deg,var(--sf),var(--sf3));color:var(--wh);box-shadow:0 4px 12px var(--sfg)}
+.wb-out{background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.6);border:1px solid rgba(255,255,255,0.1)}
+/* Saved routes */
+.sroutes{display:flex;flex-direction:column;gap:10px;margin-bottom:18px}
+.srcard{background:var(--nv3);border:1px solid rgba(255,255,255,0.06);border-radius:var(--r12);padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all .25s}
+.srcard:hover{border-color:rgba(244,123,0,0.3);background:rgba(244,123,0,0.04);transform:translateX(4px)}
+.sr-em{font-size:22px}
+.sr-name{font-size:13px;font-weight:700;color:var(--wh);flex:1}
+.sr-meta{font-size:11px;color:rgba(255,255,255,0.35);margin-top:2px}
+.sr-btn{background:rgba(244,123,0,0.12);border:1px solid rgba(244,123,0,0.2);color:var(--sf2);padding:6px 14px;border-radius:var(--r6);font-size:12px;font-weight:700;cursor:pointer;border:none;font-family:'Nunito',sans-serif;transition:all .2s;flex-shrink:0}
+.sr-btn:hover{background:linear-gradient(135deg,var(--sf),var(--sf3));color:var(--wh)}
+/* Referral */
+.ref-card{background:linear-gradient(135deg,rgba(244,123,0,0.08),rgba(232,189,58,0.05));border:1px solid rgba(244,123,0,0.15);border-radius:var(--r28);padding:24px;margin-bottom:18px}
+.ref-title{font-family:'Cinzel',serif;font-size:18px;color:var(--wh);margin-bottom:4px}
+.ref-sub{font-size:13px;color:rgba(255,255,255,0.45);margin-bottom:16px}
+.ref-code-box{background:rgba(255,255,255,0.04);border:1.5px dashed rgba(244,123,0,0.35);border-radius:var(--r12);padding:12px 18px;display:flex;align-items:center;justify-content:space-between}
+.ref-code{font-size:22px;font-weight:700;font-family:monospace;color:var(--sf2);letter-spacing:3px}
+.btn-copy{background:linear-gradient(135deg,var(--sf),var(--sf3));color:var(--wh);border:none;padding:8px 16px;border-radius:var(--r6);font-size:12px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif}
+.ref-stats{display:flex;gap:20px;margin-top:16px}
+.rs-num{font-family:'Cinzel',serif;font-size:22px;color:var(--sf2)}
+.rs-lbl{font-size:10px;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
+/* Profile */
+.pform{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.field label{display:block;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-bottom:6px}
+.finput{width:100%;padding:11px 14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);border-radius:var(--r12);font-size:14px;font-weight:600;color:var(--wh);font-family:'Nunito',sans-serif;outline:none;transition:all .2s;-webkit-appearance:none}
+.finput:focus{border-color:rgba(244,123,0,0.4);background:rgba(244,123,0,0.04)}
+.panel{display:none}.panel.act{display:block}
+/* Support */
+.sup-channels{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
+.sup-ch{border-radius:var(--r20);padding:22px;text-align:center;text-decoration:none;color:var(--wh);transition:all .25s;display:block}
+.sup-ch:hover{transform:translateY(-3px)}
+.sup-ch-icon{font-size:36px;margin-bottom:8px}
+.sup-ch-title{font-size:14px;font-weight:700}
+.sup-ch-val{font-size:12px;opacity:.75;margin-top:3px}
+/* Transactions table */
+.tbl-wrap{background:var(--nv3);border:1px solid rgba(255,255,255,0.06);border-radius:var(--r20);overflow:hidden;margin-bottom:18px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:rgba(255,255,255,0.03);padding:10px 16px;text-align:left;font-size:10px;font-weight:700;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:.5px}
+td{padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.65)}
+tr:last-child td{border-bottom:none}
+@media(max-width:900px){.sidebar{display:none}.main{margin-left:0}.stats-row{grid-template-columns:1fr 1fr}.pform{grid-template-columns:1fr}.sup-channels{grid-template-columns:1fr}}
+@media(max-width:500px){.stats-row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="sb-top">
+    <div class="sb-av">RK</div>
+    <div class="sb-name">Rahul Kapoor</div>
+    <div class="sb-mob">+91-98765 43210</div>
+    <div class="sb-badge">⭐ Frequent Traveler</div>
+  </div>
+  <nav class="sb-nav">
+    <div class="ni act" onclick="showPanel('overview',this)"><span class="ni-ic">📊</span> Overview</div>
+    <div class="ni" onclick="showPanel('bookings',this)"><span class="ni-ic">🗓️</span> My Bookings <span class="ni-badge">5</span></div>
+    <div class="ni" onclick="showPanel('wallet',this)"><span class="ni-ic">💰</span> Wallet</div>
+    <div class="ni" onclick="showPanel('saved',this)"><span class="ni-ic">❤️</span> Saved Routes</div>
+    <div class="ni" onclick="showPanel('invoices',this)"><span class="ni-ic">🧾</span> Invoices</div>
+    <div class="ni" onclick="showPanel('referral',this)"><span class="ni-ic">🎁</span> Refer & Earn</div>
+    <div class="ni" onclick="showPanel('support',this)"><span class="ni-ic">💬</span> Support</div>
+    <div class="ni" onclick="showPanel('profile',this)"><span class="ni-ic">👤</span> Profile</div>
+  </nav>
+  <div class="sb-foot"><a href="index.html">🏠 Back to Website</a></div>
+</aside>
+<div class="main">
+  <div class="topbar">
+    <div class="tb-title" id="panelTitle">Overview</div>
+    <a href="booking.html" class="btn-book-top">🚕 Book New Cab</a>
+  </div>
+  <div class="content">
+
+    <!-- OVERVIEW -->
+    <div class="panel act" id="pn-overview">
+      <div class="stats-row">
+        <div class="sc"><div class="sc-icon ic-o">🗓️</div><div><div class="sc-lbl">Total Trips</div><div class="sc-val">12</div></div></div>
+        <div class="sc"><div class="sc-icon ic-g">💰</div><div><div class="sc-lbl">Total Spent</div><div class="sc-val">₹54K</div></div></div>
+        <div class="sc"><div class="sc-icon ic-b">📍</div><div><div class="sc-lbl">km Traveled</div><div class="sc-val">3,842</div></div></div>
+        <div class="sc"><div class="sc-icon ic-gd">💳</div><div><div class="sc-lbl">Wallet Balance</div><div class="sc-val">₹480</div></div></div>
+      </div>
+      <div class="sec-hdr"><div class="sec-title">🔜 Upcoming Trip</div></div>
+      <div class="blist">
+        <div class="bcard upcoming">
+          <div class="btop"><div class="bid">OWB-2024-A1B2C</div><div class="bdate">📅 Tomorrow, 10:00 AM</div><span class="sbadge sb-conf">✓ Confirmed</span></div>
+          <div class="broute"><div class="bcity">Delhi</div><div class="barr">→</div><div class="bcity">Jaipur</div></div>
+          <div class="bmeta"><span>🚗 Sedan</span><span>📏 281 km</span><span>💰 ₹4,896</span><span>👤 Ravi Kumar</span><span>📞 +91-98765 12345</span></div>
+          <div class="bacts"><button class="ab ab-t">📍 Track Live</button><button class="ab ab-i">🧾 Invoice</button><button class="ab ab-c">✗ Cancel</button></div>
+        </div>
+      </div>
+      <div class="sec-hdr"><div class="sec-title">📋 Recent Bookings</div><span class="btn-sm btn-ol" onclick="showPanel('bookings',null)" style="cursor:pointer">View All →</span></div>
+      <div id="recentList"></div>
+    </div>
+
+    <!-- BOOKINGS -->
+    <div class="panel" id="pn-bookings">
+      <div class="sec-hdr"><div class="sec-title">All My Bookings</div><a href="booking.html" class="btn-sm btn-sf">+ Book New</a></div>
+      <div id="allBookingsList"></div>
+    </div>
+
+    <!-- WALLET -->
+    <div class="panel" id="pn-wallet">
+      <div class="sec-hdr"><div class="sec-title">My Wallet</div></div>
+      <div class="wallet-card">
+        <div class="wl">Available Balance</div>
+        <div class="wa">₹480</div>
+        <div class="wsub">Use for booking advances · Never expires</div>
+        <div class="wbtns"><button class="wbtn wb-add" onclick="alert('Add Money — UPI/Card integration coming soon!')">+ Add Money</button><button class="wbtn wb-out" onclick="alert('Withdrawal available after 3 completed trips.')">Withdraw</button></div>
+      </div>
+      <div class="sec-hdr"><div class="sec-title">Transaction History</div></div>
+      <div class="tbl-wrap"><table><thead><tr><th>Date</th><th>Description</th><th>Amount</th></tr></thead><tbody>
+        <tr><td style="color:rgba(255,255,255,.35);font-size:12px">12 Jan 2024</td><td>Refund – OWB-2024-C4D5E</td><td style="font-weight:700;color:var(--gr3)">+₹480</td></tr>
+        <tr><td style="color:rgba(255,255,255,.35);font-size:12px">10 Jan 2024</td><td>Advance – Delhi → Agra</td><td style="font-weight:700;color:#f87171">-₹390</td></tr>
+        <tr><td style="color:rgba(255,255,255,.35);font-size:12px">05 Jan 2024</td><td>Referral Bonus</td><td style="font-weight:700;color:var(--gr3)">+₹100</td></tr>
+      </tbody></table></div>
+    </div>
+
+    <!-- SAVED ROUTES -->
+    <div class="panel" id="pn-saved">
+      <div class="sec-hdr"><div class="sec-title">❤️ Saved Routes</div><span style="font-size:12px;color:rgba(255,255,255,.35)">1-click re-booking</span></div>
+      <div class="sroutes">
+        <div class="srcard"><div class="sr-em">🏯</div><div><div class="sr-name">Delhi → Jaipur</div><div class="sr-meta">281 km · Sedan · ₹4,896</div></div><button class="sr-btn" onclick="window.location='booking.html'">Book Now</button></div>
+        <div class="srcard"><div class="sr-em">🕌</div><div><div class="sr-name">Delhi → Agra</div><div class="sr-meta">233 km · Sedan · ₹3,900</div></div><button class="sr-btn" onclick="window.location='booking.html'">Book Now</button></div>
+        <div class="srcard"><div class="sr-em">🙏</div><div><div class="sr-name">Delhi → Haridwar</div><div class="sr-meta">214 km · Sedan · ₹3,700</div></div><button class="sr-btn" onclick="window.location='booking.html'">Book Now</button></div>
+      </div>
+      <div style="text-align:center;padding:24px;background:var(--nv3);border:1px dashed rgba(255,255,255,0.1);border-radius:var(--r20)">
+        <div style="font-size:28px;margin-bottom:8px">➕</div>
+        <div style="font-size:14px;font-weight:600;color:rgba(255,255,255,0.5)">Save a new route</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.3);margin-bottom:14px">Book a trip to save it here for quick future booking</div>
+        <a href="booking.html" class="btn-sm btn-sf">Book a Trip</a>
+      </div>
+    </div>
+
+    <!-- INVOICES -->
+    <div class="panel" id="pn-invoices">
+      <div class="sec-hdr"><div class="sec-title">🧾 Invoices & Receipts</div><button class="btn-sm btn-ol">⬇ Download All</button></div>
+      <div class="tbl-wrap"><table><thead><tr><th>Booking ID</th><th>Route</th><th>Date</th><th>Amount</th><th>Invoice</th></tr></thead><tbody id="invRows"></tbody></table></div>
+    </div>
+
+    <!-- REFERRAL -->
+    <div class="panel" id="pn-referral">
+      <div class="sec-hdr"><div class="sec-title">🎁 Refer & Earn</div></div>
+      <div class="ref-card">
+        <div class="ref-title">Refer Friends, Earn ₹100!</div>
+        <div class="ref-sub">Share your code. When your friend completes their first booking, both of you get ₹100 wallet credit.</div>
+        <div class="ref-code-box"><div class="ref-code">RAHUL100</div><button class="btn-copy" onclick="copyCode()">📋 Copy</button></div>
+        <div class="ref-stats">
+          <div><div class="rs-num">3</div><div class="rs-lbl">Referrals</div></div>
+          <div><div class="rs-num">₹300</div><div class="rs-lbl">Earned</div></div>
+          <div><div class="rs-num">2</div><div class="rs-lbl">Pending</div></div>
+        </div>
+      </div>
+      <div style="background:var(--nv3);border:1px solid rgba(255,255,255,0.06);border-radius:var(--r20);padding:22px">
+        <div style="font-family:'Cinzel',serif;font-size:14px;color:var(--wh);margin-bottom:16px">How It Works</div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div style="display:flex;gap:12px;align-items:flex-start"><div style="width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--sf),var(--sf3));color:var(--wh);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0">1</div><div><div style="font-weight:700;color:var(--wh);font-size:13px">Share your code RAHUL100</div><div style="font-size:12px;color:rgba(255,255,255,.4);margin-top:2px">Share via WhatsApp, SMS or social media.</div></div></div>
+          <div style="display:flex;gap:12px;align-items:flex-start"><div style="width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--sf),var(--sf3));color:var(--wh);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0">2</div><div><div style="font-weight:700;color:var(--wh);font-size:13px">Friend books their first trip</div><div style="font-size:12px;color:rgba(255,255,255,.4);margin-top:2px">They use your code while booking.</div></div></div>
+          <div style="display:flex;gap:12px;align-items:flex-start"><div style="width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--sf),var(--sf3));color:var(--wh);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0">3</div><div><div style="font-weight:700;color:var(--wh);font-size:13px">Both get ₹100 wallet credit</div><div style="font-size:12px;color:rgba(255,255,255,.4);margin-top:2px">Automatically credited after trip completion.</div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SUPPORT -->
+    <div class="panel" id="pn-support">
+      <div class="sec-hdr"><div class="sec-title">💬 Customer Support</div></div>
+      <div class="sup-channels">
+        <a href="tel:+919355757579" class="sup-ch" style="background:linear-gradient(135deg,var(--sf),var(--sf3));box-shadow:0 8px 24px var(--sfg)"><div class="sup-ch-icon">📞</div><div class="sup-ch-title">Call Us</div><div class="sup-ch-val">+91-93557 57579</div></a>
+        <a href="https://wa.me/919355757579" target="_blank" class="sup-ch" style="background:linear-gradient(135deg,#128C7E,#075E54)"><div class="sup-ch-icon">💬</div><div class="sup-ch-title">WhatsApp</div><div class="sup-ch-val">Chat instantly</div></a>
+      </div>
+      <div style="background:var(--nv3);border:1px solid rgba(255,255,255,0.06);border-radius:var(--r28);padding:24px">
+        <div style="font-family:'Cinzel',serif;font-size:15px;color:var(--wh);margin-bottom:18px">Raise a Support Ticket</div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div><label style="display:block;font-size:10px;font-weight:700;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Booking ID</label><input type="text" class="finput" placeholder="e.g. OWB-2024-XXXXX"></div>
+          <div><label style="display:block;font-size:10px;font-weight:700;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Issue Type</label><select class="finput"><option>Driver didn't arrive</option><option>Wrong fare charged</option><option>Refund not received</option><option>Driver complaint</option><option>Other</option></select></div>
+          <div><label style="display:block;font-size:10px;font-weight:700;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Description</label><textarea class="finput" rows="3" style="resize:vertical;padding-top:10px" placeholder="Describe your issue..."></textarea></div>
+          <button class="btn-sm btn-sf" onclick="alert('Ticket submitted! We will respond within 2 hours.')" style="align-self:flex-start;padding:10px 22px">📨 Submit Ticket</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROFILE -->
+    <div class="panel" id="pn-profile">
+      <div class="sec-hdr"><div class="sec-title">👤 My Profile</div></div>
+      <div style="background:var(--nv3);border:1px solid rgba(255,255,255,0.06);border-radius:var(--r28);padding:24px;margin-bottom:18px">
+        <div style="font-family:'Cinzel',serif;font-size:15px;color:var(--wh);margin-bottom:20px">Edit Profile</div>
+        <div class="pform">
+          <div class="field"><label>Full Name</label><input class="finput" type="text" value="Rahul Kapoor"></div>
+          <div class="field"><label>Mobile Number</label><input class="finput" type="tel" value="+91-98765 43210" readonly style="opacity:.5;cursor:not-allowed"></div>
+          <div class="field"><label>Email Address</label><input class="finput" type="email" value="rahul@email.com"></div>
+          <div class="field"><label>City</label><input class="finput" type="text" value="New Delhi"></div>
+        </div>
+        <button class="btn-sm btn-sf" style="margin-top:18px;padding:10px 22px" onclick="alert('Profile saved!')">💾 Save Changes</button>
+      </div>
+      <div style="background:rgba(220,38,38,0.06);border:1px solid rgba(220,38,38,0.15);border-radius:var(--r20);padding:20px">
+        <div style="font-size:14px;font-weight:700;color:#f87171;margin-bottom:6px">⚠️ Delete Account</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.4);margin-bottom:12px">Permanently delete your account and all booking history. Cannot be undone.</div>
+        <button class="btn-sm" style="background:rgba(220,38,38,0.15);color:#f87171;border:1px solid rgba(220,38,38,0.25)" onclick="alert('Please contact +91-93557 57579 to delete your account.')">Delete Account</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+<script>
+const bookings=[
+  {id:'OWB-2024-A1B2C',from:'Delhi',to:'Jaipur',veh:'Sedan',date:'2024-01-20',fare:'₹4,896',status:'confirmed'},
+  {id:'OWB-2024-D3E4F',from:'Delhi',to:'Agra',veh:'Sedan',date:'2024-01-10',fare:'₹3,900',status:'completed'},
+  {id:'OWB-2024-G5H6I',from:'Delhi',to:'Haridwar',veh:'Innova',date:'2024-01-05',fare:'₹6,900',status:'completed'},
+  {id:'OWB-2024-J7K8L',from:'Delhi',to:'Chandigarh',veh:'Ertiga',date:'2023-12-28',fare:'₹5,200',status:'completed'},
+  {id:'OWB-2024-M9N0O',from:'Delhi',to:'Mathura',veh:'Hatchback',date:'2023-12-15',fare:'₹2,600',status:'cancelled'},
+];
+const smap={confirmed:'sb-conf',completed:'sb-comp',pending:'sb-pend',cancelled:'sb-canc'};
+const slbl={confirmed:'✓ Confirmed',completed:'Completed',pending:'Pending',cancelled:'Cancelled'};
+function renderBookings(data,id,lim){
+  const items=lim?data.slice(0,lim):data;
+  document.getElementById(id).innerHTML=`<div class="blist">${items.map(b=>`
+    <div class="bcard">
+      <div class="btop"><div class="bid">${b.id}</div><div class="bdate">📅 ${b.date}</div><span class="sbadge ${smap[b.status]}">${slbl[b.status]}</span></div>
+      <div class="broute"><div class="bcity">${b.from}</div><div class="barr">→</div><div class="bcity">${b.to}</div></div>
+      <div class="bmeta"><span>🚗 ${b.veh}</span><span>💰 ${b.fare}</span></div>
+      <div class="bacts">
+        <button class="ab ab-v">View</button>
+        <button class="ab ab-i" onclick="alert('Downloading invoice...')">🧾 Invoice</button>
+        ${b.status==='confirmed'?'<button class="ab ab-t">📍 Track</button><button class="ab ab-c" onclick="if(confirm(\'Cancel booking?\'))alert(\'Cancellation submitted\')">Cancel</button>':''}
+      </div>
+    </div>`).join('')}</div>`;
+}
+function renderInvoices(){
+  document.getElementById('invRows').innerHTML=bookings.filter(b=>b.status!=='cancelled').map(b=>`
+    <tr><td style="font-size:11px;font-family:monospace;color:#93c5fd">${b.id}</td><td style="font-weight:600">${b.from} → ${b.to}</td><td style="font-size:12px;color:rgba(255,255,255,.4)">${b.date}</td><td style="font-weight:700">${b.fare}</td><td><button class="btn-sm btn-ol" onclick="alert('Downloading...')">⬇ PDF</button></td></tr>`).join('');
+}
+function showPanel(name,navEl){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('act'));
+  document.getElementById('pn-'+name).classList.add('act');
+  if(navEl){document.querySelectorAll('.ni').forEach(n=>n.classList.remove('act'));navEl.classList.add('act');}
+  const titles={overview:'Overview',bookings:'My Bookings',wallet:'My Wallet',saved:'Saved Routes',invoices:'Invoices',referral:'Refer & Earn',support:'Support',profile:'My Profile'};
+  document.getElementById('panelTitle').textContent=titles[name]||name;
+  if(name==='invoices')renderInvoices();
+}
+function copyCode(){navigator.clipboard.writeText('RAHUL100').then(()=>alert('Code RAHUL100 copied!')).catch(()=>alert('Your referral code: RAHUL100'));}
+renderBookings(bookings,'recentList',3);
+renderBookings(bookings,'allBookingsList');
+</script>
+</body>
+</html>

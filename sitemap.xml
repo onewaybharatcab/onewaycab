@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
+        http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
+
+  <!-- Core Pages -->
+  <url><loc>https://one-waybharat.com/</loc><lastmod>2024-01-01</lastmod><changefreq>daily</changefreq><priority>1.0</priority></url>
+  <url><loc>https://one-waybharat.com/booking.html</loc><lastmod>2024-01-01</lastmod><changefreq>daily</changefreq><priority>0.9</priority></url>
+  <url><loc>https://one-waybharat.com/routes.html</loc><lastmod>2024-01-01</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://one-waybharat.com/fleet.html</loc><lastmod>2024-01-01</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://one-waybharat.com/about.html</loc><lastmod>2024-01-01</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://one-waybharat.com/contact.html</loc><lastmod>2024-01-01</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://one-waybharat.com/faq.html</loc><lastmod>2024-01-01</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://one-waybharat.com/blog.html</loc><lastmod>2024-01-01</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://one-waybharat.com/policies.html</loc><lastmod>2024-01-01</lastmod><changefreq>yearly</changefreq><priority>0.4</priority></url>
+
+  <!-- Popular Route Pages (North India) -->
+  <url><loc>https://one-waybharat.com/routes/delhi-to-jaipur-cab.html</loc><lastmod>2024-01-01</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://one-waybharat.com/routes/delhi-to-agra-cab.html</loc><lastmod>2024-01-01</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://one-waybharat.com/routes/delhi-to-chandigarh-cab.html</loc><lastmod>2024-01-01</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://one-waybharat.com/routes/delhi-to-haridwar-cab.html</loc><lastmod>2024-01-01</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://one-waybharat.com/routes/delhi-to-dehradun-cab.html</loc><lastmod>2024-01-01</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://one-waybharat.com/routes/delhi-to-shimla-cab.html</loc><lastmod>2024-01-01</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://one-waybharat.com/routes/delhi-to-manali-cab.html</loc><lastmod>2024-01-01</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://one-waybharat.com/routes/delhi-to-amritsar-cab.html</loc><lastmod>2024-01-01</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://one-waybharat.com/routes/delhi-to-mathura-vrindavan-cab.html</loc><lastmod>2024-01-01</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+
+  <!-- Popular Route Pages (West India) -->
+  <url><loc>https://one-waybharat.com/routes/mumbai-to-pune-cab.html</loc><lastmod>2024-01-01</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://one-waybharat.com/routes/mumbai-to-goa-cab.html</loc><lastmod>2024-01-01</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://one-waybharat.com/routes/mumbai-to-nashik-cab.html</loc><lastmod>2024-01-01</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://one-waybharat.com/routes/mumbai-to-shirdi-cab.html</loc><lastmod>2024-01-01</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://one-waybharat.com/routes/ahmedabad-to-udaipur-cab.html</loc><lastmod>2024-01-01</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://one-waybharat.com/routes/ahmedabad-to-surat-cab.html</loc><lastmod>2024-01-01</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
+
+  <!-- Popular Route Pages (South India) -->
+  <url><loc>https://one-waybharat.com/routes/bangalore-to-mysore-cab.html</loc><lastmod>2024-01-01</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://one-waybharat.com/routes/bangalore-to-coorg-cab.html</loc><lastmod>2024-01-01</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://one-waybharat.com/routes/bangalore-to-chennai-cab.html</loc><lastmod>2024-01-01</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://one-waybharat.com/routes/bangalore-to-ooty-cab.html</loc><lastmod>2024-01-01</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://one-waybharat.com/routes/chennai-to-pondicherry-cab.html</loc><lastmod>2024-01-01</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://one-waybharat.com/routes/chennai-to-tirupati-cab.html</loc><lastmod>2024-01-01</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://one-waybharat.com/routes/hyderabad-to-vijayawada-cab.html</loc><lastmod>2024-01-01</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://one-waybharat.com/routes/kochi-to-munnar-cab.html</loc><lastmod>2024-01-01</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
+
+  <!-- Blog Posts -->
+  <url><loc>https://one-waybharat.com/blog/delhi-to-jaipur-cab-guide.html</loc><lastmod>2024-01-10</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://one-waybharat.com/blog/delhi-to-agra-cab-guide.html</loc><lastmod>2024-01-08</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://one-waybharat.com/blog/mumbai-to-goa-road-trip.html</loc><lastmod>2024-01-05</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://one-waybharat.com/blog/save-money-outstation-cab.html</loc><lastmod>2024-01-02</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+
+</urlset>

@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Book a Cab | One-Way Bhaarat Pvt. Ltd.</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--sf-400:#FF9D2F;--sf-500:#F47B00;--sf-700:#A85200;--sf-glow:rgba(244,123,0,0.3);--sf-pale:rgba(244,123,0,0.08);--nv-900:#040C1E;--nv-800:#061428;--nv-700:#0B1F3A;--nv-400:#1C3E6A;--gd-400:#E8BD3A;--gd-300:#F5D060;--gr-400:#1DAD10;--gr-300:#49CF3E;--wh:#FFFFFF;--muted:rgba(255,255,255,0.5);--faint:rgba(255,255,255,0.07);--r-sm:6px;--r-md:12px;--r-lg:20px;--r-xl:28px;--r-pill:100px;--shadow:0 4px 24px rgba(4,12,30,0.5)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Nunito',sans-serif;background:var(--nv-900);color:var(--wh);min-height:100vh;-webkit-font-smoothing:antialiased}
+
+/* HEADER */
+header{background:rgba(4,12,30,0.95);backdrop-filter:blur(20px);border-bottom:1px solid rgba(244,123,0,0.15);padding:0 5%;display:flex;align-items:center;justify-content:space-between;height:64px;position:sticky;top:0;z-index:100}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+.logo-em{width:38px;height:38px;background:linear-gradient(135deg,var(--sf-500),var(--sf-700));border-radius:var(--r-md);display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 4px 16px var(--sf-glow)}
+.logo-name{font-family:'Cinzel',serif;font-size:15px;font-weight:700;background:linear-gradient(135deg,var(--sf-400),var(--gd-400));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.logo-sub{font-size:9px;color:rgba(255,255,255,0.3);letter-spacing:2px;text-transform:uppercase;display:block;margin-top:1px}
+.hdr-right{display:flex;align-items:center;gap:12px}
+.hdr-phone{color:var(--sf-400);font-size:13px;font-weight:700;text-decoration:none}
+.btn-back{background:var(--faint);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);padding:7px 16px;border-radius:var(--r-sm);font-size:13px;font-weight:600;text-decoration:none;transition:all .2s}
+.btn-back:hover{color:var(--wh);border-color:rgba(255,255,255,0.25)}
+
+/* STEPS */
+.steps-bar{background:rgba(255,255,255,0.02);border-bottom:1px solid rgba(255,255,255,0.05);padding:0 5%}
+.steps{display:flex;max-width:800px;margin:0 auto}
+.step{flex:1;padding:14px 12px;display:flex;align-items:center;gap:10px;opacity:.4;transition:opacity .3s;position:relative}
+.step.active,.step.done{opacity:1}
+.step-num{width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,0.07);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:rgba(255,255,255,0.5);flex-shrink:0;transition:all .3s}
+.step.active .step-num{background:var(--sf-500);color:var(--wh);box-shadow:0 0 12px var(--sf-glow)}
+.step.done .step-num{background:var(--gr-400);color:var(--wh)}
+.step-label{font-size:12px;font-weight:700;color:rgba(255,255,255,0.5)}
+.step.active .step-label{color:var(--wh)}
+.step::after{content:'›';position:absolute;right:-4px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,0.2);font-size:18px}
+.step:last-child::after{display:none}
+
+/* LAYOUT */
+.layout{max-width:1100px;margin:0 auto;padding:32px 5%;display:grid;grid-template-columns:1fr 380px;gap:24px;align-items:start}
+
+/* GLASS PANEL */
+.glass{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:var(--r-xl);overflow:hidden;margin-bottom:20px;box-shadow:var(--shadow)}
+.glass-hdr{padding:18px 24px;border-bottom:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;gap:12px;background:rgba(255,255,255,0.02)}
+.glass-hdr-icon{width:36px;height:36px;background:rgba(244,123,0,0.12);border:1px solid rgba(244,123,0,0.2);border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;font-size:18px}
+.glass-hdr h2{font-family:'Cinzel',serif;font-size:15px;font-weight:700;color:var(--wh)}
+.glass-body{padding:24px}
+
+/* FORM */
+.field{margin-bottom:16px}
+.field label{display:block;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-bottom:6px}
+.field-wrap{position:relative}
+.fi{position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:15px;pointer-events:none;z-index:1}
+.finput{width:100%;padding:12px 14px 12px 40px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);border-radius:var(--r-md);font-size:14px;font-weight:600;color:var(--wh);font-family:'Nunito',sans-serif;outline:none;transition:all .25s;-webkit-appearance:none}
+.finput::placeholder{color:rgba(255,255,255,0.2);font-weight:400}
+.finput:focus{border-color:rgba(244,123,0,0.5);background:rgba(244,123,0,0.05);box-shadow:0 0 0 3px rgba(244,123,0,0.1)}
+.finput option{background:var(--nv-700)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+
+/* TRIP TYPE TABS */
+.trip-tabs{display:flex;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:var(--r-md);padding:4px;margin-bottom:20px;gap:0}
+.ttab{flex:1;padding:9px 6px;border:none;background:none;border-radius:var(--r-sm);color:rgba(255,255,255,0.4);font-size:12px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;transition:all .2s;letter-spacing:.3px}
+.ttab.active{background:linear-gradient(135deg,var(--sf-500),var(--sf-700));color:var(--wh);box-shadow:0 4px 14px var(--sf-glow)}
+
+/* VEHICLE CARDS */
+.vehicle-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.vcard{border:1.5px solid rgba(255,255,255,0.08);border-radius:var(--r-lg);padding:16px;cursor:pointer;transition:all .25s;position:relative;background:rgba(255,255,255,0.02)}
+.vcard:hover{border-color:rgba(244,123,0,0.35);background:rgba(244,123,0,0.04)}
+.vcard.sel{border-color:var(--sf-500);background:rgba(244,123,0,0.07);box-shadow:0 0 0 1px rgba(244,123,0,0.2)}
+.vcard.sel::after{content:'✓';position:absolute;top:10px;right:12px;width:20px;height:20px;background:var(--sf-500);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--wh)}
+.vc-icon{font-size:36px;margin-bottom:10px}
+.vc-name{font-family:'Cinzel',serif;font-size:13px;font-weight:700;color:var(--wh);margin-bottom:2px}
+.vc-sub{font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:10px}
+.vc-tags{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px}
+.vc-tag{font-size:9px;font-weight:700;padding:2px 8px;border-radius:var(--r-pill);background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.45)}
+.vc-rate{font-family:'Cinzel',serif;font-size:20px;font-weight:700;color:var(--sf-400)}
+.vc-per{font-size:10px;color:rgba(255,255,255,0.3)}
+
+/* OTP */
+.otp-box{background:rgba(28,62,106,0.2);border:1px solid rgba(28,62,106,0.4);border-radius:var(--r-lg);padding:18px;margin-bottom:16px}
+.otp-title{font-size:13px;font-weight:700;color:var(--wh);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.otp-row{display:flex;gap:10px;align-items:flex-end}
+.otp-row .finput{flex:1}
+.btn-otp{padding:12px 18px;background:linear-gradient(135deg,var(--nv-400),var(--nv-700));border:1px solid rgba(255,255,255,0.1);color:var(--wh);border-radius:var(--r-md);font-size:12px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;white-space:nowrap;transition:all .2s}
+.btn-otp:hover{background:linear-gradient(135deg,#2a5290,var(--nv-400))}
+.otp-digits{display:none;margin-top:14px}
+.otp-digit-row{display:flex;gap:8px;margin-bottom:12px}
+.otp-d{width:44px;height:44px;border:1.5px solid rgba(255,255,255,0.1);border-radius:var(--r-md);background:rgba(255,255,255,0.04);text-align:center;font-size:20px;font-weight:700;color:var(--wh);font-family:'Nunito',sans-serif;outline:none;transition:border-color .2s}
+.otp-d:focus{border-color:var(--sf-500)}
+.btn-verify{width:100%;padding:11px;background:rgba(29,173,16,0.15);border:1px solid rgba(29,173,16,0.3);color:var(--gr-300);border-radius:var(--r-md);font-size:13px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;transition:all .2s}
+.btn-verify:hover{background:rgba(29,173,16,0.25)}
+.otp-verified{background:rgba(29,173,16,0.12);border:1px solid rgba(29,173,16,0.25);border-radius:var(--r-md);padding:14px 16px;color:var(--gr-300);font-size:14px;font-weight:700;display:none;align-items:center;gap:8px;margin-bottom:16px}
+.otp-verified.show{display:flex}
+
+/* PAY METHODS */
+.pay-methods{display:flex;flex-direction:column;gap:10px;margin-bottom:16px}
+.pay-method{display:flex;align-items:center;gap:14px;padding:14px 16px;border:1.5px solid rgba(255,255,255,0.08);border-radius:var(--r-lg);cursor:pointer;transition:all .2s;background:rgba(255,255,255,0.02)}
+.pay-method:hover,.pay-method.sel-p{border-color:rgba(244,123,0,0.35);background:rgba(244,123,0,0.05)}
+.pay-method input[type=radio]{accent-color:var(--sf-500)}
+.pm-icon{font-size:24px}
+.pm-name{font-size:14px;font-weight:700;color:var(--wh)}
+.pm-sub{font-size:11px;color:rgba(255,255,255,0.35);margin-top:1px}
+
+/* SIDEBAR */
+.sidebar-sticky{position:sticky;top:76px}
+.summary-card{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:var(--r-xl);overflow:hidden;box-shadow:var(--shadow)}
+.summary-hdr{background:linear-gradient(135deg,rgba(244,123,0,0.15),rgba(201,162,39,0.07));padding:20px 22px;border-bottom:1px solid rgba(244,123,0,0.15)}
+.sum-title{font-family:'Cinzel',serif;font-size:16px;font-weight:700;color:var(--wh)}
+.sum-sub{font-size:11px;color:rgba(255,255,255,0.35);margin-top:2px;letter-spacing:1px;text-transform:uppercase}
+.sum-route{padding:18px 22px;border-bottom:1px solid rgba(255,255,255,0.05)}
+.route-row{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.rc{font-size:16px;font-weight:700;color:var(--wh)}
+.ra{color:var(--sf-400);font-size:20px}
+.meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.meta-box{background:rgba(255,255,255,0.03);border-radius:var(--r-sm);padding:8px 10px}
+.meta-lbl{font-size:9px;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:.5px}
+.meta-val{font-size:13px;font-weight:700;color:var(--wh);margin-top:2px}
+.fare-rows{padding:18px 22px;border-bottom:1px solid rgba(255,255,255,0.05)}
+.fare-row{display:flex;justify-content:space-between;padding:7px 0;font-size:13px;border-bottom:1px solid rgba(255,255,255,0.04)}
+.fare-row:last-child{border:none}
+.fare-row .fl{color:rgba(255,255,255,0.45)}
+.fare-row .fv{font-weight:700;color:var(--wh)}
+.fare-total{display:flex;justify-content:space-between;padding:14px 0 0;font-size:16px;margin-top:6px;border-top:1px solid rgba(244,123,0,0.25)}
+.fare-total .fl{font-family:'Cinzel',serif;color:rgba(255,255,255,0.7)}
+.fare-total .fv{font-family:'Cinzel',serif;color:var(--sf-400)}
+.pay-section{padding:18px 22px}
+.advance-pill{background:rgba(244,123,0,0.1);border:1px solid rgba(244,123,0,0.2);border-radius:var(--r-lg);padding:16px;text-align:center;margin-bottom:14px}
+.adv-lbl{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--sf-400);margin-bottom:4px}
+.adv-amt{font-family:'Cinzel',serif;font-size:32px;font-weight:700;color:var(--sf-400)}
+.adv-note{font-size:11px;color:rgba(255,255,255,0.3);margin-top:4px}
+.remain-row{display:flex;justify-content:space-between;align-items:center;background:rgba(255,255,255,0.03);border-radius:var(--r-md);padding:12px 16px;margin-bottom:16px}
+.rem-lbl{font-size:11px;color:rgba(255,255,255,0.4)}
+.rem-amt{font-size:16px;font-weight:700;color:var(--wh)}
+.btn-pay{width:100%;padding:16px;background:linear-gradient(135deg,var(--sf-500),var(--sf-700));border:none;border-radius:var(--r-md);color:var(--wh);font-size:15px;font-weight:700;font-family:'Nunito',sans-serif;cursor:pointer;transition:all .25s;box-shadow:0 8px 28px var(--sf-glow),inset 0 1px 0 rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-pay:hover{transform:translateY(-2px);box-shadow:0 14px 40px var(--sf-glow)}
+.secure-note{text-align:center;font-size:11px;color:rgba(255,255,255,0.25);margin-top:10px;display:flex;align-items:center;justify-content:center;gap:6px}
+.trust-mini{margin-top:16px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);border-radius:var(--r-lg);padding:16px}
+.tm-title{font-size:11px;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px}
+.tm-item{display:flex;align-items:center;gap:8px;font-size:12px;color:rgba(255,255,255,0.45);margin-bottom:6px}
+.tm-item:last-child{margin-bottom:0}
+.tm-item .ic{color:var(--gr-300);font-size:14px}
+
+/* SUCCESS MODAL */
+.overlay{position:fixed;inset:0;background:rgba(4,12,30,0.85);backdrop-filter:blur(8px);z-index:1000;display:none;align-items:center;justify-content:center;padding:20px}
+.overlay.show{display:flex}
+.modal{background:var(--nv-800);border:1px solid rgba(244,123,0,0.2);border-radius:var(--r-xl);padding:48px 40px;text-align:center;max-width:460px;width:100%;box-shadow:0 30px 80px rgba(4,12,30,0.8),0 0 0 1px rgba(244,123,0,0.1);animation:popIn .4s ease}
+@keyframes popIn{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
+.modal-icon{width:80px;height:80px;border-radius:50%;background:rgba(29,173,16,0.12);border:2px solid rgba(29,173,16,0.3);display:flex;align-items:center;justify-content:center;font-size:40px;margin:0 auto 20px}
+.modal h2{font-family:'Cinzel',serif;font-size:26px;color:var(--wh);margin-bottom:8px}
+.modal p{font-size:14px;color:rgba(255,255,255,0.5);line-height:1.7;margin-bottom:16px}
+.booking-id-box{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:var(--r-md);padding:12px 20px;font-family:monospace;font-size:18px;font-weight:700;color:var(--sf-400);letter-spacing:2px;margin:16px 0}
+.confirm-badges{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:16px 0}
+.cb{background:rgba(255,255,255,0.03);border-radius:var(--r-md);padding:10px;font-size:12px;color:rgba(255,255,255,0.5)}
+.modal-actions{display:flex;gap:10px;justify-content:center;margin-top:20px;flex-wrap:wrap}
+.btn-home{background:linear-gradient(135deg,var(--sf-500),var(--sf-700));color:var(--wh);border:none;padding:11px 24px;border-radius:var(--r-md);font-size:13px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif}
+.btn-dl{background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.7);border:1px solid rgba(255,255,255,0.1);padding:11px 24px;border-radius:var(--r-md);font-size:13px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif}
+
+@media(max-width:900px){.layout{grid-template-columns:1fr}.sidebar-sticky{position:static}.vehicle-grid{grid-template-columns:1fr 1fr}.row2{grid-template-columns:1fr}}
+@media(max-width:500px){.vehicle-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <a href="index.html" class="logo">
+    <div class="logo-em">🚕</div>
+    <div><span class="logo-name">One-Way Bhaarat</span><span class="logo-sub">Pvt. Ltd.</span></div>
+  </a>
+  <div class="hdr-right">
+    <a href="tel:+919355757579" class="hdr-phone">📞 +91-93557 57579</a>
+    <a href="index.html" class="btn-back">← Back</a>
+  </div>
+</header>
+
+<div class="steps-bar">
+  <div class="steps">
+    <div class="step done"><div class="step-num">✓</div><div class="step-label">Search</div></div>
+    <div class="step active"><div class="step-num">2</div><div class="step-label">Select Cab</div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-label">Your Details</div></div>
+    <div class="step"><div class="step-num">4</div><div class="step-label">Payment</div></div>
+  </div>
+</div>
+
+<div class="layout">
+  <!-- LEFT -->
+  <div>
+    <!-- Trip Details -->
+    <div class="glass">
+      <div class="glass-hdr"><div class="glass-hdr-icon">🗺️</div><h2>Trip Details</h2></div>
+      <div class="glass-body">
+        <div class="trip-tabs">
+          <button class="ttab active" onclick="setTrip(this,'oneway')">↗ One Way</button>
+          <button class="ttab" onclick="setTrip(this,'roundtrip')">🔄 Round Trip</button>
+          <button class="ttab" onclick="setTrip(this,'airport')">✈️ Airport</button>
+        </div>
+        <div class="row2">
+          <div class="field"><label>Pickup Location *</label><div class="field-wrap"><div class="fi">📍</div><input class="finput" type="text" id="pickup" placeholder="City or station" value="Delhi"></div></div>
+          <div class="field"><label>Drop Location *</label><div class="field-wrap"><div class="fi">🏁</div><input class="finput" type="text" id="drop" placeholder="Destination" value="Jaipur"></div></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>Pickup Date *</label><div class="field-wrap"><div class="fi">📅</div><input class="finput" type="date" id="pdate"></div></div>
+          <div class="field"><label>Pickup Time *</label><div class="field-wrap"><div class="fi">🕐</div><input class="finput" type="time" id="ptime" value="10:00"></div></div>
+        </div>
+        <div class="field" id="returnGroup" style="display:none"><label>Return Date</label><div class="field-wrap"><div class="fi">📅</div><input class="finput" type="date" id="rdate"></div></div>
+      </div>
+    </div>
+
+    <!-- Vehicle Selection -->
+    <div class="glass">
+      <div class="glass-hdr"><div class="glass-hdr-icon">🚗</div><h2>Select Vehicle</h2></div>
+      <div class="glass-body">
+        <div class="vehicle-grid" id="vGrid"></div>
+      </div>
+    </div>
+
+    <!-- Passenger Details -->
+    <div class="glass">
+      <div class="glass-hdr"><div class="glass-hdr-icon">👤</div><h2>Passenger Details</h2></div>
+      <div class="glass-body">
+        <!-- OTP -->
+        <div class="otp-box">
+          <div class="otp-title">📱 Mobile Verification <span style="font-size:10px;color:rgba(255,255,255,0.35);font-weight:400">(Required before payment)</span></div>
+          <div class="otp-row">
+            <div class="field-wrap" style="flex:1"><div class="fi">📱</div><input class="finput" type="tel" id="mobile" placeholder="10-digit mobile number" maxlength="10"></div>
+            <button class="btn-otp" onclick="sendOTP()">Send OTP</button>
+          </div>
+          <div class="otp-digits" id="otpDigits">
+            <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-bottom:10px">Enter 6-digit OTP sent to your mobile</div>
+            <div class="otp-digit-row">
+              <input class="otp-d" type="text" maxlength="1" onkeyup="nextOtp(this,0)">
+              <input class="otp-d" type="text" maxlength="1" onkeyup="nextOtp(this,1)">
+              <input class="otp-d" type="text" maxlength="1" onkeyup="nextOtp(this,2)">
+              <input class="otp-d" type="text" maxlength="1" onkeyup="nextOtp(this,3)">
+              <input class="otp-d" type="text" maxlength="1" onkeyup="nextOtp(this,4)">
+              <input class="otp-d" type="text" maxlength="1" onkeyup="nextOtp(this,5)">
+            </div>
+            <button class="btn-verify" onclick="verifyOTP()">✓ Verify OTP</button>
+          </div>
+        </div>
+        <div class="otp-verified" id="otpVerifiedBadge"><span style="font-size:20px">✅</span> Mobile number verified successfully!</div>
+
+        <div class="row2">
+          <div class="field"><label>Full Name *</label><div class="field-wrap"><div class="fi">👤</div><input class="finput" type="text" id="fname" placeholder="As on Aadhar / ID"></div></div>
+          <div class="field"><label>Email Address *</label><div class="field-wrap"><div class="fi">✉️</div><input class="finput" type="email" id="email" placeholder="For confirmation"></div></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>Passengers</label><div class="field-wrap"><div class="fi">👥</div><select class="finput" id="pax"><option>1</option><option>2</option><option>3</option><option selected>4</option><option>5</option><option>6</option><option>7</option></select></div></div>
+          <div class="field"><label>Luggage Bags</label><div class="field-wrap"><div class="fi">🧳</div><select class="finput" id="bags"><option>0</option><option>1</option><option selected>2</option><option>3</option><option>4</option><option>5</option></select></div></div>
+        </div>
+        <div class="field"><label>Special Instructions (Optional)</label><textarea class="finput" id="notes" rows="2" style="padding-left:14px;resize:vertical" placeholder="e.g. child seat needed, early morning pickup, medical stop..."></textarea></div>
+      </div>
+    </div>
+
+    <!-- Payment -->
+    <div class="glass">
+      <div class="glass-hdr"><div class="glass-hdr-icon">💳</div><h2>Payment Method</h2></div>
+      <div class="glass-body">
+        <p style="font-size:13px;color:rgba(255,255,255,0.45);margin-bottom:16px">Pay only <strong style="color:var(--sf-400)">10% advance</strong> now. Remaining balance paid directly to the driver at trip start.</p>
+        <div class="pay-methods">
+          <label class="pay-method sel-p" onclick="selPay(this)"><input type="radio" name="pm" value="razorpay" checked><div class="pm-icon">💳</div><div><div class="pm-name">Razorpay</div><div class="pm-sub">Credit/Debit Card, UPI, Net Banking, EMI</div></div></label>
+          <label class="pay-method" onclick="selPay(this)"><input type="radio" name="pm" value="phonepe"><div class="pm-icon">📱</div><div><div class="pm-name">PhonePe Business</div><div class="pm-sub">UPI via PhonePe app</div></div></label>
+          <label class="pay-method" onclick="selPay(this)"><input type="radio" name="pm" value="payu"><div class="pm-icon">🏦</div><div><div class="pm-name">PayU</div><div class="pm-sub">EMI, Cards, Net Banking, Wallets</div></div></label>
+        </div>
+        <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:var(--r-md);padding:12px 16px;font-size:12px;color:rgba(255,255,255,0.35);line-height:1.7">
+          By proceeding you agree to our <a href="policies.html" style="color:var(--sf-400);text-decoration:none">Terms & Conditions</a>, <a href="policies.html" style="color:var(--sf-400);text-decoration:none">Privacy Policy</a>, and <a href="policies.html" style="color:var(--sf-400);text-decoration:none">Cancellation Policy</a>.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar-sticky">
+    <div class="summary-card">
+      <div class="summary-hdr">
+        <div class="sum-title">Booking Summary</div>
+        <div class="sum-sub">One-Way Bhaarat Pvt. Ltd.</div>
+      </div>
+      <div class="sum-route">
+        <div class="route-row">
+          <div class="rc" id="s_from">Delhi</div>
+          <div class="ra">→</div>
+          <div class="rc" id="s_to">Jaipur</div>
+        </div>
+        <div class="meta-grid">
+          <div class="meta-box"><div class="meta-lbl">Distance</div><div class="meta-val" id="s_dist">281 km</div></div>
+          <div class="meta-box"><div class="meta-lbl">Trip Type</div><div class="meta-val" id="s_type">One Way</div></div>
+          <div class="meta-box"><div class="meta-lbl">Vehicle</div><div class="meta-val" id="s_veh">Sedan</div></div>
+          <div class="meta-box"><div class="meta-lbl">Est. Time</div><div class="meta-val" id="s_time">5h 30m</div></div>
+        </div>
+      </div>
+      <div class="fare-rows">
+        <div class="fare-row"><span class="fl" id="s_bl">Base (281×₹16)</span><span class="fv" id="s_base">₹4,496</span></div>
+        <div class="fare-row"><span class="fl">Driver Allowance</span><span class="fv" id="s_drv">₹200</span></div>
+        <div class="fare-row"><span class="fl">State Tax (5%)</span><span class="fv" id="s_tax">₹225</span></div>
+        <div class="fare-row"><span class="fl">GST (5%)</span><span class="fv" id="s_gst">₹225</span></div>
+        <div class="fare-row"><span class="fl">Toll (est.)</span><span class="fv" id="s_toll">₹150</span></div>
+        <div class="fare-total"><span class="fl">Total Fare</span><span class="fv" id="s_total">₹5,296</span></div>
+      </div>
+      <div class="pay-section">
+        <div class="advance-pill">
+          <div class="adv-lbl">Pay Now — 10% Advance</div>
+          <div class="adv-amt" id="s_adv">₹530</div>
+          <div class="adv-note">Secure payment via Razorpay / PhonePe / PayU</div>
+        </div>
+        <div class="remain-row">
+          <div><div class="rem-lbl">Pay to Driver at Trip Start</div><div class="rem-amt" id="s_rem">₹4,766</div></div>
+          <span style="font-size:28px">🚕</span>
+        </div>
+        <button class="btn-pay" onclick="proceedPay()">🔒 Pay ₹<span id="pay_amt">530</span> Now</button>
+        <div class="secure-note">🔐 256-bit SSL &nbsp;|&nbsp; PCI-DSS Compliant</div>
+      </div>
+    </div>
+
+    <div class="trust-mini">
+      <div class="tm-title">Why Book with Us</div>
+      <div class="tm-item"><span class="ic">✅</span> Free cancellation up to 4 hrs before</div>
+      <div class="tm-item"><span class="ic">📱</span> Instant SMS + WhatsApp + Email</div>
+      <div class="tm-item"><span class="ic">📍</span> Real-time GPS tracking</div>
+      <div class="tm-item"><span class="ic">🧾</span> GST invoice for every booking</div>
+      <div class="tm-item"><span class="ic">📞</span> 24×7: +91-93557 57579</div>
+    </div>
+  </div>
+</div>
+
+<!-- SUCCESS MODAL -->
+<div class="overlay" id="successOverlay">
+  <div class="modal">
+    <div class="modal-icon">🎉</div>
+    <h2>Booking Confirmed!</h2>
+    <p>Your premium one-way cab is booked. Confirmation details sent to your mobile & email.</p>
+    <div class="booking-id-box" id="bookingIdBox">OWB-2024-XXXXXX</div>
+    <div class="confirm-badges">
+      <div class="cb">📱 SMS Sent</div>
+      <div class="cb">💬 WhatsApp Sent</div>
+      <div class="cb">✉️ Email Sent</div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-home" onclick="window.location='index.html'">🏠 Home</button>
+      <button class="btn-dl" onclick="alert('Ticket download will be available after payment gateway integration.')">⬇ Download Ticket</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const today = new Date().toISOString().split('T')[0];
+document.getElementById('pdate').min = today;
+document.getElementById('pdate').value = today;
+
+const vehicles = [
+  {id:'hatchback',icon:'🚙',name:'Hatchback',sub:'WagonR / i10 / Tiago',tags:['4 Seats','2 Bags','AC'],ow:13,rt:10},
+  {id:'sedan',    icon:'🚗',name:'Sedan',    sub:'Dzire / Amaze / Aspire',tags:['4 Seats','3 Bags','AC'],ow:16,rt:11},
+  {id:'ertiga',   icon:'🚐',name:'Ertiga',   sub:'Maruti Ertiga 6-Seater',tags:['6 Seats','4 Bags','AC'],ow:21,rt:15},
+  {id:'innova',   icon:'🚌',name:'Innova',   sub:'Toyota Innova Crysta',  tags:['7 Seats','5 Bags','AC'],ow:30,rt:20},
+];
+let selV = vehicles[1], tripMode = 'oneway', otpVerified = false;
+const DIST = 281;
+
+function renderVehicles() {
+  const r = tripMode==='oneway'?'ow':'rt';
+  document.getElementById('vGrid').innerHTML = vehicles.map(v=>`
+    <div class="vcard ${v.id===selV.id?'sel':''}" onclick="selVehicle('${v.id}')">
+      <div class="vc-icon">${v.icon}</div>
+      <div class="vc-name">${v.name}</div>
+      <div class="vc-sub">${v.sub}</div>
+      <div class="vc-tags">${v.tags.map(t=>`<span class="vc-tag">${t}</span>`).join('')}</div>
+      <div class="vc-rate">₹${v[r]}<span class="vc-per">/km</span></div>
+    </div>`).join('');
+}
+
+function selVehicle(id) { selV=vehicles.find(v=>v.id===id); renderVehicles(); updateSummary(); }
+
+function setTrip(el, m) {
+  document.querySelectorAll('.ttab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active'); tripMode=m;
+  document.getElementById('returnGroup').style.display = m==='roundtrip'?'block':'none';
+  document.getElementById('s_type').textContent = {oneway:'One Way',roundtrip:'Round Trip',airport:'Airport'}[m];
+  renderVehicles(); updateSummary();
+}
+
+function updateSummary() {
+  const r = tripMode==='oneway'?selV.ow:selV.rt;
+  const base=DIST*r, drv=200, tax=Math.round(base*.05), gst=Math.round(base*.05), toll=Math.round(DIST/50)*30;
+  const total=base+drv+tax+gst+toll, adv=Math.round(total*.1);
+  const fmt=n=>'₹'+n.toLocaleString('en-IN');
+  document.getElementById('s_bl').textContent=`Base (${DIST}×₹${r})`;
+  document.getElementById('s_base').textContent=fmt(base);
+  document.getElementById('s_drv').textContent=fmt(drv);
+  document.getElementById('s_tax').textContent=fmt(tax);
+  document.getElementById('s_gst').textContent=fmt(gst);
+  document.getElementById('s_toll').textContent=fmt(toll);
+  document.getElementById('s_total').textContent=fmt(total);
+  document.getElementById('s_adv').textContent=fmt(adv);
+  document.getElementById('s_rem').textContent=fmt(total-adv);
+  document.getElementById('pay_amt').textContent=adv.toLocaleString('en-IN');
+  document.getElementById('s_veh').textContent=selV.name;
+}
+
+function selPay(el) { document.querySelectorAll('.pay-method').forEach(m=>m.classList.remove('sel-p')); el.classList.add('sel-p'); }
+
+function sendOTP() {
+  const m=document.getElementById('mobile').value;
+  if(m.length<10){alert('Please enter a valid 10-digit mobile number.');return;}
+  document.getElementById('otpDigits').style.display='block';
+  alert(`OTP sent to +91-${m}\n\n📌 Demo OTP: 123456`);
+}
+function nextOtp(el,idx) { if(el.value.length===1&&idx<5) el.parentElement.children[idx+1].focus(); }
+function verifyOTP() {
+  const otp=[...document.querySelectorAll('.otp-d')].map(d=>d.value).join('');
+  if(otp==='123456'||otp.length===6){
+    otpVerified=true;
+    document.querySelector('.otp-box').style.display='none';
+    document.getElementById('otpVerifiedBadge').classList.add('show');
+  } else { alert('Invalid OTP. Demo OTP is: 123456'); }
+}
+function proceedPay() {
+  const name=document.getElementById('fname').value.trim();
+  const email=document.getElementById('email').value.trim();
+  if(!name){alert('Please enter your full name.');return;}
+  if(!email||!email.includes('@')){alert('Please enter a valid email address.');return;}
+  if(!otpVerified){alert('Please verify your mobile number with OTP first.');return;}
+  const id='OWB-'+new Date().getFullYear()+'-'+Math.random().toString(36).substr(2,6).toUpperCase();
+  document.getElementById('bookingIdBox').textContent=id;
+  document.getElementById('successOverlay').classList.add('show');
+}
+renderVehicles(); updateSummary();
+</script>
+</body>
+</html>

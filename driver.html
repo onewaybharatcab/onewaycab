@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Driver Panel | One-Way Bhaarat</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--sf:#F47B00;--sf2:#FF9D2F;--sf3:#A85200;--sfg:rgba(244,123,0,0.28);--gd:#E8BD3A;--gr:#1DAD10;--gr3:#49CF3E;--rd:#DC2626;--nv:#040C1E;--nv2:#061428;--nv3:#0B1F3A;--nv4:#1C3E6A;--wh:#fff;--fa:rgba(255,255,255,0.06);--r6:6px;--r12:12px;--r20:20px;--r28:28px;--rp:100px}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Nunito',sans-serif;background:var(--nv);color:var(--wh);display:flex;min-height:100vh;-webkit-font-smoothing:antialiased}
+/* SIDEBAR */
+.sidebar{width:230px;background:var(--nv2);min-height:100vh;position:fixed;top:0;left:0;z-index:50;display:flex;flex-direction:column;border-right:1px solid rgba(255,255,255,0.05)}
+.sb-top{padding:20px;border-bottom:1px solid rgba(255,255,255,0.06);text-align:center}
+.sb-av{width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,var(--sf),var(--sf3));display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:var(--wh);margin:0 auto 10px;box-shadow:0 4px 16px var(--sfg)}
+.sb-name{font-weight:700;color:var(--wh);font-size:15px}
+.sb-vehicle{font-size:11px;color:rgba(255,255,255,0.35);margin-top:2px}
+.sb-rating{display:inline-flex;align-items:center;gap:4px;color:var(--gd);font-size:13px;font-weight:700;margin-top:6px}
+.online-wrap{margin-top:12px;display:flex;align-items:center;justify-content:center;gap:10px}
+.online-lbl{font-size:12px;color:rgba(255,255,255,0.5)}
+.toggle{width:44px;height:24px;border-radius:12px;background:var(--gr);border:none;position:relative;cursor:pointer;transition:background .3s;flex-shrink:0}
+.toggle::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:var(--wh);transition:left .3s;box-shadow:0 1px 4px rgba(0,0,0,0.3)}
+.toggle.off{background:rgba(255,255,255,0.2)}
+.toggle.off::after{left:23px}
+.online-status{font-size:11px;font-weight:700;color:var(--gr3)}
+.toggle.off~.online-status{color:rgba(255,255,255,0.4)}
+.sb-nav{flex:1;padding:12px 0;overflow-y:auto}
+.ni{display:flex;align-items:center;gap:10px;padding:10px 18px;color:rgba(255,255,255,0.5);cursor:pointer;transition:all .2s;border-left:2px solid transparent;font-size:13px;font-weight:600}
+.ni:hover{background:rgba(255,255,255,0.04);color:var(--wh)}
+.ni.act{background:rgba(244,123,0,0.1);color:var(--wh);border-left-color:var(--sf)}
+.ni-ic{font-size:16px;width:20px;text-align:center;flex-shrink:0}
+.ni-badge{margin-left:auto;background:var(--sf);color:var(--wh);font-size:9px;font-weight:700;padding:2px 7px;border-radius:100px}
+.sb-foot{padding:14px 18px;border-top:1px solid rgba(255,255,255,0.06)}
+.sb-foot a{color:rgba(255,255,255,0.4);text-decoration:none;font-size:13px;transition:color .2s;display:flex;align-items:center;gap:8px}
+.sb-foot a:hover{color:var(--sf2)}
+/* MAIN */
+.main{margin-left:230px;flex:1;display:flex;flex-direction:column}
+.topbar{background:var(--nv2);border-bottom:1px solid rgba(255,255,255,0.05);padding:0 24px;height:58px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:40}
+.tb-title{font-family:'Cinzel',serif;font-size:15px;font-weight:700;color:var(--wh)}
+.sos-btn{background:linear-gradient(135deg,var(--rd),#991b1b);color:var(--wh);border:none;padding:8px 18px;border-radius:var(--r6);font-size:13px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;display:flex;align-items:center;gap:6px;box-shadow:0 4px 12px rgba(220,38,38,0.3);transition:all .2s}
+.sos-btn:hover{transform:translateY(-1px);box-shadow:0 8px 20px rgba(220,38,38,0.4)}
+.content{padding:24px;flex:1}
+/* STAT CARDS */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
+.sc{background:var(--nv3);border:1px solid rgba(255,255,255,0.06);border-radius:var(--r20);padding:18px;display:flex;align-items:center;gap:12px;transition:all .25s}
+.sc:hover{border-color:rgba(244,123,0,0.2);transform:translateY(-2px)}
+.sc-icon{width:40px;height:40px;border-radius:var(--r12);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.ic-o{background:rgba(244,123,0,0.12);border:1px solid rgba(244,123,0,0.2)}
+.ic-g{background:rgba(29,173,16,0.1);border:1px solid rgba(29,173,16,0.2)}
+.ic-b{background:rgba(28,62,106,0.3);border:1px solid rgba(28,62,106,0.5)}
+.ic-gd{background:rgba(232,189,58,0.1);border:1px solid rgba(232,189,58,0.2)}
+.sc-lbl{font-size:11px;color:rgba(255,255,255,0.4);font-weight:600}
+.sc-val{font-family:'Cinzel',serif;font-size:22px;font-weight:700;color:var(--wh)}
+/* CURRENT TRIP */
+.current-trip{background:linear-gradient(135deg,rgba(28,62,106,0.35),rgba(4,12,30,0.6));border:1px solid rgba(28,62,106,0.5);border-radius:var(--r28);padding:24px;margin-bottom:22px;position:relative;overflow:hidden}
+.current-trip::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--sf),var(--gd),var(--sf))}
+.ct-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.ct-title{font-family:'Cinzel',serif;font-size:18px;color:var(--wh);display:flex;align-items:center;gap:10px}
+.ct-badge{background:rgba(244,123,0,0.15);border:1px solid rgba(244,123,0,0.3);color:var(--sf2);padding:4px 14px;border-radius:var(--rp);font-size:11px;font-weight:700;letter-spacing:.5px;animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
+.ct-route{display:flex;align-items:center;gap:14px;margin-bottom:18px}
+.ct-city{font-family:'Cinzel',serif;font-size:22px;font-weight:700;color:var(--wh)}
+.ct-arrow{font-size:22px;color:var(--sf2)}
+.ct-meta{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}
+.ctm{background:rgba(255,255,255,0.04);border-radius:var(--r12);padding:10px 12px}
+.ctm-lbl{font-size:9px;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:.5px}
+.ctm-val{font-size:13px;font-weight:700;color:var(--wh);margin-top:3px}
+.ct-actions{display:flex;gap:10px;flex-wrap:wrap}
+.ct-btn{padding:11px 20px;border-radius:var(--r12);font-size:13px;font-weight:700;cursor:pointer;border:none;font-family:'Nunito',sans-serif;transition:all .25s;display:flex;align-items:center;gap:6px}
+.cb-nav{background:linear-gradient(135deg,var(--sf),var(--sf3));color:var(--wh);box-shadow:0 4px 14px var(--sfg)}
+.cb-nav:hover{transform:translateY(-2px);box-shadow:0 8px 22px var(--sfg)}
+.cb-call{background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.7);border:1px solid rgba(255,255,255,0.1)}
+.cb-call:hover{background:rgba(255,255,255,0.1)}
+.cb-done{background:rgba(29,173,16,0.15);color:var(--gr3);border:1px solid rgba(29,173,16,0.25)}
+.cb-done:hover{background:rgba(29,173,16,0.25)}
+.cb-sos{background:rgba(220,38,38,0.15);color:#f87171;border:1px solid rgba(220,38,38,0.25)}
+.cb-sos:hover{background:rgba(220,38,38,0.25)}
+/* TRIPS LIST */
+.sec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.sec-title{font-family:'Cinzel',serif;font-size:15px;font-weight:700;color:var(--wh)}
+.blist{display:flex;flex-direction:column;gap:12px;margin-bottom:22px}
+.tcard{background:var(--nv3);border:1px solid rgba(255,255,255,0.06);border-radius:var(--r20);padding:16px 20px;transition:all .25s}
+.tcard:hover{border-color:rgba(244,123,0,0.2);box-shadow:0 4px 16px rgba(4,12,30,0.4)}
+.tc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px}
+.tc-id{font-size:11px;font-family:monospace;background:rgba(28,62,106,0.3);color:#93c5fd;padding:3px 10px;border-radius:var(--r6);font-weight:700}
+.tc-date{font-size:12px;color:rgba(255,255,255,0.35)}
+.sbadge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:var(--rp);font-size:11px;font-weight:700}
+.sb-act{background:rgba(244,123,0,0.12);color:var(--sf2)}
+.sb-up{background:rgba(28,62,106,0.3);color:#93c5fd}
+.sb-done{background:rgba(29,173,16,0.12);color:var(--gr3)}
+.tc-route{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.tc-city{font-size:16px;font-weight:700;color:var(--wh)}
+.tc-arr{color:var(--sf2);font-size:18px}
+.tc-meta{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:rgba(255,255,255,0.45)}
+/* EARNINGS */
+.earn-card{background:var(--nv3);border:1px solid rgba(255,255,255,0.06);border-radius:var(--r28);padding:24px;margin-bottom:18px}
+.earn-total{font-family:'Cinzel',serif;font-size:36px;font-weight:700;background:linear-gradient(135deg,var(--sf2),var(--gd));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.earn-sub{font-size:12px;color:rgba(255,255,255,0.35);margin-bottom:22px}
+.week-chart{display:flex;align-items:flex-end;gap:10px;height:100px}
+.wc-bar{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px}
+.wc-fill{width:100%;border-radius:4px 4px 0 0;background:rgba(255,255,255,0.08);transition:all .5s;cursor:pointer}
+.wc-fill.today{background:linear-gradient(to top,var(--sf3),var(--sf))}
+.wc-day{font-size:9px;color:rgba(255,255,255,0.35);font-weight:700}
+.earn-split{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:20px}
+.es-box{background:rgba(255,255,255,0.04);border-radius:var(--r12);padding:12px;text-align:center}
+.es-lbl{font-size:9px;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.es-val{font-family:'Cinzel',serif;font-size:20px;font-weight:700;color:var(--wh)}
+/* KYC */
+.kyc-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+.kyc-item{border:1px solid rgba(255,255,255,0.08);border-radius:var(--r12);padding:14px 16px;display:flex;align-items:center;gap:12px;background:rgba(255,255,255,0.025)}
+.kyc-item.verified{border-color:rgba(29,173,16,0.25);background:rgba(29,173,16,0.06)}
+.kyc-item.pending{border-color:rgba(234,179,8,0.25);background:rgba(234,179,8,0.06)}
+.kyc-icon{font-size:26px}
+.kyc-lbl{font-size:13px;font-weight:700;color:var(--wh)}
+.kyc-status{font-size:11px;font-weight:700;margin-top:2px}
+.kyc-item.verified .kyc-status{color:var(--gr3)}
+.kyc-item.pending .kyc-status{color:#fbbf24}
+/* ATTENDANCE */
+.att-wrap{background:var(--nv3);border:1px solid rgba(255,255,255,0.06);border-radius:var(--r28);padding:24px}
+.att-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:22px}
+.att-stat{border-radius:var(--r12);padding:14px;text-align:center}
+.as-pre{background:rgba(29,173,16,0.08);border:1px solid rgba(29,173,16,0.15)}
+.as-abs{background:rgba(220,38,38,0.08);border:1px solid rgba(220,38,38,0.15)}
+.as-hrs{background:rgba(28,62,106,0.2);border:1px solid rgba(28,62,106,0.3)}
+.as-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.5px;font-weight:700;margin-bottom:4px}
+.as-pre .as-lbl{color:var(--gr3)}.as-abs .as-lbl{color:#f87171}.as-hrs .as-lbl{color:#93c5fd}
+.as-val{font-family:'Cinzel',serif;font-size:28px;font-weight:700}
+.as-pre .as-val{color:var(--gr3)}.as-abs .as-val{color:#f87171}.as-hrs .as-val{color:#93c5fd}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;font-size:11px}
+.cal-day-hdr{text-align:center;font-weight:700;color:rgba(255,255,255,0.3);padding:4px}
+.cal-cell{border-radius:var(--r6);text-align:center;padding:6px 4px;font-weight:600;font-size:11px}
+.cal-pre{background:rgba(29,173,16,0.12);color:var(--gr3)}
+.cal-abs{background:rgba(220,38,38,0.1);color:#f87171}
+.cal-empty{background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.2)}
+/* PROFILE */
+.pform{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.field label{display:block;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-bottom:6px}
+.finput{width:100%;padding:11px 14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);border-radius:var(--r12);font-size:14px;font-weight:600;color:var(--wh);font-family:'Nunito',sans-serif;outline:none;transition:all .2s;-webkit-appearance:none}
+.finput:focus{border-color:rgba(244,123,0,0.4);background:rgba(244,123,0,0.04)}
+.btn-sm{padding:7px 16px;border-radius:var(--r6);font-size:12px;font-weight:700;cursor:pointer;border:none;font-family:'Nunito',sans-serif;transition:all .2s;display:inline-flex;align-items:center;gap:5px}
+.btn-sf{background:linear-gradient(135deg,var(--sf),var(--sf3));color:var(--wh);box-shadow:0 4px 12px var(--sfg)}
+.btn-sf:hover{transform:translateY(-1px);box-shadow:0 8px 20px var(--sfg)}
+.btn-ol{background:var(--fa);color:rgba(255,255,255,0.6);border:1px solid rgba(255,255,255,0.1)}
+.panel{display:none}.panel.act{display:block}
+/* Nav map placeholder */
+.map-ph{background:linear-gradient(135deg,rgba(28,62,106,0.2),rgba(4,12,30,0.5));border:1px solid rgba(28,62,106,0.4);border-radius:var(--r28);height:280px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;margin-bottom:18px}
+.map-ph .mp-icon{font-size:56px}
+.map-ph p{font-size:14px;font-weight:700;color:var(--wh)}
+.map-ph small{font-size:12px;color:rgba(255,255,255,0.35)}
+/* Tbl */
+.tbl-wrap{background:var(--nv3);border:1px solid rgba(255,255,255,0.06);border-radius:var(--r20);overflow:hidden;margin-bottom:18px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:rgba(255,255,255,0.03);padding:10px 16px;text-align:left;font-size:10px;font-weight:700;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:.5px}
+td{padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.65)}
+tr:last-child td{border-bottom:none}
+@media(max-width:900px){.sidebar{display:none}.main{margin-left:0}.stats-row{grid-template-columns:1fr 1fr}.ct-meta{grid-template-columns:1fr 1fr}.kyc-grid{grid-template-columns:1fr}.pform{grid-template-columns:1fr}.earn-split{grid-template-columns:1fr 1fr}}
+@media(max-width:500px){.stats-row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sb-top">
+    <div class="sb-av">RK</div>
+    <div class="sb-name">Ravi Kumar</div>
+    <div class="sb-vehicle">Sedan · DL-01-AB-1234</div>
+    <div class="sb-rating">★ 4.9 <span style="font-size:10px;color:rgba(255,255,255,0.3);font-weight:400">(148 trips)</span></div>
+    <div class="online-wrap">
+      <span class="online-lbl">Status:</span>
+      <button class="toggle" id="onlineToggle" onclick="toggleOnline()"></button>
+      <span class="online-status" id="onlineStatus">Online</span>
+    </div>
+  </div>
+  <nav class="sb-nav">
+    <div class="ni act" onclick="showPanel('dashboard',this)"><span class="ni-ic">📊</span> Dashboard</div>
+    <div class="ni" onclick="showPanel('trips',this)"><span class="ni-ic">🗓️</span> My Trips <span class="ni-badge">3</span></div>
+    <div class="ni" onclick="showPanel('earnings',this)"><span class="ni-ic">💰</span> Earnings</div>
+    <div class="ni" onclick="showPanel('navigation',this)"><span class="ni-ic">🗺️</span> Navigation</div>
+    <div class="ni" onclick="showPanel('kyc',this)"><span class="ni-ic">📄</span> KYC Documents</div>
+    <div class="ni" onclick="showPanel('attendance',this)"><span class="ni-ic">📅</span> Attendance</div>
+    <div class="ni" onclick="showPanel('profile',this)"><span class="ni-ic">👤</span> Profile</div>
+  </nav>
+  <div class="sb-foot"><a href="index.html">🏠 Back to Website</a></div>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <div class="tb-title" id="panelTitle">Driver Dashboard</div>
+    <button class="sos-btn" onclick="alert('🚨 SOS sent to One-Way Bhaarat control room with your live GPS location!')">🚨 SOS Alert</button>
+  </div>
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div class="panel act" id="pn-dashboard">
+      <div class="stats-row">
+        <div class="sc"><div class="sc-icon ic-o">🗓️</div><div><div class="sc-lbl">Today's Trips</div><div class="sc-val">2</div></div></div>
+        <div class="sc"><div class="sc-icon ic-g">💰</div><div><div class="sc-lbl">Today's Earnings</div><div class="sc-val">₹2,400</div></div></div>
+        <div class="sc"><div class="sc-icon ic-b">📍</div><div><div class="sc-lbl">km Driven Today</div><div class="sc-val">281</div></div></div>
+        <div class="sc"><div class="sc-icon ic-gd">⭐</div><div><div class="sc-lbl">My Rating</div><div class="sc-val">4.9</div></div></div>
+      </div>
+
+      <!-- Current Trip Card -->
+      <div class="current-trip">
+        <div class="ct-hdr">
+          <div class="ct-title">🚕 Current Trip</div>
+          <div class="ct-badge">● IN PROGRESS</div>
+        </div>
+        <div class="ct-route">
+          <div class="ct-city">Delhi</div>
+          <div class="ct-arrow">→</div>
+          <div class="ct-city">Jaipur</div>
+        </div>
+        <div class="ct-meta">
+          <div class="ctm"><div class="ctm-lbl">Passenger</div><div class="ctm-val">Rahul Kapoor</div></div>
+          <div class="ctm"><div class="ctm-lbl">Distance</div><div class="ctm-val">281 km</div></div>
+          <div class="ctm"><div class="ctm-lbl">Fare</div><div class="ctm-val">₹4,896</div></div>
+          <div class="ctm"><div class="ctm-lbl">Pickup Time</div><div class="ctm-val">10:00 AM</div></div>
+        </div>
+        <div class="ct-actions">
+          <button class="ct-btn cb-nav" onclick="alert('Opening Google Maps navigation to Jaipur...')">🗺️ Navigate</button>
+          <button class="ct-btn cb-call" onclick="alert('Calling +91-98765 43210 (Rahul Kapoor)...')">📞 Call Passenger</button>
+          <button class="ct-btn cb-done" onclick="alert('Trip completed! Please collect ₹4,406 from the passenger.')">✓ Complete Trip</button>
+          <button class="ct-btn cb-sos" onclick="alert('🚨 SOS alert sent to control room with your GPS coordinates!')">🚨 SOS</button>
+        </div>
+      </div>
+
+      <!-- Upcoming -->
+      <div class="sec-hdr"><div class="sec-title">📅 Upcoming Trip</div></div>
+      <div class="blist">
+        <div class="tcard">
+          <div class="tc-top"><div class="tc-id">OWB-2024-D3E4F</div><div class="tc-date">Today at 6:00 PM</div><span class="sbadge sb-up">Upcoming</span></div>
+          <div class="tc-route"><div class="tc-city">Delhi</div><div class="tc-arr">→</div><div class="tc-city">Chandigarh</div></div>
+          <div class="tc-meta"><span>👤 Priya Sharma</span><span>📏 248 km</span><span>💰 ₹4,200</span><span>🚗 Sedan</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRIPS -->
+    <div class="panel" id="pn-trips">
+      <div class="sec-hdr"><div class="sec-title">All My Trips</div><span style="font-size:12px;color:rgba(255,255,255,.35)">This month: 24 trips</span></div>
+      <div id="tripsListEl"></div>
+    </div>
+
+    <!-- EARNINGS -->
+    <div class="panel" id="pn-earnings">
+      <div class="sec-hdr"><div class="sec-title">Earnings Overview</div></div>
+      <div class="earn-card">
+        <div class="earn-total">₹38,400</div>
+        <div class="earn-sub">January 2024 · 24 trips completed</div>
+        <div class="week-chart" id="weekChart"></div>
+        <div class="earn-split">
+          <div class="es-box"><div class="es-lbl">This Week</div><div class="es-val">₹9,200</div></div>
+          <div class="es-box"><div class="es-lbl">Avg / Trip</div><div class="es-val">₹1,600</div></div>
+          <div class="es-box"><div class="es-lbl">Total km</div><div class="es-val">5,840</div></div>
+        </div>
+      </div>
+      <div class="sec-hdr"><div class="sec-title">Recent Payments</div></div>
+      <div class="tbl-wrap">
+        <table><thead><tr><th>Date</th><th>Route</th><th>Amount</th><th>Mode</th></tr></thead>
+        <tbody>
+          <tr><td style="color:rgba(255,255,255,.35);font-size:12px">Today</td><td style="font-weight:600">Delhi → Jaipur</td><td style="font-weight:700;color:var(--gr3)">₹4,406</td><td>Cash</td></tr>
+          <tr><td style="color:rgba(255,255,255,.35);font-size:12px">Yesterday</td><td style="font-weight:600">Delhi → Agra</td><td style="font-weight:700;color:var(--gr3)">₹3,510</td><td>UPI</td></tr>
+          <tr><td style="color:rgba(255,255,255,.35);font-size:12px">Jan 13</td><td style="font-weight:600">Delhi → Chandigarh</td><td style="font-weight:700;color:var(--gr3)">₹3,780</td><td>Cash</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+
+    <!-- NAVIGATION -->
+    <div class="panel" id="pn-navigation">
+      <div class="sec-hdr"><div class="sec-title">🗺️ Navigation</div></div>
+      <div class="map-ph">
+        <div class="mp-icon">🗺️</div>
+        <p>Google Maps Navigation</p>
+        <small>Integrate Google Maps API for live turn-by-turn navigation</small>
+        <button class="btn-sm btn-sf" onclick="alert('Opening Google Maps with current trip route...')">🗺️ Open Google Maps</button>
+      </div>
+      <div style="background:var(--nv3);border:1px solid rgba(255,255,255,0.06);border-radius:var(--r20);padding:22px">
+        <div style="font-family:'Cinzel',serif;font-size:14px;color:var(--wh);margin-bottom:14px">Current Route Info</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div style="background:rgba(255,255,255,0.04);border-radius:var(--r12);padding:12px"><div style="font-size:9px;color:rgba(255,255,255,.3);margin-bottom:4px">FROM</div><div style="font-weight:700">Delhi, NCR</div></div>
+          <div style="background:rgba(255,255,255,0.04);border-radius:var(--r12);padding:12px"><div style="font-size:9px;color:rgba(255,255,255,.3);margin-bottom:4px">TO</div><div style="font-weight:700">Jaipur, Rajasthan</div></div>
+          <div style="background:rgba(255,255,255,0.04);border-radius:var(--r12);padding:12px"><div style="font-size:9px;color:rgba(255,255,255,.3);margin-bottom:4px">DISTANCE</div><div style="font-weight:700">281 km</div></div>
+          <div style="background:rgba(255,255,255,0.04);border-radius:var(--r12);padding:12px"><div style="font-size:9px;color:rgba(255,255,255,.3);margin-bottom:4px">ETA</div><div style="font-weight:700">5h 30m (NH48)</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- KYC -->
+    <div class="panel" id="pn-kyc">
+      <div class="sec-hdr"><div class="sec-title">📄 KYC Documents</div></div>
+      <div style="background:var(--nv3);border:1px solid rgba(255,255,255,0.06);border-radius:var(--r28);padding:24px">
+        <div style="font-family:'Cinzel',serif;font-size:14px;color:var(--wh);margin-bottom:4px">Document Verification Status</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.35);margin-bottom:16px">All documents must be verified to receive trip assignments.</div>
+        <div class="kyc-grid">
+          <div class="kyc-item verified"><div class="kyc-icon">🪪</div><div><div class="kyc-lbl">Aadhar Card</div><div class="kyc-status">✓ Verified</div></div></div>
+          <div class="kyc-item verified"><div class="kyc-icon">🪪</div><div><div class="kyc-lbl">PAN Card</div><div class="kyc-status">✓ Verified</div></div></div>
+          <div class="kyc-item verified"><div class="kyc-icon">🚗</div><div><div class="kyc-lbl">Driving License</div><div class="kyc-status">✓ Verified</div></div></div>
+          <div class="kyc-item verified"><div class="kyc-icon">📋</div><div><div class="kyc-lbl">Vehicle RC Book</div><div class="kyc-status">✓ Verified</div></div></div>
+          <div class="kyc-item verified"><div class="kyc-icon">🛡️</div><div><div class="kyc-lbl">Vehicle Insurance</div><div class="kyc-status">✓ Verified</div></div></div>
+          <div class="kyc-item pending"><div class="kyc-icon">📄</div><div><div class="kyc-lbl">Fitness Certificate</div><div class="kyc-status">⏳ Renewal Due</div></div></div>
+          <div class="kyc-item verified"><div class="kyc-icon">👮</div><div><div class="kyc-lbl">Police Verification</div><div class="kyc-status">✓ Verified</div></div></div>
+          <div class="kyc-item verified"><div class="kyc-icon">🏦</div><div><div class="kyc-lbl">Bank Account</div><div class="kyc-status">✓ Verified</div></div></div>
+        </div>
+        <div style="margin-top:18px;background:rgba(234,179,8,0.06);border:1px solid rgba(234,179,8,0.2);border-radius:var(--r12);padding:14px;font-size:12px;color:#fbbf24;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          ⚠️ <span><strong>Fitness Certificate</strong> renewal due by Feb 28, 2024. Upload renewed certificate to avoid suspension.</span>
+          <button class="btn-sm" style="background:rgba(234,179,8,0.15);color:#fbbf24;border:1px solid rgba(234,179,8,0.25);flex-shrink:0" onclick="alert('Please visit our office with your renewed fitness certificate.')">Upload Now</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ATTENDANCE -->
+    <div class="panel" id="pn-attendance">
+      <div class="sec-hdr"><div class="sec-title">📅 Attendance Tracker</div></div>
+      <div class="att-wrap">
+        <div class="att-stats">
+          <div class="att-stat as-pre"><div class="as-lbl">Present</div><div class="as-val">18</div></div>
+          <div class="att-stat as-abs"><div class="as-lbl">Absent</div><div class="as-val">3</div></div>
+          <div class="att-stat as-hrs"><div class="as-lbl">Hours</div><div class="as-val">186h</div></div>
+        </div>
+        <div style="font-size:13px;font-weight:700;color:var(--wh);margin-bottom:14px">January 2024</div>
+        <div id="calEl"></div>
+      </div>
+    </div>
+
+    <!-- PROFILE -->
+    <div class="panel" id="pn-profile">
+      <div class="sec-hdr"><div class="sec-title">👤 Driver Profile</div></div>
+      <div style="background:var(--nv3);border:1px solid rgba(255,255,255,0.06);border-radius:var(--r28);padding:24px">
+        <div class="pform">
+          <div class="field"><label>Full Name</label><input class="finput" type="text" value="Ravi Kumar"></div>
+          <div class="field"><label>Mobile</label><input class="finput" type="tel" value="+91-98765 12345" readonly style="opacity:.5;cursor:not-allowed"></div>
+          <div class="field"><label>Vehicle Type</label><input class="finput" type="text" value="Sedan"></div>
+          <div class="field"><label>Vehicle Number</label><input class="finput" type="text" value="DL-01-AB-1234"></div>
+          <div class="field"><label>Home City</label><input class="finput" type="text" value="New Delhi"></div>
+          <div class="field"><label>Bank Account</label><input class="finput" type="text" value="XXXX XXXX 4321" readonly style="opacity:.5;cursor:not-allowed"></div>
+        </div>
+        <button class="btn-sm btn-sf" style="margin-top:18px;padding:10px 22px" onclick="alert('Profile saved!')">💾 Save Changes</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const trips=[
+  {id:'OWB-2024-A1B2C',from:'Delhi',to:'Jaipur',d:281,pax:'Rahul Kapoor',date:'Today, 10:00 AM',fare:'₹4,896',status:'active'},
+  {id:'OWB-2024-D3E4F',from:'Delhi',to:'Chandigarh',d:248,pax:'Priya Sharma',date:'Today, 6:00 PM',fare:'₹4,200',status:'upcoming'},
+  {id:'OWB-2024-G5H6I',from:'Delhi',to:'Agra',d:233,pax:'Sunita Devi',date:'Jan 14, 8:00 AM',fare:'₹3,900',status:'done'},
+  {id:'OWB-2024-J7K8L',from:'Delhi',to:'Haridwar',d:214,pax:'Arun Mishra',date:'Jan 13, 7:00 AM',fare:'₹3,700',status:'done'},
+  {id:'OWB-2024-M9N0O',from:'Delhi',to:'Mathura',d:160,pax:'Deepa Singh',date:'Jan 12, 9:00 AM',fare:'₹2,800',status:'done'},
+];
+const sm={active:'sb-act',upcoming:'sb-up',done:'sb-done'};
+const sl={active:'● Active',upcoming:'Upcoming',done:'✓ Completed'};
+
+function renderTrips(){
+  document.getElementById('tripsListEl').innerHTML=`<div class="blist">${trips.map(t=>`
+    <div class="tcard">
+      <div class="tc-top"><div class="tc-id">${t.id}</div><div class="tc-date">${t.date}</div><span class="sbadge ${sm[t.status]}">${sl[t.status]}</span></div>
+      <div class="tc-route"><div class="tc-city">${t.from}</div><div class="tc-arr">→</div><div class="tc-city">${t.to}</div></div>
+      <div class="tc-meta"><span>👤 ${t.pax}</span><span>📏 ${t.d} km</span><span>💰 ${t.fare}</span>${t.status==='active'?'<button class="btn-sm btn-sf" style="margin-left:auto" onclick="alert(\'Opening navigation...\')">🗺️ Navigate</button>':''}</div>
+    </div>`).join('')}</div>`;
+}
+
+function renderWeekChart(){
+  const days=[{d:'Mon',v:4800,pct:68},{d:'Tue',v:6200,pct:88},{d:'Wed',v:3400,pct:48},{d:'Thu',v:5600,pct:80},{d:'Fri',v:7100,pct:100},{d:'Sat',v:6800,pct:96},{d:'Sun',v:4200,pct:60}];
+  document.getElementById('weekChart').innerHTML=days.map((d,i)=>`
+    <div class="wc-bar">
+      <div class="wc-fill ${i===4?'today':''}" style="height:${d.pct}%" title="₹${d.v.toLocaleString('en-IN')}"></div>
+      <div class="wc-day">${d.d}</div>
+    </div>`).join('');
+}
+
+function renderCal(){
+  const present=[1,2,3,4,5,7,8,9,10,11,12,14,15,16,17,18,19,21,22];
+  const absent=[6,13,20];
+  let h='';
+  ['S','M','T','W','T','F','S'].forEach(d=>{h+=`<div class="cal-day-hdr">${d}</div>`;});
+  for(let i=1;i<=31;i++){
+    const cls=present.includes(i)?'cal-pre':absent.includes(i)?'cal-abs':'cal-empty';
+    h+=`<div class="cal-cell ${cls}">${i}</div>`;
+  }
+  document.getElementById('calEl').innerHTML=`<div class="cal">${h}</div>`;
+}
+
+function showPanel(name,navEl){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('act'));
+  document.getElementById('pn-'+name).classList.add('act');
+  if(navEl){document.querySelectorAll('.ni').forEach(n=>n.classList.remove('act'));navEl.classList.add('act');}
+  const titles={dashboard:'Driver Dashboard',trips:'My Trips',earnings:'Earnings',navigation:'Navigation',kyc:'KYC Documents',attendance:'Attendance',profile:'Driver Profile'};
+  document.getElementById('panelTitle').textContent=titles[name]||name;
+  if(name==='trips')renderTrips();
+  if(name==='earnings')renderWeekChart();
+  if(name==='attendance')renderCal();
+}
+
+function toggleOnline(){
+  const btn=document.getElementById('onlineToggle');
+  const status=document.getElementById('onlineStatus');
+  btn.classList.toggle('off');
+  if(btn.classList.contains('off')){status.textContent='Offline';status.style.color='rgba(255,255,255,0.4)';}
+  else{status.textContent='Online';status.style.color='var(--gr3)';}
+}
+
+// Init earnings chart
+renderWeekChart();
+</script>
+</body>
+</html>

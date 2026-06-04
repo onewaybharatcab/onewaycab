@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Travel Blog | One-Way Bhaarat – India Cab Tips & Travel Guides</title>
+<meta name="description" content="Cab travel tips, intercity route guides, pilgrimage travel, hill station journeys and more from One-Way Bhaarat's travel blog.">
+<link href="https://fonts.googleapis.com/css2?family=Yatra+One&family=Mukta:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--saffron:#FF6B00;--saffron-dark:#CC5500;--saffron-pale:#FFF3E8;--navy:#0A1F5C;--navy-pale:#EEF2FF;--white:#FFFFFF;--off-white:#FAFAF8;--gray-100:#F4F4F2;--gray-200:#E8E8E4;--gray-400:#A8A8A0;--gray-600:#6C6C64;--gray-800:#2C2C28;--shadow-sm:0 2px 8px rgba(10,31,92,0.08);--shadow-md:0 8px 32px rgba(10,31,92,0.12);--radius-sm:8px;--radius-md:12px;--radius-lg:20px}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Mukta',sans-serif;background:var(--off-white);color:var(--gray-800)}
+header{background:var(--navy);padding:0 5%;display:flex;align-items:center;justify-content:space-between;height:64px;position:sticky;top:0;z-index:100;border-bottom:1px solid rgba(255,107,0,0.2)}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+.logo-icon{width:38px;height:38px;background:var(--saffron);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px}
+.logo-text strong{font-family:'Yatra One',cursive;font-size:16px;display:block;color:#fff;line-height:1.1}
+.logo-text span{font-size:10px;color:#FF8C38;letter-spacing:1.5px;text-transform:uppercase}
+nav{display:flex;align-items:center;gap:4px}
+nav a{color:rgba(255,255,255,0.8);text-decoration:none;font-size:14px;padding:6px 12px;border-radius:var(--radius-sm);transition:all 0.2s}
+nav a:hover{color:#fff;background:rgba(255,107,0,0.15)}
+.btn-book-nav{background:var(--saffron);color:#fff!important;padding:8px 18px!important;border-radius:var(--radius-sm)!important}
+
+.page-hero{background:linear-gradient(135deg,var(--navy),#1a3480);padding:60px 5%;text-align:center;color:#fff}
+.page-tag{display:inline-block;background:rgba(255,107,0,0.2);color:#FF8C38;border-radius:100px;padding:5px 16px;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px}
+.page-title{font-family:'Yatra One',cursive;font-size:clamp(26px,4vw,48px);margin-bottom:12px}
+.accent{color:var(--saffron)}
+.page-sub{font-size:15px;color:rgba(255,255,255,0.7);max-width:500px;margin:0 auto}
+
+.content{max-width:1100px;margin:0 auto;padding:60px 5%}
+
+/* Category filter */
+.cat-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:40px}
+.cat-btn{padding:7px 18px;border-radius:100px;border:1.5px solid var(--gray-200);background:var(--white);font-size:13px;font-weight:600;cursor:pointer;color:var(--gray-600);transition:all 0.2s;font-family:inherit}
+.cat-btn:hover,.cat-btn.active{background:var(--saffron);border-color:var(--saffron);color:#fff}
+
+/* Featured Post */
+.featured-post{background:var(--white);border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--gray-200);display:grid;grid-template-columns:1.2fr 1fr;margin-bottom:40px;transition:all 0.3s}
+.featured-post:hover{box-shadow:var(--shadow-md);border-color:var(--saffron)}
+.featured-img{background:linear-gradient(135deg,var(--navy),#1a3480);display:flex;align-items:center;justify-content:center;font-size:100px;min-height:280px}
+.featured-body{padding:36px}
+.post-tag{display:inline-block;background:var(--saffron-pale);color:var(--saffron-dark);font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 10px;border-radius:100px;margin-bottom:12px}
+.featured-title{font-family:'Yatra One',cursive;font-size:26px;color:var(--navy);margin-bottom:12px;line-height:1.3}
+.featured-title a{color:inherit;text-decoration:none}
+.featured-title a:hover{color:var(--saffron)}
+.post-excerpt{font-size:15px;color:var(--gray-600);line-height:1.7;margin-bottom:20px}
+.post-meta{display:flex;align-items:center;gap:16px;font-size:12px;color:var(--gray-400)}
+.read-more{background:var(--saffron);color:#fff;padding:10px 22px;border-radius:var(--radius-md);font-size:14px;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:6px;transition:all 0.2s;margin-top:16px}
+.read-more:hover{background:var(--saffron-dark);transform:translateX(2px)}
+
+/* Blog grid */
+.blog-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-bottom:40px}
+.blog-card{background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);overflow:hidden;transition:all 0.3s;cursor:pointer}
+.blog-card:hover{transform:translateY(-6px);box-shadow:var(--shadow-md);border-color:var(--saffron)}
+.blog-img{height:160px;display:flex;align-items:center;justify-content:center;font-size:64px;position:relative}
+.blog-body{padding:20px}
+.blog-tag{display:inline-block;background:var(--saffron-pale);color:var(--saffron-dark);font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:2px 8px;border-radius:100px;margin-bottom:8px}
+.blog-title{font-size:16px;font-weight:700;color:var(--navy);margin-bottom:8px;line-height:1.4}
+.blog-excerpt{font-size:13px;color:var(--gray-600);line-height:1.6;margin-bottom:12px}
+.blog-meta{display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--gray-400)}
+.blog-read{color:var(--saffron);font-weight:700}
+
+/* Sidebar */
+.blog-layout{display:grid;grid-template-columns:1fr 280px;gap:32px}
+.sidebar-widget{background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:24px;margin-bottom:20px}
+.widget-title{font-size:16px;font-weight:700;color:var(--navy);margin-bottom:16px}
+.popular-post{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--gray-200);cursor:pointer}
+.popular-post:last-child{border-bottom:none}
+.pp-icon{font-size:28px;flex-shrink:0}
+.pp-title{font-size:13px;font-weight:700;color:var(--navy);line-height:1.4;margin-bottom:2px}
+.pp-meta{font-size:11px;color:var(--gray-400)}
+.tag-cloud{display:flex;flex-wrap:wrap;gap:8px}
+.tag{padding:5px 12px;background:var(--gray-100);border-radius:100px;font-size:12px;color:var(--gray-600);cursor:pointer;transition:all 0.2s;border:1.5px solid transparent}
+.tag:hover{background:var(--saffron-pale);color:var(--saffron-dark);border-color:rgba(255,107,0,0.2)}
+
+.cta-widget{background:linear-gradient(135deg,var(--saffron),var(--saffron-dark));border-radius:var(--radius-lg);padding:24px;text-align:center;color:#fff;margin-bottom:20px}
+.cta-widget h3{font-family:'Yatra One',cursive;font-size:20px;margin-bottom:8px}
+.cta-widget p{font-size:13px;opacity:0.85;margin-bottom:16px}
+.btn-cta-w{background:#fff;color:var(--saffron-dark);padding:10px 20px;border-radius:var(--radius-md);font-size:14px;font-weight:700;text-decoration:none;display:inline-block;transition:all 0.2s}
+.btn-cta-w:hover{transform:translateY(-2px)}
+
+footer{background:#06132E;color:rgba(255,255,255,0.6);padding:32px 5%;text-align:center;font-size:14px}
+footer a{color:var(--saffron);text-decoration:none}
+
+@media(max-width:900px){.featured-post,.blog-layout{grid-template-columns:1fr}.blog-grid{grid-template-columns:1fr 1fr}nav{display:none}}
+@media(max-width:600px){.blog-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <a href="index.html" class="logo">
+    <div class="logo-icon">🚕</div>
+    <div class="logo-text"><strong>One-Way Bhaarat</strong><span>Pvt. Ltd.</span></div>
+  </a>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="fleet.html">Fleet</a>
+    <a href="routes.html">Routes</a>
+    <a href="contact.html">Contact</a>
+    <a href="booking.html" class="btn-book-nav">Book Now</a>
+  </nav>
+</header>
+
+<div class="page-hero">
+  <div class="page-tag">📖 Travel Blog</div>
+  <h1 class="page-title">India Travel <span class="accent">Stories & Tips</span></h1>
+  <p class="page-sub">Route guides, travel tips, pilgrimage journeys and cab travel hacks from across Bhaarat.</p>
+</div>
+
+<div class="content">
+  <div class="cat-bar">
+    <button class="cat-btn active">All Posts</button>
+    <button class="cat-btn">🗺️ Route Guides</button>
+    <button class="cat-btn">🛕 Pilgrimage</button>
+    <button class="cat-btn">🏖️ Leisure Travel</button>
+    <button class="cat-btn">💡 Cab Tips</button>
+    <button class="cat-btn">🏔️ Hill Stations</button>
+    <button class="cat-btn">✈️ Airport Travel</button>
+  </div>
+
+  <!-- Featured -->
+  <div class="featured-post">
+    <div class="featured-img" style="background:linear-gradient(135deg,#1a0960,#0a1f5c)">🏯</div>
+    <div class="featured-body">
+      <div class="post-tag">🌟 Featured</div>
+      <div class="featured-title"><a href="#">Delhi to Jaipur by Cab: The Complete 2024 Travel Guide</a></div>
+      <p class="post-excerpt">The 281 km Delhi–Jaipur highway is one of India's most beautiful intercity drives. Discover the best pit stops, when to travel, what to expect on the road, and why a one-way cab is smarter than a bus or train for this iconic route.</p>
+      <div class="post-meta">
+        <span>📅 January 2024</span>
+        <span>⏱ 8 min read</span>
+        <span>👁 12,400 views</span>
+      </div>
+      <a href="#" class="read-more">Read Full Guide →</a>
+    </div>
+  </div>
+
+  <div class="blog-layout">
+    <!-- Posts Grid -->
+    <div>
+      <div class="blog-grid" id="blogGrid"></div>
+      <div style="text-align:center;margin-top:8px">
+        <button class="cat-btn" style="padding:12px 32px;font-size:14px" onclick="loadMore()">Load More Articles</button>
+      </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div>
+      <div class="cta-widget">
+        <h3>Ready to Travel?</h3>
+        <p>Book your one-way cab in 2 minutes!</p>
+        <a href="booking.html" class="btn-cta-w">🚕 Book Now</a>
+      </div>
+
+      <div class="sidebar-widget">
+        <div class="widget-title">🔥 Popular Posts</div>
+        <div class="popular-post"><div class="pp-icon">🕌</div><div><div class="pp-title">Delhi to Agra: Taj Mahal Day Trip Guide</div><div class="pp-meta">233 km • 8,200 views</div></div></div>
+        <div class="popular-post"><div class="pp-icon">🏖️</div><div><div class="pp-title">Mumbai to Goa Road Trip: What to Expect</div><div class="pp-meta">590 km • 7,100 views</div></div></div>
+        <div class="popular-post"><div class="pp-icon">❄️</div><div><div class="pp-title">Delhi to Shimla Cab Guide: Best Season</div><div class="pp-meta">342 km • 6,500 views</div></div></div>
+        <div class="popular-post"><div class="pp-icon">☕</div><div><div class="pp-title">Bangalore to Coorg: Coffee Country Drive</div><div class="pp-meta">246 km • 5,800 views</div></div></div>
+        <div class="popular-post"><div class="pp-icon">🛕</div><div><div class="pp-title">Varanasi to Bodhgaya: Pilgrimage Cab Guide</div><div class="pp-meta">252 km • 4,900 views</div></div></div>
+      </div>
+
+      <div class="sidebar-widget">
+        <div class="widget-title">🏷️ Topics</div>
+        <div class="tag-cloud">
+          <div class="tag">Route Guides</div>
+          <div class="tag">Pilgrimage</div>
+          <div class="tag">Hill Stations</div>
+          <div class="tag">Cab Tips</div>
+          <div class="tag">Airport Transfers</div>
+          <div class="tag">Family Travel</div>
+          <div class="tag">Budget Travel</div>
+          <div class="tag">Corporate Travel</div>
+          <div class="tag">North India</div>
+          <div class="tag">South India</div>
+          <div class="tag">Rajasthan</div>
+          <div class="tag">Kerala</div>
+        </div>
+      </div>
+
+      <div class="sidebar-widget">
+        <div class="widget-title">📞 Plan Your Trip</div>
+        <p style="font-size:13px;color:var(--gray-600);margin-bottom:16px">Need help planning your intercity cab journey? Our travel experts are available 24×7.</p>
+        <a href="tel:+919355757579" style="display:flex;align-items:center;gap:10px;background:var(--navy-pale);border-radius:var(--radius-md);padding:12px 16px;text-decoration:none;color:var(--navy);font-weight:700;font-size:14px">📞 +91-93557 57579</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <p>© 2024 One-Way Bhaarat Private Limited | <a href="index.html">Home</a> | <a href="booking.html">Book Now</a> | <a href="routes.html">Routes</a> | <a href="faq.html">FAQ</a></p>
+  <p style="margin-top:8px;font-size:12px">+91-93557 57579 | onewaybharatcab@gmail.com</p>
+</footer>
+
+<script>
+const posts = [
+  {icon:'🕌',tag:'Route Guide',bg:'#fff0e0,#ffe0c0',title:'Delhi to Agra: Complete Cab Travel Guide for 2024',excerpt:'The Agra highway is iconic. Here\'s everything — best departure time, road conditions, Taj entry tips and why a cab beats a train.',date:'Jan 10, 2024',read:'6 min',views:'8.2K'},
+  {icon:'🏖️',tag:'Leisure Travel',bg:'#e0f8ff,#c0eeff',title:'Mumbai to Goa Road Trip: Route, Stops & Cab Tips',excerpt:'590 km of coastal highway magic. We cover the NH66 coastal route, the best places to stop, and how to split cab costs for a group.',date:'Jan 8, 2024',read:'10 min',views:'7.1K'},
+  {icon:'❄️',tag:'Hill Station',bg:'#e8f4ff,#d0e8ff',title:'Delhi to Shimla: Best Time, Route & Cab Booking Guide',excerpt:'The 342 km Shimla drive is spectacular in every season. Tips on mountain road safety, snow chains, and the best scenic viewpoints.',date:'Jan 5, 2024',read:'8 min',views:'6.5K'},
+  {icon:'☕',tag:'Leisure Travel',bg:'#e0fff0,#c0eed8',title:'Bangalore to Coorg: India\'s Coffee Country by Cab',excerpt:'Coorg is 246 km from Bangalore and worth every kilometer. We share the best homestay villages to stop at and what to order.',date:'Jan 2, 2024',read:'7 min',views:'5.8K'},
+  {icon:'🛕',tag:'Pilgrimage',bg:'#fff8e0,#ffefc0',title:'Delhi to Haridwar & Rishikesh: Sacred Journey Guide',excerpt:'The twin pilgrimage cities on the Ganga. Best way to plan a 2-day trip from Delhi including both cities without burning a hole in your pocket.',date:'Dec 28, 2023',read:'9 min',views:'5.2K'},
+  {icon:'🏰',tag:'Route Guide',bg:'#f0e0ff,#e0c0ff',title:'Jaipur to Udaipur: A Royal Road Trip Through Rajasthan',excerpt:'421 km of royal Rajasthan. Ancient forts, desert landscapes and heritage hotels — all reachable by cab in under 7 hours.',date:'Dec 22, 2023',read:'8 min',views:'4.9K'},
+  {icon:'🌴',tag:'South India',bg:'#e0ffe8,#c0f0d0',title:'Kochi to Munnar: God\'s Own Country by Cab',excerpt:'130 km of Kerala\'s most breathtaking scenery. Spice gardens, tea estates and waterfalls — your complete Munnar cab itinerary.',date:'Dec 18, 2023',read:'7 min',views:'4.6K'},
+  {icon:'✈️',tag:'Airport Tips',bg:'#ffe8e0,#ffd0c0',title:'5 Tips for Booking Airport Cab Transfers in India',excerpt:'From IGI Delhi to CSIA Mumbai — how to book the right cab, what to confirm before departure, and how to handle flight delays.',date:'Dec 14, 2023',read:'5 min',views:'4.1K'},
+  {icon:'💰',tag:'Cab Tips',bg:'#e8e0ff,#d8c8ff',title:'How to Save Money on Outstation Cab Bookings',excerpt:'One-way vs round trip, group travel, advance booking discounts and coupon codes — your complete guide to cheaper intercity cabs.',date:'Dec 10, 2023',read:'6 min',views:'3.8K'},
+];
+
+function renderPosts(data) {
+  document.getElementById('blogGrid').innerHTML = data.map(p=>`
+    <div class="blog-card">
+      <div class="blog-img" style="background:linear-gradient(135deg,${p.bg})">${p.icon}</div>
+      <div class="blog-body">
+        <div class="blog-tag">${p.tag}</div>
+        <div class="blog-title">${p.title}</div>
+        <div class="blog-excerpt">${p.excerpt}</div>
+        <div class="blog-meta">
+          <span>${p.date} • ${p.read}</span>
+          <span class="blog-read">Read →</span>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function loadMore() {
+  alert('More articles coming soon! Subscribe to our newsletter for updates.');
+}
+
+renderPosts(posts);
+</script>
+</body>
+</html>

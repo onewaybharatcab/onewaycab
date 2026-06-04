@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard | One-Way Bhaarat</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--sf:#F47B00;--sf2:#FF9D2F;--sf3:#A85200;--sfg:rgba(244,123,0,0.28);--gd:#E8BD3A;--gd2:#F5D060;--gr:#1DAD10;--gr3:#49CF3E;--rd:#DC2626;--nv:#040C1E;--nv2:#061428;--nv3:#0B1F3A;--nv4:#1C3E6A;--wh:#fff;--fa:rgba(255,255,255,0.06);--r6:6px;--r12:12px;--r20:20px;--r28:28px;--sh:0 4px 24px rgba(4,12,30,0.55)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Nunito',sans-serif;background:var(--nv);color:var(--wh);display:flex;min-height:100vh;-webkit-font-smoothing:antialiased}
+/* SIDEBAR */
+.sidebar{width:230px;background:var(--nv2);min-height:100vh;position:fixed;top:0;left:0;z-index:50;display:flex;flex-direction:column;border-right:1px solid rgba(255,255,255,0.05)}
+.sb-logo{padding:20px;border-bottom:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;gap:10px}
+.sb-em{width:36px;height:36px;background:linear-gradient(135deg,var(--sf),var(--sf3));border-radius:var(--r12);display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 4px 12px var(--sfg)}
+.sb-ln{font-family:'Cinzel',serif;font-size:13px;font-weight:700;background:linear-gradient(135deg,var(--sf2),var(--gd));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;display:block}
+.sb-ls{font-size:9px;color:rgba(255,255,255,0.3);letter-spacing:1.5px;text-transform:uppercase;display:block;margin-top:1px}
+.sb-nav{flex:1;padding:12px 0;overflow-y:auto}
+.sb-nav::-webkit-scrollbar{width:3px}.sb-nav::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:2px}
+.nav-sec{font-size:9px;font-weight:700;color:rgba(255,255,255,0.25);letter-spacing:2px;text-transform:uppercase;padding:10px 18px 4px}
+.ni{display:flex;align-items:center;gap:10px;padding:10px 18px;color:rgba(255,255,255,0.5);cursor:pointer;transition:all .2s;border-left:2px solid transparent;font-size:13px;font-weight:600}
+.ni:hover{background:rgba(255,255,255,0.04);color:var(--wh)}
+.ni.act{background:rgba(244,123,0,0.1);color:var(--wh);border-left-color:var(--sf)}
+.ni-ic{font-size:16px;width:20px;text-align:center;flex-shrink:0}
+.ni-badge{margin-left:auto;background:var(--sf);color:var(--wh);font-size:9px;font-weight:700;padding:2px 7px;border-radius:100px}
+.sb-user{padding:16px 18px;border-top:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;gap:10px}
+.sb-av{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--sf),var(--sf3));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
+.sb-un{font-size:13px;font-weight:700;color:var(--wh)}
+.sb-ur{font-size:10px;color:rgba(255,255,255,0.35)}
+/* MAIN */
+.main{margin-left:230px;flex:1;display:flex;flex-direction:column}
+.topbar{background:var(--nv2);border-bottom:1px solid rgba(255,255,255,0.05);padding:0 24px;height:58px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:40}
+.tb-title{font-family:'Cinzel',serif;font-size:15px;font-weight:700;color:var(--wh)}
+.tb-right{display:flex;align-items:center;gap:12px}
+.tb-date{font-size:12px;color:rgba(255,255,255,0.35)}
+.nb{position:relative;width:34px;height:34px;background:var(--fa);border-radius:var(--r12);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px}
+.nb-dot{position:absolute;top:5px;right:5px;width:7px;height:7px;background:var(--rd);border-radius:50%;border:2px solid var(--nv2)}
+.content{padding:24px;flex:1}
+/* STAT CARDS */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.sc{background:var(--nv3);border:1px solid rgba(255,255,255,0.06);border-radius:var(--r20);padding:20px;display:flex;align-items:center;gap:14px;transition:all .25s}
+.sc:hover{border-color:rgba(244,123,0,0.25);transform:translateY(-2px);box-shadow:var(--sh)}
+.sc-icon{width:42px;height:42px;border-radius:var(--r12);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.ic-o{background:rgba(244,123,0,0.12);border:1px solid rgba(244,123,0,0.2)}
+.ic-g{background:rgba(29,173,16,0.1);border:1px solid rgba(29,173,16,0.2)}
+.ic-b{background:rgba(28,62,106,0.3);border:1px solid rgba(28,62,106,0.5)}
+.ic-gd{background:rgba(232,189,58,0.1);border:1px solid rgba(232,189,58,0.2)}
+.sc-lbl{font-size:11px;color:rgba(255,255,255,0.4);font-weight:600;letter-spacing:.3px}
+.sc-val{font-family:'Cinzel',serif;font-size:24px;font-weight:700;color:var(--wh)}
+.sc-ch{font-size:11px;color:var(--gr3);margin-top:2px}
+/* CHARTS ROW */
+.charts-row{display:grid;grid-template-columns:1.5fr 1fr;gap:18px;margin-bottom:24px}
+.chart-card{background:var(--nv3);border:1px solid rgba(255,255,255,0.06);border-radius:var(--r20);padding:22px}
+.cc-title{font-family:'Cinzel',serif;font-size:14px;font-weight:700;color:var(--wh);margin-bottom:2px}
+.cc-sub{font-size:11px;color:rgba(255,255,255,0.35);margin-bottom:18px}
+.bar-chart{display:flex;align-items:flex-end;gap:10px;height:120px}
+.bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px}
+.bar-fill{width:100%;border-radius:4px 4px 0 0;background:rgba(255,255,255,0.08);transition:all .5s;cursor:pointer;position:relative}
+.bar-fill.sf{background:linear-gradient(to top,var(--sf3),var(--sf))}
+.bar-fill:hover{opacity:0.8}
+.bar-lbl{font-size:9px;color:rgba(255,255,255,0.35);font-weight:700}
+/* Donut */
+.donut-wrap{display:flex;align-items:center;gap:18px}
+.legend{display:flex;flex-direction:column;gap:8px}
+.leg-item{display:flex;align-items:center;gap:8px;font-size:12px}
+.leg-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.leg-lbl{color:rgba(255,255,255,0.5)}
+.leg-val{font-weight:700;color:var(--wh);margin-left:auto}
+/* TABLE */
+.sec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.sec-title{font-family:'Cinzel',serif;font-size:15px;font-weight:700;color:var(--wh)}
+.btn-sm{padding:7px 16px;border-radius:var(--r6);font-size:12px;font-weight:700;cursor:pointer;border:none;font-family:'Nunito',sans-serif;transition:all .2s;text-decoration:none;display:inline-flex;align-items:center;gap:5px}
+.btn-sf{background:linear-gradient(135deg,var(--sf),var(--sf3));color:var(--wh);box-shadow:0 4px 12px var(--sfg)}
+.btn-sf:hover{transform:translateY(-1px);box-shadow:0 7px 18px var(--sfg)}
+.btn-ol{background:var(--fa);color:rgba(255,255,255,0.6);border:1px solid rgba(255,255,255,0.1)}
+.btn-ol:hover{color:var(--wh)}
+.tbl-wrap{background:var(--nv3);border:1px solid rgba(255,255,255,0.06);border-radius:var(--r20);overflow:hidden;margin-bottom:24px}
+.tbl-filter{padding:14px 18px;border-bottom:1px solid rgba(255,255,255,0.05);display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.tbl-input{padding:8px 12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);border-radius:var(--r6);font-size:12px;font-family:'Nunito',sans-serif;color:var(--wh);outline:none;transition:border-color .2s;-webkit-appearance:none}
+.tbl-input:focus{border-color:rgba(244,123,0,0.4)}
+.tbl-input option{background:var(--nv3)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:rgba(255,255,255,0.03);padding:11px 16px;text-align:left;font-size:10px;font-weight:700;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap}
+td{padding:13px 16px;border-bottom:1px solid rgba(255,255,255,0.04);vertical-align:middle;color:rgba(255,255,255,0.7)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(244,123,0,0.03)}
+.sbadge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:100px;font-size:11px;font-weight:700}
+.sb-conf{background:rgba(29,173,16,0.12);color:var(--gr3)}
+.sb-pend{background:rgba(234,179,8,0.12);color:#fbbf24}
+.sb-canc{background:rgba(220,38,38,0.12);color:#f87171}
+.sb-comp{background:rgba(59,130,246,0.12);color:#93c5fd}
+.sb-act{background:rgba(29,173,16,0.12);color:var(--gr3)}
+.sb-inact{background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.4)}
+.action-row{display:flex;gap:5px}
+.ab{padding:4px 10px;border-radius:var(--r6);font-size:11px;font-weight:700;cursor:pointer;border:none;font-family:'Nunito',sans-serif}
+.ab-v{background:rgba(28,62,106,0.3);color:#93c5fd}
+.ab-e{background:rgba(232,189,58,0.1);color:var(--gd)}
+.ab-d{background:rgba(220,38,38,0.1);color:#f87171}
+/* PRICING PANEL */
+.price-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.price-section{background:var(--nv3);border:1px solid rgba(255,255,255,0.06);border-radius:var(--r20);padding:22px}
+.ps-title{font-family:'Cinzel',serif;font-size:14px;font-weight:700;color:var(--wh);margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.rate-row{display:flex;align-items:center;justify-content:space-between;padding:10px;background:rgba(255,255,255,0.025);border-radius:var(--r12);margin-bottom:8px}
+.rate-lbl{font-size:13px;font-weight:600;color:rgba(255,255,255,0.7)}
+.rate-inp{width:72px;padding:6px 10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:var(--r6);font-size:14px;font-weight:700;text-align:center;color:var(--sf2);font-family:'Nunito',sans-serif;outline:none}
+.rate-inp:focus{border-color:rgba(244,123,0,0.4)}
+/* PANEL */
+.panel{display:none}
+.panel.act{display:block}
+@media(max-width:900px){.sidebar{display:none}.main{margin-left:0}.stats-row{grid-template-columns:1fr 1fr}.charts-row{grid-template-columns:1fr}.price-grid{grid-template-columns:1fr}}
+@media(max-width:500px){.stats-row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="sb-logo">
+    <div class="sb-em">🚕</div>
+    <div><span class="sb-ln">One-Way Bhaarat</span><span class="sb-ls">Admin Panel</span></div>
+  </div>
+  <nav class="sb-nav">
+    <div class="nav-sec">Main</div>
+    <div class="ni act" onclick="showPanel('dashboard',this)"><span class="ni-ic">📊</span> Dashboard</div>
+    <div class="ni" onclick="showPanel('bookings',this)"><span class="ni-ic">🗓️</span> Bookings <span class="ni-badge">12</span></div>
+    <div class="nav-sec">Management</div>
+    <div class="ni" onclick="showPanel('customers',this)"><span class="ni-ic">👤</span> Customers</div>
+    <div class="ni" onclick="showPanel('drivers',this)"><span class="ni-ic">🚗</span> Drivers</div>
+    <div class="ni" onclick="showPanel('vehicles',this)"><span class="ni-ic">🚌</span> Vehicles</div>
+    <div class="ni" onclick="showPanel('routes',this)"><span class="ni-ic">🗺️</span> Routes</div>
+    <div class="nav-sec">Finance</div>
+    <div class="ni" onclick="showPanel('payments',this)"><span class="ni-ic">💳</span> Payments</div>
+    <div class="ni" onclick="showPanel('refunds',this)"><span class="ni-ic">↩️</span> Refunds</div>
+    <div class="ni" onclick="showPanel('gst',this)"><span class="ni-ic">🧾</span> GST Reports</div>
+    <div class="ni" onclick="showPanel('coupons',this)"><span class="ni-ic">🎫</span> Coupons</div>
+    <div class="nav-sec">Config</div>
+    <div class="ni" onclick="showPanel('pricing',this)"><span class="ni-ic">💰</span> Pricing</div>
+    <div class="ni" onclick="showPanel('analytics',this)"><span class="ni-ic">📈</span> Analytics</div>
+    <div class="ni" onclick="window.location='index.html'"><span class="ni-ic">🌐</span> View Website</div>
+  </nav>
+  <div class="sb-user">
+    <div class="sb-av">A</div>
+    <div><div class="sb-un">Admin User</div><div class="sb-ur">Super Admin</div></div>
+  </div>
+</aside>
+<div class="main">
+  <div class="topbar">
+    <div class="tb-title" id="tbTitle">Dashboard <span style="font-size:11px;color:rgba(255,255,255,0.3);font-weight:400;margin-left:8px">Overview</span></div>
+    <div class="tb-right">
+      <div class="tb-date" id="tbDate"></div>
+      <button class="nb">🔔<div class="nb-dot"></div></button>
+    </div>
+  </div>
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div class="panel act" id="pn-dashboard">
+      <div class="stats-row">
+        <div class="sc"><div class="sc-icon ic-o">🗓️</div><div><div class="sc-lbl">Total Bookings</div><div class="sc-val">1,248</div><div class="sc-ch">↑ 12% this month</div></div></div>
+        <div class="sc"><div class="sc-icon ic-g">💰</div><div><div class="sc-lbl">Revenue (Month)</div><div class="sc-val">₹3.2L</div><div class="sc-ch">↑ 8% vs last month</div></div></div>
+        <div class="sc"><div class="sc-icon ic-b">🚗</div><div><div class="sc-lbl">Active Drivers</div><div class="sc-val">84</div><div class="sc-ch">↑ 5 new this week</div></div></div>
+        <div class="sc"><div class="sc-icon ic-gd">⭐</div><div><div class="sc-lbl">Customer Rating</div><div class="sc-val">4.8</div><div class="sc-ch">↑ 0.1 this month</div></div></div>
+      </div>
+      <div class="charts-row">
+        <div class="chart-card">
+          <div class="cc-title">Monthly Bookings</div>
+          <div class="cc-sub">Last 6 months performance</div>
+          <div class="bar-chart" id="barChart"></div>
+        </div>
+        <div class="chart-card">
+          <div class="cc-title">Bookings by Vehicle</div>
+          <div class="cc-sub">Current month distribution</div>
+          <div class="donut-wrap">
+            <svg width="110" height="110" viewBox="0 0 110 110">
+              <circle cx="55" cy="55" r="42" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="18"/>
+              <circle cx="55" cy="55" r="42" fill="none" stroke="#F47B00" stroke-width="18" stroke-dasharray="119 146" stroke-dashoffset="0" transform="rotate(-90 55 55)"/>
+              <circle cx="55" cy="55" r="42" fill="none" stroke="#1C3E6A" stroke-width="18" stroke-dasharray="66 199" stroke-dashoffset="-119" transform="rotate(-90 55 55)"/>
+              <circle cx="55" cy="55" r="42" fill="none" stroke="#E8BD3A" stroke-width="18" stroke-dasharray="53 212" stroke-dashoffset="-185" transform="rotate(-90 55 55)"/>
+              <circle cx="55" cy="55" r="42" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="18" stroke-dasharray="27 238" stroke-dashoffset="-238" transform="rotate(-90 55 55)"/>
+              <text x="55" y="59" text-anchor="middle" fill="#fff" font-size="14" font-weight="700" font-family="Cinzel,serif">562</text>
+            </svg>
+            <div class="legend">
+              <div class="leg-item"><div class="leg-dot" style="background:#F47B00"></div><span class="leg-lbl">Sedan</span><span class="leg-val">45%</span></div>
+              <div class="leg-item"><div class="leg-dot" style="background:#1C3E6A"></div><span class="leg-lbl">Innova</span><span class="leg-val">25%</span></div>
+              <div class="leg-item"><div class="leg-dot" style="background:#E8BD3A"></div><span class="leg-lbl">Ertiga</span><span class="leg-val">20%</span></div>
+              <div class="leg-item"><div class="leg-dot" style="background:rgba(255,255,255,.15)"></div><span class="leg-lbl">Hatchback</span><span class="leg-val">10%</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="sec-hdr"><div class="sec-title">Recent Bookings</div><button class="btn-sm btn-sf" onclick="showPanel('bookings',null)">View All →</button></div>
+      <div class="tbl-wrap" id="recentTbl"></div>
+    </div>
+
+    <!-- BOOKINGS -->
+    <div class="panel" id="pn-bookings">
+      <div class="sec-hdr"><div class="sec-title">All Bookings</div><button class="btn-sm btn-sf">+ New Booking</button></div>
+      <div class="tbl-wrap">
+        <div class="tbl-filter">
+          <input class="tbl-input" placeholder="🔍 Search booking ID, name..." style="width:220px">
+          <select class="tbl-input"><option>All Status</option><option>Confirmed</option><option>Pending</option><option>Completed</option><option>Cancelled</option></select>
+          <select class="tbl-input"><option>All Vehicles</option><option>Sedan</option><option>Ertiga</option><option>Innova Crysta</option><option>Hatchback</option></select>
+          <button class="btn-sm btn-ol">⬇ Export CSV</button>
+        </div>
+        <div id="allTbl"></div>
+      </div>
+    </div>
+
+    <!-- DRIVERS -->
+    <div class="panel" id="pn-drivers">
+      <div class="sec-hdr"><div class="sec-title">Driver Management</div><button class="btn-sm btn-sf">+ Add Driver</button></div>
+      <div class="tbl-wrap">
+        <div class="tbl-filter">
+          <input class="tbl-input" placeholder="🔍 Search driver..." style="width:200px">
+          <select class="tbl-input"><option>All Status</option><option>Active</option><option>Inactive</option><option>Pending KYC</option></select>
+        </div>
+        <div id="driversTbl"></div>
+      </div>
+    </div>
+
+    <!-- CUSTOMERS -->
+    <div class="panel" id="pn-customers">
+      <div class="sec-hdr"><div class="sec-title">Customer Management</div><button class="btn-sm btn-ol">⬇ Export</button></div>
+      <div class="tbl-wrap">
+        <div class="tbl-filter"><input class="tbl-input" placeholder="🔍 Search customer..." style="width:220px"></div>
+        <div id="custTbl"></div>
+      </div>
+    </div>
+
+    <!-- PAYMENTS -->
+    <div class="panel" id="pn-payments">
+      <div class="sec-hdr"><div class="sec-title">Payment Records</div><div style="display:flex;gap:8px"><button class="btn-sm btn-ol">⬇ Export</button><button class="btn-sm btn-sf">GST Report</button></div></div>
+      <div class="stats-row" style="grid-template-columns:repeat(3,1fr)">
+        <div class="sc"><div class="sc-icon ic-g">💰</div><div><div class="sc-lbl">Total Collected</div><div class="sc-val">₹12.4L</div></div></div>
+        <div class="sc"><div class="sc-icon ic-o">⏳</div><div><div class="sc-lbl">Pending</div><div class="sc-val">₹84K</div></div></div>
+        <div class="sc"><div class="sc-icon ic-b">↩️</div><div><div class="sc-lbl">Total Refunds</div><div class="sc-val">₹18.6K</div></div></div>
+      </div>
+      <div class="tbl-wrap"><div id="payTbl"></div></div>
+    </div>
+
+    <!-- PRICING -->
+    <div class="panel" id="pn-pricing">
+      <div class="sec-hdr"><div class="sec-title">Fare & Pricing Management</div><button class="btn-sm btn-sf" onclick="savePricing()">💾 Save Changes</button></div>
+      <div class="price-grid">
+        <div class="price-section">
+          <div class="ps-title">🔷 One Way Rates (₹/km)</div>
+          <div class="rate-row"><span class="rate-lbl">🚙 Hatchback</span><input class="rate-inp" type="number" value="13"></div>
+          <div class="rate-row"><span class="rate-lbl">🚗 Sedan</span><input class="rate-inp" type="number" value="16"></div>
+          <div class="rate-row"><span class="rate-lbl">🚐 Ertiga</span><input class="rate-inp" type="number" value="21"></div>
+          <div class="rate-row"><span class="rate-lbl">🚌 Innova Crysta</span><input class="rate-inp" type="number" value="30"></div>
+        </div>
+        <div class="price-section">
+          <div class="ps-title">🔄 Round Trip Rates (₹/km)</div>
+          <div class="rate-row"><span class="rate-lbl">🚙 Hatchback</span><input class="rate-inp" type="number" value="10"></div>
+          <div class="rate-row"><span class="rate-lbl">🚗 Sedan</span><input class="rate-inp" type="number" value="11"></div>
+          <div class="rate-row"><span class="rate-lbl">🚐 Ertiga</span><input class="rate-inp" type="number" value="15"></div>
+          <div class="rate-row"><span class="rate-lbl">🚌 Innova Crysta</span><input class="rate-inp" type="number" value="20"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GENERIC PANELS -->
+    <div class="panel" id="pn-vehicles"><div class="sec-hdr"><div class="sec-title">Vehicle Management</div><button class="btn-sm btn-sf">+ Add Vehicle</button></div><div class="tbl-wrap" style="padding:60px;text-align:center"><div style="font-size:48px">🚗</div><div style="font-size:16px;color:rgba(255,255,255,0.4);margin-top:12px">Vehicle management module</div></div></div>
+    <div class="panel" id="pn-routes"><div class="sec-hdr"><div class="sec-title">Route Management</div><button class="btn-sm btn-sf">+ Add Route</button></div><div class="tbl-wrap" style="padding:60px;text-align:center"><div style="font-size:48px">🗺️</div><div style="font-size:16px;color:rgba(255,255,255,0.4);margin-top:12px">Route management module</div></div></div>
+    <div class="panel" id="pn-refunds"><div class="sec-hdr"><div class="sec-title">Refund Requests</div></div><div class="tbl-wrap" style="padding:60px;text-align:center"><div style="font-size:48px">↩️</div><div style="font-size:16px;color:rgba(255,255,255,0.4);margin-top:12px">Refund management module</div></div></div>
+    <div class="panel" id="pn-gst"><div class="sec-hdr"><div class="sec-title">GST Reports</div><button class="btn-sm btn-sf">⬇ Download GSTR-1</button></div><div class="tbl-wrap" style="padding:60px;text-align:center"><div style="font-size:48px">🧾</div><div style="font-size:16px;color:rgba(255,255,255,0.4);margin-top:12px">GST reporting module</div></div></div>
+    <div class="panel" id="pn-coupons"><div class="sec-hdr"><div class="sec-title">Coupon Management</div><button class="btn-sm btn-sf">+ Create Coupon</button></div><div class="tbl-wrap" style="padding:60px;text-align:center"><div style="font-size:48px">🎫</div><div style="font-size:16px;color:rgba(255,255,255,0.4);margin-top:12px">Coupon management module</div></div></div>
+    <div class="panel" id="pn-analytics"><div class="sec-hdr"><div class="sec-title">Analytics</div></div><div class="tbl-wrap" style="padding:60px;text-align:center"><div style="font-size:48px">📈</div><div style="font-size:16px;color:rgba(255,255,255,0.4);margin-top:12px">Advanced analytics module</div></div></div>
+
+  </div>
+</div>
+<script>
+document.getElementById('tbDate').textContent=new Date().toLocaleDateString('en-IN',{weekday:'short',year:'numeric',month:'short',day:'numeric'});
+const bookings=[
+  {id:'OWB-2024-A1B2C',cust:'Rahul Kapoor',mob:'9876543210',route:'Delhi → Jaipur',veh:'Sedan',date:'2024-01-15',fare:'₹4,896',adv:'₹490',status:'Confirmed',driver:'Ravi Kumar'},
+  {id:'OWB-2024-D3E4F',cust:'Priya Sharma',mob:'9988776655',route:'Mumbai → Pune',veh:'Ertiga',date:'2024-01-14',fare:'₹3,200',adv:'₹320',status:'Completed',driver:'Suresh Yadav'},
+  {id:'OWB-2024-G5H6I',cust:'Anand Venkat',mob:'8877665544',route:'Bangalore → Mysore',veh:'Innova',date:'2024-01-14',fare:'₹5,100',adv:'₹510',status:'Confirmed',driver:'Mohan Reddy'},
+  {id:'OWB-2024-J7K8L',cust:'Sunita Devi',mob:'7766554433',route:'Delhi → Agra',veh:'Sedan',date:'2024-01-13',fare:'₹3,900',adv:'₹390',status:'Pending',driver:'Assigned'},
+  {id:'OWB-2024-M9N0O',cust:'Arun Mishra',mob:'6655443322',route:'Chennai → Pondicherry',veh:'Hatchback',date:'2024-01-12',fare:'₹2,600',adv:'₹260',status:'Cancelled',driver:'N/A'},
+];
+const drivers=[
+  {id:'DRV-001',name:'Ravi Kumar',mob:'9876512345',veh:'Sedan (DL-01-AB-1234)',trips:148,rating:'4.9',kyc:'Verified',status:'Active'},
+  {id:'DRV-002',name:'Suresh Yadav',mob:'8765423456',veh:'Ertiga (UP-14-CD-5678)',trips:89,rating:'4.7',kyc:'Verified',status:'Active'},
+  {id:'DRV-003',name:'Mohan Reddy',mob:'7654334567',veh:'Innova (KA-01-EF-9012)',trips:203,rating:'4.8',kyc:'Verified',status:'Active'},
+  {id:'DRV-004',name:'Ajay Sharma',mob:'6543245678',veh:'Sedan (DL-01-GH-3456)',trips:67,rating:'4.6',kyc:'Pending',status:'Inactive'},
+];
+const customers=[
+  {id:'CUS-001',name:'Rahul Kapoor',mob:'9876543210',email:'rahul@email.com',trips:5,spent:'₹22,400',joined:'Dec 2023',status:'Active'},
+  {id:'CUS-002',name:'Priya Sharma',mob:'9988776655',email:'priya@email.com',trips:3,spent:'₹11,800',joined:'Nov 2023',status:'Active'},
+  {id:'CUS-003',name:'Anand Venkat',mob:'8877665544',email:'anand@email.com',trips:8,spent:'₹41,200',joined:'Oct 2023',status:'Active'},
+];
+const payments=[
+  {id:'PAY-001',bid:'OWB-2024-A1B2C',cust:'Rahul Kapoor',amt:'₹490',method:'Razorpay/UPI',date:'2024-01-15',status:'Success'},
+  {id:'PAY-002',bid:'OWB-2024-D3E4F',cust:'Priya Sharma',amt:'₹320',method:'PhonePe',date:'2024-01-14',status:'Success'},
+  {id:'PAY-003',bid:'OWB-2024-M9N0O',cust:'Arun Mishra',amt:'₹260',method:'Razorpay/Card',date:'2024-01-12',status:'Refunded'},
+];
+function badge(s){const m={Confirmed:'sb-conf',Completed:'sb-comp',Pending:'sb-pend',Cancelled:'sb-canc',Active:'sb-act',Inactive:'sb-inact',Verified:'sb-act',Pending:'sb-pend',Success:'sb-conf',Refunded:'sb-pend'};return`<span class="sbadge ${m[s]||''}">${s}</span>`;}
+function renderBookings(data,id,lim){const items=lim?data.slice(0,lim):data;document.getElementById(id).innerHTML=`<table><thead><tr><th>Booking ID</th><th>Customer</th><th>Route</th><th>Vehicle</th><th>Date</th><th>Fare</th><th>Status</th><th>Actions</th></tr></thead><tbody>${items.map(b=>`<tr><td><span style="font-size:11px;font-family:monospace;color:#93c5fd">${b.id}</span></td><td><div style="font-weight:700">${b.cust}</div><div style="font-size:11px;color:rgba(255,255,255,0.35)">${b.mob}</div></td><td style="font-weight:600">${b.route}</td><td>${b.veh}</td><td style="font-size:12px;color:rgba(255,255,255,0.45)">${b.date}</td><td><div style="font-weight:700">${b.fare}</div><div style="font-size:11px;color:rgba(255,255,255,0.35)">Adv: ${b.adv}</div></td><td>${badge(b.status)}</td><td><div class="action-row"><button class="ab ab-v">View</button><button class="ab ab-e">Edit</button><button class="ab ab-d">×</button></div></td></tr>`).join('')}</tbody></table>`;}
+function renderDrivers(){document.getElementById('driversTbl').innerHTML=`<table><thead><tr><th>Driver ID</th><th>Name</th><th>Vehicle</th><th>Trips</th><th>Rating</th><th>KYC</th><th>Status</th><th>Actions</th></tr></thead><tbody>${drivers.map(d=>`<tr><td style="font-size:11px;font-family:monospace;color:#93c5fd">${d.id}</td><td><div style="font-weight:700">${d.name}</div><div style="font-size:11px;color:rgba(255,255,255,.35)">${d.mob}</div></td><td style="font-size:12px">${d.veh}</td><td style="font-weight:700">${d.trips}</td><td style="color:#E8BD3A;font-weight:700">★ ${d.rating}</td><td>${badge(d.kyc)}</td><td>${badge(d.status)}</td><td><div class="action-row"><button class="ab ab-v">View</button><button class="ab ab-e">Edit</button></div></td></tr>`).join('')}</tbody></table>`;}
+function renderCustomers(){document.getElementById('custTbl').innerHTML=`<table><thead><tr><th>ID</th><th>Name</th><th>Mobile</th><th>Trips</th><th>Spent</th><th>Joined</th><th>Status</th></tr></thead><tbody>${customers.map(c=>`<tr><td style="font-size:11px;font-family:monospace;color:#93c5fd">${c.id}</td><td style="font-weight:700">${c.name}</td><td>${c.mob}</td><td style="font-weight:700;text-align:center">${c.trips}</td><td style="font-weight:700;color:var(--gr3)">${c.spent}</td><td style="font-size:12px;color:rgba(255,255,255,.4)">${c.joined}</td><td>${badge(c.status)}</td></tr>`).join('')}</tbody></table>`;}
+function renderPayments(){document.getElementById('payTbl').innerHTML=`<table><thead><tr><th>Pay ID</th><th>Booking ID</th><th>Customer</th><th>Amount</th><th>Method</th><th>Date</th><th>Status</th></tr></thead><tbody>${payments.map(p=>`<tr><td style="font-size:11px;font-weight:700">${p.id}</td><td style="font-size:11px;font-family:monospace;color:#93c5fd">${p.bid}</td><td style="font-weight:600">${p.cust}</td><td style="font-weight:700;color:var(--gr3)">${p.amt}</td><td>${p.method}</td><td style="font-size:12px;color:rgba(255,255,255,.4)">${p.date}</td><td>${badge(p.status)}</td></tr>`).join('')}</tbody></table>`;}
+function initChart(){const data=[{m:'Aug',v:68},{m:'Sep',v:82},{m:'Oct',v:95},{m:'Nov',v:110},{m:'Dec',v:125},{m:'Jan',v:148}];const max=Math.max(...data.map(d=>d.v));document.getElementById('barChart').innerHTML=data.map((d,i)=>`<div class="bar-wrap"><div class="bar-fill ${i===5?'sf':''}" style="height:${Math.round(d.v/max*110)}px" title="₹${(d.v*2200).toLocaleString('en-IN')}"></div><div class="bar-lbl">${d.m}</div></div>`).join('');}
+function showPanel(name,navEl){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('act'));
+  document.getElementById('pn-'+name).classList.add('act');
+  if(navEl){document.querySelectorAll('.ni').forEach(n=>n.classList.remove('act'));navEl.classList.add('act');}
+  const titles={dashboard:'Dashboard',bookings:'Bookings',customers:'Customers',drivers:'Drivers',vehicles:'Vehicles',routes:'Routes',payments:'Payments',refunds:'Refunds',gst:'GST Reports',coupons:'Coupons',pricing:'Pricing',analytics:'Analytics'};
+  document.getElementById('tbTitle').textContent=titles[name]||name;
+  if(name==='bookings'){renderBookings(bookings,'allTbl');}
+  if(name==='drivers'){renderDrivers();}
+  if(name==='customers'){renderCustomers();}
+  if(name==='payments'){renderPayments();}
+}
+function savePricing(){alert('✅ Pricing updated successfully!\nChanges will reflect on the website immediately.');}
+initChart();
+renderBookings(bookings,'recentTbl',4);
+</script>
+</body>
+</html>

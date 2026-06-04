@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>About Us | One-Way Bhaarat – India's Premium One-Way Taxi</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Nunito:wght@400;500;600;700&family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
+<style>
+:root{--sf:#F47B00;--sf2:#FF9D2F;--sf3:#A85200;--sfg:rgba(244,123,0,0.28);--gd:#E8BD3A;--gd2:#F5D060;--gr:#1DAD10;--gr3:#49CF3E;--nv:#040C1E;--nv2:#061428;--nv3:#0B1F3A;--nv4:#1C3E6A;--wh:#fff;--r6:6px;--r12:12px;--r20:20px;--r28:28px;--rp:100px}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Nunito',sans-serif;background:var(--nv);color:var(--wh);-webkit-font-smoothing:antialiased}
+header{background:rgba(4,12,30,.95);backdrop-filter:blur(20px);border-bottom:1px solid rgba(244,123,0,.15);padding:0 5%;display:flex;align-items:center;justify-content:space-between;height:64px;position:sticky;top:0;z-index:100}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+.lem{width:38px;height:38px;background:linear-gradient(135deg,var(--sf),var(--sf3));border-radius:var(--r12);display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 4px 16px var(--sfg)}
+.ln{font-family:'Cinzel',serif;font-size:15px;font-weight:700;background:linear-gradient(135deg,var(--sf2),var(--gd));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.ls{font-size:9px;color:rgba(255,255,255,.3);letter-spacing:2px;text-transform:uppercase;display:block;margin-top:1px}
+nav{display:flex;align-items:center;gap:4px}
+nav a{color:rgba(255,255,255,.6);text-decoration:none;font-size:13px;font-weight:600;padding:7px 14px;border-radius:var(--r6);transition:all .2s}
+nav a:hover{color:var(--wh);background:rgba(244,123,0,.1)}
+.ncta{background:linear-gradient(135deg,var(--sf),var(--sf3))!important;color:var(--wh)!important;box-shadow:0 4px 14px var(--sfg)}
+.accent{background:linear-gradient(135deg,var(--sf2),var(--gd2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+
+/* HERO */
+.hero{background:linear-gradient(150deg,var(--nv) 0%,var(--nv3) 60%,var(--nv) 100%);padding:80px 5%;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-100px;right:-100px;width:600px;height:600px;background:radial-gradient(ellipse,rgba(244,123,0,.08),transparent 70%);pointer-events:none}
+.hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--sf),var(--gd),var(--sf),transparent)}
+.hero-inner{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:1.2fr 1fr;gap:60px;align-items:center;position:relative;z-index:1}
+.ptag{display:inline-flex;align-items:center;gap:8px;background:rgba(244,123,0,.1);border:1px solid rgba(244,123,0,.22);border-radius:var(--rp);padding:5px 16px;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--sf2);margin-bottom:14px}
+.hero-h{font-family:'Cinzel',serif;font-size:clamp(28px,4vw,52px);font-weight:700;color:var(--wh);margin-bottom:14px;line-height:1.15}
+.hero-p{font-size:15px;color:rgba(255,255,255,.55);line-height:1.8;margin-bottom:28px}
+.hero-btns{display:flex;gap:12px;flex-wrap:wrap}
+.btn-p{background:linear-gradient(135deg,var(--sf),var(--sf3));color:var(--wh);padding:13px 28px;border-radius:var(--r12);font-size:14px;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:8px;box-shadow:0 6px 20px var(--sfg);transition:all .2s}
+.btn-p:hover{transform:translateY(-2px);box-shadow:0 12px 32px var(--sfg)}
+.btn-s{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);color:var(--wh);padding:13px 28px;border-radius:var(--r12);font-size:14px;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:all .2s}
+.btn-s:hover{background:rgba(255,255,255,.1)}
+.stats-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:var(--r28);padding:32px;backdrop-filter:blur(16px)}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.sitem{text-align:center}
+.snum{font-family:'Cinzel',serif;font-size:32px;font-weight:700;background:linear-gradient(135deg,var(--sf2),var(--gd));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;display:block}
+.slbl{font-size:10px;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:1px;margin-top:4px;display:block}
+
+section{padding:72px 5%}
+.sec-inner{max-width:1200px;margin:0 auto}
+.sec-tag{display:inline-flex;align-items:center;gap:8px;background:rgba(244,123,0,.1);border:1px solid rgba(244,123,0,.2);border-radius:var(--rp);padding:5px 16px;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--sf2);margin-bottom:14px}
+.sec-title{font-family:'Cinzel',serif;font-size:clamp(22px,3vw,40px);font-weight:700;color:var(--wh);margin-bottom:12px}
+.sec-sub{font-size:14px;color:rgba(255,255,255,.45);line-height:1.8;max-width:540px}
+
+/* Story */
+.story-sec{background:var(--nv2)}
+.story-grid{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center;margin-top:44px}
+.story-visual{background:linear-gradient(135deg,rgba(244,123,0,.08),rgba(232,189,58,.05));border:1px solid rgba(244,123,0,.15);border-radius:var(--r28);padding:48px 36px;text-align:center;position:relative;overflow:hidden}
+.story-visual::before{content:'🇮🇳';position:absolute;font-size:160px;opacity:.04;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none}
+.story-emoji{font-size:64px;display:block;margin-bottom:16px;position:relative}
+.story-quote{font-family:'Playfair Display',serif;font-size:20px;color:var(--wh);line-height:1.5;position:relative}
+.story-quote-sub{font-size:12px;color:var(--sf2);margin-top:10px;font-weight:600;letter-spacing:.5px}
+.story-text p{font-size:14px;color:rgba(255,255,255,.5);line-height:1.85;margin-bottom:14px}
+.story-text strong{color:var(--wh)}
+
+/* Values */
+.values-sec{background:var(--nv3)}
+.values-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:44px}
+.vcard{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:var(--r20);padding:26px 22px;transition:all .3s}
+.vcard:hover{border-color:rgba(244,123,0,.3);transform:translateY(-4px);box-shadow:0 16px 48px rgba(4,12,30,.5)}
+.vcard-icon{font-size:36px;margin-bottom:14px}
+.vcard-title{font-family:'Cinzel',serif;font-size:15px;color:var(--wh);margin-bottom:8px}
+.vcard-text{font-size:13px;color:rgba(255,255,255,.45);line-height:1.7}
+
+/* Timeline */
+.timeline-sec{background:var(--nv2)}
+.timeline{margin-top:44px;padding-left:28px;position:relative;max-width:640px}
+.timeline::before{content:'';position:absolute;left:6px;top:0;bottom:0;width:1.5px;background:linear-gradient(to bottom,var(--sf),rgba(244,123,0,.1))}
+.mile{position:relative;margin-bottom:32px}
+.mile::before{content:'';position:absolute;left:-25px;top:4px;width:14px;height:14px;border-radius:50%;background:var(--sf);border:2.5px solid var(--nv);box-shadow:0 0 0 3px rgba(244,123,0,.2)}
+.mile-year{font-size:10px;font-weight:700;color:var(--sf2);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:4px}
+.mile-title{font-family:'Cinzel',serif;font-size:16px;color:var(--wh);margin-bottom:4px}
+.mile-text{font-size:13px;color:rgba(255,255,255,.45);line-height:1.7}
+
+/* Trust */
+.trust-sec{background:var(--nv)}
+.trust-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:16px;margin-top:44px}
+.tcard{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:var(--r20);padding:22px;text-align:center;transition:all .25s}
+.tcard:hover{border-color:rgba(244,123,0,.25);transform:translateY(-3px)}
+.tcard-icon{font-size:32px;margin-bottom:10px}
+.tcard-title{font-size:13px;font-weight:700;color:var(--wh);margin-bottom:4px}
+.tcard-sub{font-size:11px;color:rgba(255,255,255,.3);line-height:1.6}
+
+/* CTA */
+.cta-sec{background:var(--nv3);padding:80px 5%;text-align:center}
+.cta-sec h2{font-family:'Cinzel',serif;font-size:clamp(24px,3.5vw,44px);color:var(--wh);margin-bottom:12px}
+.cta-sec p{font-size:15px;color:rgba(255,255,255,.45);margin-bottom:32px}
+
+footer{background:var(--nv2);border-top:1px solid rgba(244,123,0,.1);padding:28px 5%;text-align:center;font-size:13px;color:rgba(255,255,255,.3)}
+footer a{color:var(--sf2);text-decoration:none}
+@media(max-width:900px){.hero-inner,.story-grid{grid-template-columns:1fr}.values-grid{grid-template-columns:1fr 1fr}nav{display:none}}
+@media(max-width:560px){.values-grid{grid-template-columns:1fr}.stats-grid{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<header>
+  <a href="index.html" class="logo"><div class="lem">🚕</div><div><span class="ln">One-Way Bhaarat</span><span class="ls">Pvt. Ltd.</span></div></a>
+  <nav><a href="index.html">Home</a><a href="fleet.html">Fleet</a><a href="routes.html">Routes</a><a href="contact.html">Contact</a><a href="booking.html" class="ncta">Book Now</a></nav>
+</header>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div>
+      <div class="ptag">🇮🇳 Our Story</div>
+      <h1 class="hero-h">Born from the <span class="accent">Roads of Bhaarat</span></h1>
+      <p class="hero-p">One-Way Bhaarat was founded with a simple belief — every Indian deserves affordable, safe and transparent intercity travel. We started in Ghaziabad, UP, and today serve 20,000+ locations across India.</p>
+      <div class="hero-btns"><a href="booking.html" class="btn-p">🚕 Book a Cab</a><a href="contact.html" class="btn-s">📞 Contact Us</a></div>
+    </div>
+    <div class="stats-card">
+      <div class="stats-grid">
+        <div class="sitem"><span class="snum">50K+</span><span class="slbl">Happy Riders</span></div>
+        <div class="sitem"><span class="snum">20K+</span><span class="slbl">Locations</span></div>
+        <div class="sitem"><span class="snum">500+</span><span class="slbl">Routes</span></div>
+        <div class="sitem"><span class="snum">4.8★</span><span class="slbl">Rating</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Story -->
+<section class="story-sec">
+  <div class="sec-inner">
+    <div class="sec-tag">📖 Our Story</div>
+    <h2 class="sec-title">Why We Started <span class="accent">One-Way Bhaarat</span></h2>
+    <div class="story-grid">
+      <div class="story-text">
+        <p>India is a country of incredible distances. Millions travel between cities, towns and villages every day for work, family and pilgrimage. Yet outstation cab travelers faced a persistent problem — <strong>being charged for the driver's return trip even on one-way journeys.</strong></p>
+        <p>We founded One-Way Bhaarat to fix this. Our mission: connect passengers with verified drivers for one-way intercity trips at <strong>fair, transparent prices with no hidden charges</strong> and no forced round-trip billing.</p>
+        <p>Starting from Ghaziabad, UP, we've grown one satisfied customer at a time to serve <strong>50,000+ happy riders across 20,000+ locations</strong>. From metros to the smallest villages on Google Maps — if you need to go there, we'll get you there.</p>
+        <p>We are <strong>proudly Indian, proudly Make in India</strong>, committed to serving every corner of this great nation with dignity, safety and affordability.</p>
+      </div>
+      <div class="story-visual">
+        <span class="story-emoji">🚕</span>
+        <div class="story-quote">"India's Trusted One-Way Taxi Service"</div>
+        <div class="story-quote-sub">— One-Way Bhaarat Pvt. Ltd., Ghaziabad, UP</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Values -->
+<section class="values-sec">
+  <div class="sec-inner">
+    <div class="sec-tag">🎯 Our Values</div>
+    <h2 class="sec-title">What Drives <span class="accent">Everything We Do</span></h2>
+    <p class="sec-sub">Six core values that guide every decision — from hiring drivers to building features to resolving complaints.</p>
+    <div class="values-grid">
+      <div class="vcard"><div class="vcard-icon">💰</div><div class="vcard-title">Transparent Pricing</div><p class="vcard-text">Every rupee is accounted for before you pay. No surprises, no hidden fees. What you see is exactly what you pay.</p></div>
+      <div class="vcard"><div class="vcard-icon">🛡️</div><div class="vcard-title">Safety First</div><p class="vcard-text">Background-verified drivers, GPS tracking, and 24×7 monitoring ensure every passenger reaches their destination safely.</p></div>
+      <div class="vcard"><div class="vcard-icon">🇮🇳</div><div class="vcard-title">Pan-India Reach</div><p class="vcard-text">From the Himalayas to Kanyakumari — we serve every reachable location across all 28 Indian states.</p></div>
+      <div class="vcard"><div class="vcard-icon">⚡</div><div class="vcard-title">Instant Confirmation</div><p class="vcard-text">Book in under 2 minutes. Receive instant confirmation via SMS, WhatsApp, and email within seconds of payment.</p></div>
+      <div class="vcard"><div class="vcard-icon">🤝</div><div class="vcard-title">Driver Respect</div><p class="vcard-text">We treat our driver partners with dignity and fair earnings. Happy drivers deliver exceptional service to passengers.</p></div>
+      <div class="vcard"><div class="vcard-icon">📞</div><div class="vcard-title">Always Available</div><p class="vcard-text">Customer support available 24 hours a day, 365 days a year. Real humans who genuinely care about your journey.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- Timeline -->
+<section class="timeline-sec">
+  <div class="sec-inner">
+    <div class="sec-tag">🏆 Milestones</div>
+    <h2 class="sec-title">Our <span class="accent">Journey So Far</span></h2>
+    <p class="sec-sub">From a small startup in Ghaziabad to India's fastest-growing one-way cab platform.</p>
+    <div class="timeline">
+      <div class="mile"><div class="mile-year">2022 — Founded</div><div class="mile-title">One-Way Bhaarat Launched</div><div class="mile-text">Started operations from Ghaziabad, UP with 10 partner drivers and 5 routes in the NCR region.</div></div>
+      <div class="mile"><div class="mile-year">2022 — Growth</div><div class="mile-title">First 500 Completed Trips</div><div class="mile-text">Reached 500 trips milestone in 6 months. Expanded to the Delhi–Agra–Jaipur triangle.</div></div>
+      <div class="mile"><div class="mile-year">2023 — Expansion</div><div class="mile-title">Pan-India Coverage Begins</div><div class="mile-text">Expanded to Mumbai, Bangalore, Chennai and Hyderabad. Fleet grew to 50+ driver partners.</div></div>
+      <div class="mile"><div class="mile-year">2023 — Technology</div><div class="mile-title">Digital Platform Launch</div><div class="mile-text">Online booking website with OTP verification, fare calculator, and payment gateway integration. 5,000+ customers served.</div></div>
+      <div class="mile"><div class="mile-year">2024 — Milestone</div><div class="mile-title">50,000+ Happy Riders</div><div class="mile-text">Crossed 50,000 completed trips. Now serving 20,000+ locations across all Indian states. 4.8★ average rating.</div></div>
+      <div class="mile"><div class="mile-year">2024 — Future</div><div class="mile-title">AI & Corporate Expansion</div><div class="mile-text">Launching AI-powered fare prediction, corporate billing dashboards, and driver mobile app. Target: 1 Lakh trips by year end.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- Trust Signals -->
+<section class="trust-sec">
+  <div class="sec-inner">
+    <div class="sec-tag">🌟 Trust Signals</div>
+    <h2 class="sec-title">Built on <span class="accent">Trust & Transparency</span></h2>
+    <div class="trust-grid">
+      <div class="tcard"><div class="tcard-icon">🏛️</div><div class="tcard-title">Registered Company</div><div class="tcard-sub">One-Way Bhaarat Pvt. Ltd.<br>CIN Registered, India</div></div>
+      <div class="tcard"><div class="tcard-icon">🔒</div><div class="tcard-title">Secure Payments</div><div class="tcard-sub">PCI-DSS Compliant<br>256-bit SSL Encrypted</div></div>
+      <div class="tcard"><div class="tcard-icon">✅</div><div class="tcard-title">Verified Drivers</div><div class="tcard-sub">Police Verified<br>License Checked</div></div>
+      <div class="tcard"><div class="tcard-icon">📍</div><div class="tcard-title">GPS Tracking</div><div class="tcard-sub">Real-time every trip<br>Share with family</div></div>
+      <div class="tcard"><div class="tcard-icon">⭐</div><div class="tcard-title">4.8★ Rating</div><div class="tcard-sub">500+ verified reviews<br>Consistently rated</div></div>
+      <div class="tcard"><div class="tcard-icon">🧾</div><div class="tcard-title">GST Invoices</div><div class="tcard-sub">Valid tax invoices<br>Every booking</div></div>
+    </div>
+  </div>
+</section>
+
+<div class="cta-sec">
+  <h2>Ready to Travel Across <span class="accent">Bhaarat?</span></h2>
+  <p>Join 50,000+ happy riders. Book your premium one-way cab today.</p>
+  <a href="booking.html" class="btn-p">🚕 Book Your Cab Now →</a>
+</div>
+
+<footer><p>© 2024 One-Way Bhaarat Private Limited &nbsp;|&nbsp; <a href="index.html">Home</a> &nbsp;|&nbsp; <a href="booking.html">Book Now</a> &nbsp;|&nbsp; <a href="contact.html">Contact</a> &nbsp;|&nbsp; <a href="faq.html">FAQ</a></p><p style="margin-top:6px;font-size:12px">Shop No. 7, Radha Kunj 2, Ghaziabad, UP – 203207 &nbsp;|&nbsp; +91-93557 57579</p></footer>
+</body>
+</html>

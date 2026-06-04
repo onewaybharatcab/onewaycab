@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Our Fleet | One-Way Bhaarat – Premium Cab Vehicles</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--sf:#F47B00;--sf2:#FF9D2F;--sf3:#A85200;--sfg:rgba(244,123,0,0.28);--gd:#E8BD3A;--gd2:#F5D060;--gr:#1DAD10;--nv:#040C1E;--nv2:#061428;--nv3:#0B1F3A;--nv4:#1C3E6A;--wh:#fff;--mu:rgba(255,255,255,0.5);--fa:rgba(255,255,255,0.07);--r6:6px;--r12:12px;--r20:20px;--r28:28px;--rp:100px;--sh:0 4px 24px rgba(4,12,30,0.5)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Nunito',sans-serif;background:var(--nv);color:var(--wh);-webkit-font-smoothing:antialiased}
+header{background:rgba(4,12,30,0.95);backdrop-filter:blur(20px);border-bottom:1px solid rgba(244,123,0,0.15);padding:0 5%;display:flex;align-items:center;justify-content:space-between;height:64px;position:sticky;top:0;z-index:100}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+.lem{width:38px;height:38px;background:linear-gradient(135deg,var(--sf),var(--sf3));border-radius:var(--r12);display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 4px 16px var(--sfg)}
+.ln{font-family:'Cinzel',serif;font-size:15px;font-weight:700;background:linear-gradient(135deg,var(--sf2),var(--gd));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.ls{font-size:9px;color:rgba(255,255,255,0.3);letter-spacing:2px;text-transform:uppercase;display:block;margin-top:1px}
+nav{display:flex;align-items:center;gap:4px}
+nav a{color:rgba(255,255,255,0.6);text-decoration:none;font-size:13px;font-weight:600;padding:7px 14px;border-radius:var(--r6);transition:all .2s}
+nav a:hover{color:var(--wh);background:rgba(244,123,0,0.1)}
+.ncta{background:linear-gradient(135deg,var(--sf),var(--sf3))!important;color:var(--wh)!important;box-shadow:0 4px 14px var(--sfg)}
+
+.page-hero{background:linear-gradient(160deg,var(--nv2) 0%,var(--nv3) 100%);border-bottom:1px solid rgba(244,123,0,0.12);padding:72px 5% 64px;position:relative;overflow:hidden}
+.page-hero::before{content:'';position:absolute;top:-100px;right:-100px;width:500px;height:500px;background:radial-gradient(ellipse,rgba(244,123,0,0.08),transparent 70%);pointer-events:none}
+.page-hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--sf),var(--gd),var(--sf),transparent)}
+.ph-inner{max-width:1200px;margin:0 auto;position:relative;z-index:1}
+.ptag{display:inline-flex;align-items:center;gap:8px;background:rgba(244,123,0,0.1);border:1px solid rgba(244,123,0,0.22);border-radius:var(--rp);padding:5px 16px;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--sf2);margin-bottom:14px}
+.ph{font-family:'Cinzel',serif;font-size:clamp(28px,4vw,52px);font-weight:700;color:var(--wh);margin-bottom:12px;line-height:1.15}
+.accent{background:linear-gradient(135deg,var(--sf2),var(--gd2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.ps{font-size:15px;color:rgba(255,255,255,0.5);max-width:560px;line-height:1.75}
+
+.content{max-width:1200px;margin:0 auto;padding:64px 5%}
+.stitle{font-family:'Cinzel',serif;font-size:clamp(22px,2.8vw,36px);font-weight:700;color:var(--wh);margin-bottom:8px}
+.ssub{font-size:14px;color:rgba(255,255,255,0.45);margin-bottom:32px}
+.scenter{text-align:center}
+
+/* Compare Table */
+.table-wrap{background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);border-radius:var(--r28);overflow:hidden;margin-bottom:56px;box-shadow:var(--sh)}
+.ctable{width:100%;border-collapse:collapse;font-size:13px}
+.ctable th{background:rgba(244,123,0,0.1);padding:14px 18px;text-align:left;font-family:'Cinzel',serif;font-size:11px;font-weight:700;color:rgba(255,255,255,0.6);letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,0.06)}
+.ctable td{padding:12px 18px;border-bottom:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.65);vertical-align:middle}
+.ctable tr:last-child td{border-bottom:none}
+.ctable tr:hover td{background:rgba(244,123,0,0.03)}
+.ctable .feat{font-weight:700;color:rgba(255,255,255,0.8)}
+.ck{color:var(--gr);font-size:16px;font-weight:700}
+.cx{color:rgba(255,255,255,0.2);font-size:16px}
+.rate-pill{background:rgba(244,123,0,0.15);border:1px solid rgba(244,123,0,0.25);color:var(--sf2);padding:4px 12px;border-radius:var(--rp);font-size:12px;font-weight:700;display:inline-block}
+
+/* Fleet Detail Cards */
+.fleet-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:56px}
+.fcard{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:var(--r28);overflow:hidden;transition:all .35s;position:relative}
+.fcard:hover{border-color:rgba(244,123,0,0.35);transform:translateY(-8px);box-shadow:0 24px 64px rgba(4,12,30,0.6),0 0 0 1px rgba(244,123,0,0.12)}
+.fbadge{position:absolute;top:14px;right:14px;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:4px 11px;border-radius:var(--rp)}
+.b-pop{background:rgba(232,189,58,0.15);color:var(--gd);border:1px solid rgba(232,189,58,0.25)}
+.b-fam{background:rgba(29,173,16,0.12);color:var(--gr);border:1px solid rgba(29,173,16,0.22)}
+.b-pre{background:rgba(244,123,0,0.12);color:var(--sf2);border:1px solid rgba(244,123,0,0.22)}
+.b-bud{background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.45);border:1px solid rgba(255,255,255,0.1)}
+.fimg{height:180px;display:flex;align-items:center;justify-content:center;font-size:90px;position:relative}
+.fbody{padding:24px 26px}
+.fname{font-family:'Cinzel',serif;font-size:19px;font-weight:700;color:var(--wh);margin-bottom:4px}
+.fmodels{font-size:12px;color:rgba(255,255,255,0.3);margin-bottom:16px}
+.fspecs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:18px}
+.fspec{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:var(--r12);padding:10px 12px}
+.fsl{font-size:9px;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:.5px}
+.fsv{font-size:13px;font-weight:700;color:var(--wh);margin-top:3px}
+.frates{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px}
+.frate{border-radius:var(--r12);padding:14px;text-align:center}
+.frate-ow{background:rgba(244,123,0,0.09);border:1px solid rgba(244,123,0,0.18)}
+.frate-rt{background:rgba(28,62,106,0.25);border:1px solid rgba(28,62,106,0.4)}
+.frl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+.frate-ow .frl{color:var(--sf2)}
+.frate-rt .frl{color:rgba(255,255,255,0.4)}
+.fra{font-family:'Cinzel',serif;font-size:26px;font-weight:700}
+.frate-ow .fra{color:var(--sf2)}
+.frate-rt .fra{color:rgba(255,255,255,0.7)}
+.fru{font-size:10px;color:rgba(255,255,255,0.25)}
+.fbtn{width:100%;padding:13px;border-radius:var(--r12);background:rgba(244,123,0,0.08);border:1px solid rgba(244,123,0,0.2);color:var(--sf2);font-size:13px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;transition:all .25s;letter-spacing:.4px}
+.fbtn:hover{background:linear-gradient(135deg,var(--sf),var(--sf3));color:var(--wh);border-color:transparent;box-shadow:0 8px 24px var(--sfg)}
+
+/* FAQ */
+.faq-section{margin-bottom:48px}
+.faq-head{font-family:'Cinzel',serif;font-size:24px;color:var(--wh);margin-bottom:20px;display:flex;align-items:center;gap:12px}
+.faq-head::after{content:'';flex:1;height:1px;background:rgba(244,123,0,0.2)}
+.faqs{display:flex;flex-direction:column;gap:10px}
+.faq{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:var(--r12);overflow:hidden;transition:border-color .25s}
+.faq.open{border-color:rgba(244,123,0,0.3)}
+.faq-q{padding:16px 20px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.faq-qt{font-size:14px;font-weight:700;color:var(--wh);flex:1;line-height:1.4}
+.faq-ic{width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:center;font-size:16px;color:rgba(255,255,255,0.4);transition:all .3s;flex-shrink:0}
+.faq.open .faq-ic{background:var(--sf);color:var(--wh);transform:rotate(45deg)}
+.faq-a{padding:0 20px;max-height:0;overflow:hidden;transition:max-height .35s ease,padding .2s;font-size:13px;color:rgba(255,255,255,0.5);line-height:1.75}
+.faq.open .faq-a{max-height:300px;padding:0 20px 18px}
+
+/* CTA */
+.cta-strip{background:linear-gradient(135deg,rgba(244,123,0,0.12),rgba(201,162,39,0.06));border:1px solid rgba(244,123,0,0.2);border-radius:var(--r28);padding:40px;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;margin-bottom:56px}
+.cta-text h2{font-family:'Cinzel',serif;font-size:22px;color:var(--wh);margin-bottom:6px}
+.cta-text p{font-size:13px;color:rgba(255,255,255,0.45)}
+.btn-cta{background:linear-gradient(135deg,var(--sf),var(--sf3));color:var(--wh);padding:13px 28px;border-radius:var(--r12);font-size:14px;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:all .25s;box-shadow:0 8px 24px var(--sfg)}
+.btn-cta:hover{transform:translateY(-2px);box-shadow:0 14px 36px var(--sfg)}
+
+footer{background:var(--nv2);border-top:1px solid rgba(244,123,0,0.1);padding:32px 5%;text-align:center;font-size:13px;color:rgba(255,255,255,0.3)}
+footer a{color:var(--sf2);text-decoration:none}
+footer a:hover{color:var(--gd)}
+
+@media(max-width:800px){.fleet-grid{grid-template-columns:1fr}nav{display:none}}
+@media(max-width:600px){.fspecs,.frates{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <a href="index.html" class="logo">
+    <div class="lem">🚕</div>
+    <div><span class="ln">One-Way Bhaarat</span><span class="ls">Pvt. Ltd.</span></div>
+  </a>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="routes.html">Routes</a>
+    <a href="fleet.html">Fleet</a>
+    <a href="contact.html">Contact</a>
+    <a href="booking.html" class="ncta">Book Now</a>
+  </nav>
+</header>
+
+<div class="page-hero">
+  <div class="ph-inner">
+    <div class="ptag">🚗 Our Fleet</div>
+    <h1 class="ph">Premium Cabs for Every <span class="accent">Indian Journey</span></h1>
+    <p class="ps">Well-maintained, air-conditioned, GPS-equipped cabs with background-verified professional drivers. Every vehicle inspected, insured, and ready for any distance across India.</p>
+  </div>
+</div>
+
+<div class="content">
+  <!-- Comparison -->
+  <div class="scenter" style="margin-bottom:32px">
+    <div class="stitle">Quick <span class="accent">Comparison</span></div>
+    <div class="ssub">Find the right vehicle for your group size and budget at a glance</div>
+  </div>
+  <div class="table-wrap">
+    <div style="overflow-x:auto">
+      <table class="ctable">
+        <thead><tr>
+          <th>Feature</th><th>🚙 Hatchback</th><th>🚗 Sedan</th><th>🚐 Ertiga</th><th>🚌 Innova Crysta</th>
+        </tr></thead>
+        <tbody>
+          <tr><td class="feat">Best For</td><td>Solo / Couple</td><td>Family of 4</td><td>Group of 6</td><td>Large Group / Premium</td></tr>
+          <tr><td class="feat">Passengers</td><td>Up to 4</td><td>Up to 4</td><td>Up to 6</td><td>Up to 7</td></tr>
+          <tr><td class="feat">Luggage</td><td>2 bags</td><td>3 bags</td><td>4 bags</td><td>5 large bags</td></tr>
+          <tr><td class="feat">Air Conditioning</td><td><span class="ck">✓</span></td><td><span class="ck">✓</span></td><td><span class="ck">✓</span></td><td><span class="ck">✓ Dual</span></td></tr>
+          <tr><td class="feat">GPS Tracking</td><td><span class="ck">✓</span></td><td><span class="ck">✓</span></td><td><span class="ck">✓</span></td><td><span class="ck">✓</span></td></tr>
+          <tr><td class="feat">USB Charging</td><td><span class="cx">✗</span></td><td><span class="ck">✓</span></td><td><span class="ck">✓</span></td><td><span class="ck">✓</span></td></tr>
+          <tr><td class="feat">Fuel Type</td><td>Petrol</td><td>CNG / Petrol</td><td>CNG / Petrol</td><td>Diesel</td></tr>
+          <tr><td class="feat">One Way Rate</td><td><span class="rate-pill">₹13/km</span></td><td><span class="rate-pill">₹16/km</span></td><td><span class="rate-pill">₹21/km</span></td><td><span class="rate-pill">₹30/km</span></td></tr>
+          <tr><td class="feat">Round Trip Rate</td><td><span class="rate-pill">₹10/km</span></td><td><span class="rate-pill">₹11/km</span></td><td><span class="rate-pill">₹15/km</span></td><td><span class="rate-pill">₹20/km</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Detail Cards -->
+  <div class="scenter" style="margin-bottom:32px">
+    <div class="stitle">Vehicle <span class="accent">Details</span></div>
+    <div class="ssub">Everything you need to know about each vehicle type</div>
+  </div>
+  <div class="fleet-grid">
+    <div class="fcard">
+      <div class="fbadge b-bud">Budget</div>
+      <div class="fimg" style="background:linear-gradient(135deg,rgba(28,62,106,0.5),rgba(4,12,30,0.9))">🚙</div>
+      <div class="fbody">
+        <div class="fname">Hatchback</div>
+        <div class="fmodels">Maruti WagonR · Hyundai i10 · Tata Tiago · Maruti Alto</div>
+        <div class="fspecs">
+          <div class="fspec"><div class="fsl">Seating</div><div class="fsv">4 Passengers</div></div>
+          <div class="fspec"><div class="fsl">Luggage</div><div class="fsv">2 Medium Bags</div></div>
+          <div class="fspec"><div class="fsl">AC</div><div class="fsv">✅ Yes</div></div>
+          <div class="fspec"><div class="fsl">Fuel</div><div class="fsv">Petrol</div></div>
+        </div>
+        <div class="frates">
+          <div class="frate frate-ow"><div class="frl">One Way</div><div class="fra">₹13</div><div class="fru">per km</div></div>
+          <div class="frate frate-rt"><div class="frl">Round Trip</div><div class="fra">₹10</div><div class="fru">per km</div></div>
+        </div>
+        <button class="fbtn" onclick="window.location='booking.html'">Book Hatchback →</button>
+      </div>
+    </div>
+    <div class="fcard">
+      <div class="fbadge b-pop">Most Popular</div>
+      <div class="fimg" style="background:linear-gradient(135deg,rgba(120,70,0,0.4),rgba(4,12,30,0.9))">🚗</div>
+      <div class="fbody">
+        <div class="fname">Sedan</div>
+        <div class="fmodels">Swift Dzire · Honda Amaze · Ford Aspire · Hyundai Verna</div>
+        <div class="fspecs">
+          <div class="fspec"><div class="fsl">Seating</div><div class="fsv">4 Passengers</div></div>
+          <div class="fspec"><div class="fsl">Luggage</div><div class="fsv">3 Medium Bags</div></div>
+          <div class="fspec"><div class="fsl">AC</div><div class="fsv">✅ Yes</div></div>
+          <div class="fspec"><div class="fsl">Fuel</div><div class="fsv">CNG / Petrol</div></div>
+        </div>
+        <div class="frates">
+          <div class="frate frate-ow"><div class="frl">One Way</div><div class="fra">₹16</div><div class="fru">per km</div></div>
+          <div class="frate frate-rt"><div class="frl">Round Trip</div><div class="fra">₹11</div><div class="fru">per km</div></div>
+        </div>
+        <button class="fbtn" onclick="window.location='booking.html'">Book Sedan →</button>
+      </div>
+    </div>
+    <div class="fcard">
+      <div class="fbadge b-fam">Family Choice</div>
+      <div class="fimg" style="background:linear-gradient(135deg,rgba(0,70,30,0.4),rgba(4,12,30,0.9))">🚐</div>
+      <div class="fbody">
+        <div class="fname">Maruti Ertiga</div>
+        <div class="fmodels">Maruti Suzuki Ertiga 6-Seater (2022 onwards)</div>
+        <div class="fspecs">
+          <div class="fspec"><div class="fsl">Seating</div><div class="fsv">6 Passengers</div></div>
+          <div class="fspec"><div class="fsl">Luggage</div><div class="fsv">4 Medium Bags</div></div>
+          <div class="fspec"><div class="fsl">AC</div><div class="fsv">✅ Yes</div></div>
+          <div class="fspec"><div class="fsl">Fuel</div><div class="fsv">CNG / Petrol</div></div>
+        </div>
+        <div class="frates">
+          <div class="frate frate-ow"><div class="frl">One Way</div><div class="fra">₹21</div><div class="fru">per km</div></div>
+          <div class="frate frate-rt"><div class="frl">Round Trip</div><div class="fra">₹15</div><div class="fru">per km</div></div>
+        </div>
+        <button class="fbtn" onclick="window.location='booking.html'">Book Ertiga →</button>
+      </div>
+    </div>
+    <div class="fcard">
+      <div class="fbadge b-pre">Premium</div>
+      <div class="fimg" style="background:linear-gradient(135deg,rgba(80,50,0,0.5),rgba(4,12,30,0.9))">🚌</div>
+      <div class="fbody">
+        <div class="fname">Toyota Innova Crysta</div>
+        <div class="fmodels">Toyota Innova Crysta 7-Seater (2020 onwards)</div>
+        <div class="fspecs">
+          <div class="fspec"><div class="fsl">Seating</div><div class="fsv">7 Passengers</div></div>
+          <div class="fspec"><div class="fsl">Luggage</div><div class="fsv">5 Large Bags</div></div>
+          <div class="fspec"><div class="fsl">AC</div><div class="fsv">✅ Dual Zone</div></div>
+          <div class="fspec"><div class="fsl">Fuel</div><div class="fsv">Diesel</div></div>
+        </div>
+        <div class="frates">
+          <div class="frate frate-ow"><div class="frl">One Way</div><div class="fra">₹30</div><div class="fru">per km</div></div>
+          <div class="frate frate-rt"><div class="frl">Round Trip</div><div class="fra">₹20</div><div class="fru">per km</div></div>
+        </div>
+        <button class="fbtn" onclick="window.location='booking.html'">Book Innova →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CTA Strip -->
+  <div class="cta-strip">
+    <div class="cta-text">
+      <h2>Not Sure Which Cab to Choose?</h2>
+      <p>Our travel experts are available 24×7 to help you pick the perfect vehicle.</p>
+    </div>
+    <a href="tel:+919355757579" class="btn-cta">📞 Call +91-93557 57579</a>
+  </div>
+
+  <!-- FAQ -->
+  <div class="faq-section">
+    <div class="faq-head">Frequently Asked Questions</div>
+    <div class="faqs">
+      <div class="faq" onclick="this.classList.toggle('open')"><div class="faq-q"><div class="faq-qt">Are all cabs air-conditioned?</div><div class="faq-ic">+</div></div><div class="faq-a">Yes — every vehicle in our fleet is fully air-conditioned. We do not offer non-AC options. Vehicle AC is serviced regularly and checked before every outstation trip.</div></div>
+      <div class="faq" onclick="this.classList.toggle('open')"><div class="faq-q"><div class="faq-qt">What is the difference between One Way and Round Trip rates?</div><div class="faq-ic">+</div></div><div class="faq-a">One-way rates are slightly higher because the driver must return empty. Round trip rates are lower as the return journey is accounted for. Round trip bookings include both the onward and return journey.</div></div>
+      <div class="faq" onclick="this.classList.toggle('open')"><div class="faq-q"><div class="faq-qt">Can I request a specific car model?</div><div class="faq-ic">+</div></div><div class="faq-a">You can choose the vehicle type (Hatchback, Sedan, Ertiga, Innova Crysta) but not a specific model number. We assign the best available vehicle of that type from our verified fleet based on your pickup location and trip date.</div></div>
+      <div class="faq" onclick="this.classList.toggle('open')"><div class="faq-q"><div class="faq-qt">Are drivers background verified?</div><div class="faq-ic">+</div></div><div class="faq-a">Absolutely. All drivers go through police background checks, driving license verification, vehicle fitness checks, and customer service training before being onboarded. Re-verification happens every 6 months.</div></div>
+      <div class="faq" onclick="this.classList.toggle('open')"><div class="faq-q"><div class="faq-qt">Is passenger insurance included?</div><div class="faq-ic">+</div></div><div class="faq-a">Yes. All vehicles carry comprehensive insurance with valid fitness certificates. Passenger insurance is included with every booking at no additional cost to you.</div></div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <p>© 2024 One-Way Bhaarat Private Limited &nbsp;|&nbsp; <a href="index.html">Home</a> &nbsp;|&nbsp; <a href="booking.html">Book Now</a> &nbsp;|&nbsp; <a href="contact.html">Contact</a></p>
+  <p style="margin-top:6px;font-size:12px">Shop No. 7, Radha Kunj 2, Ghaziabad, UP – 203207 &nbsp;|&nbsp; +91-93557 57579</p>
+</footer>
+</body>
+</html>
