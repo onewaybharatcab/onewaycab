@@ -8,6 +8,9 @@
 <meta property="og:title" content="One-Way Bhaarat – India's Premium One-Way Taxi Service">
 <meta property="og:description" content="Book premium one-way cabs across India. Starting ₹13/km. Verified drivers, transparent fares, 20,000+ locations.">
 <title>One-Way Bhaarat Pvt. Ltd. | India's Premium One-Way Taxi Service</title>
+<!-- ═══ Google Places API — Replace YOUR_GOOGLE_API_KEY below ═══ -->
+<script src="https://maps.googleapis.com/maps/api/js?key=__GOOGLE_PLACES_API_KEY__&libraries=places&callback=initAutocomplete" async defer></script>
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Nunito:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
@@ -1027,6 +1030,82 @@ footer {
   .calc-row { grid-template-columns: 1fr; }
   section { padding: 60px 4%; }
 }
+
+/* ═══════════════════════ GOOGLE PLACES AUTOCOMPLETE ═══════════════════════ */
+/* Override Google's default dropdown to match dark theme */
+.pac-container {
+  background: #0B1F3A !important;
+  border: 1px solid rgba(244,123,0,0.35) !important;
+  border-radius: 12px !important;
+  margin-top: 4px !important;
+  box-shadow: 0 16px 48px rgba(4,12,30,0.8) !important;
+  font-family: 'Nunito', sans-serif !important;
+  overflow: hidden !important;
+  z-index: 9999 !important;
+}
+.pac-item {
+  padding: 10px 14px !important;
+  cursor: pointer !important;
+  border-top: 1px solid rgba(255,255,255,0.05) !important;
+  color: rgba(255,255,255,0.75) !important;
+  font-size: 13px !important;
+  font-family: 'Nunito', sans-serif !important;
+  line-height: 1.4 !important;
+  transition: background 0.15s !important;
+}
+.pac-item:first-child { border-top: none !important; }
+.pac-item:hover, .pac-item-selected {
+  background: rgba(244,123,0,0.12) !important;
+}
+.pac-item-query {
+  color: #FF9D2F !important;
+  font-weight: 700 !important;
+  font-size: 14px !important;
+  font-family: 'Nunito', sans-serif !important;
+}
+.pac-icon {
+  filter: invert(60%) sepia(80%) saturate(400%) hue-rotate(10deg) !important;
+  margin-top: 2px !important;
+}
+.pac-logo::after { display: none !important; }
+.pac-container::after { display: none !important; }
+/* Inline suggestion fallback list */
+.autocomplete-list {
+  position: absolute; left: 0; right: 0; top: calc(100% + 4px);
+  background: #0B1F3A;
+  border: 1px solid rgba(244,123,0,0.35);
+  border-radius: 12px;
+  z-index: 9999;
+  overflow: hidden;
+  box-shadow: 0 16px 48px rgba(4,12,30,0.8);
+  max-height: 260px; overflow-y: auto;
+}
+.autocomplete-list:empty { display: none; }
+.autocomplete-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 16px;
+  cursor: pointer;
+  border-top: 1px solid rgba(255,255,255,0.05);
+  transition: background 0.15s;
+}
+.autocomplete-item:first-child { border-top: none; }
+.autocomplete-item:hover { background: rgba(244,123,0,0.1); }
+.autocomplete-item .ac-icon { font-size: 15px; flex-shrink: 0; opacity: 0.7; }
+.autocomplete-item .ac-main { font-size: 13px; font-weight: 700; color: #FF9D2F; }
+.autocomplete-item .ac-sub  { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 1px; }
+.api-key-banner {
+  background: rgba(244,123,0,0.08);
+  border: 1px solid rgba(244,123,0,0.3);
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-bottom: 14px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.6);
+  display: flex; align-items: center; gap: 8px;
+}
+.api-key-banner strong { color: #FF9D2F; }
+.api-key-banner a { color: #FF9D2F; text-decoration: underline; }
+
 </style>
 </head>
 <body>
@@ -1230,6 +1309,11 @@ footer {
       </div>
 
       <div class="widget-body">
+        <!-- API key missing banner (hidden when API loads) -->
+        <div class="api-key-banner" id="api-key-banner" style="display:none">
+          <span>⚠️</span>
+          <span><strong>Setup needed:</strong> Add your <a href="https://console.cloud.google.com" target="_blank">Google API key</a> to enable location autocomplete.</span>
+        </div>
         <div class="trip-tabs">
           <button class="trip-tab active" onclick="setTrip(this,'oneway')">↗ One Way</button>
           <button class="trip-tab" onclick="setTrip(this,'roundtrip')">🔄 Round Trip</button>
@@ -1237,19 +1321,18 @@ footer {
         </div>
 
         <div class="location-connector">
-          <div class="connector-line"></div>
           <div class="field-group">
             <label class="field-label">Pickup Location</label>
             <div class="field-wrap">
               <div class="field-icon">📍</div>
-              <input class="field-input" type="text" id="pickup" placeholder="City, railway stn. or airport">
+              <input class="field-input" type="text" id="pickup" placeholder="City, railway stn. or airport"><div id="pickup-list" class="autocomplete-list"></div></div>
             </div>
           </div>
           <div class="field-group" style="margin-bottom:0">
             <label class="field-label">Drop Location</label>
             <div class="field-wrap">
               <div class="field-icon">🏁</div>
-              <input class="field-input" type="text" id="drop" placeholder="Where are you headed?">
+              <input class="field-input" type="text" id="drop" placeholder="Where are you headed?"><div id="drop-list" class="autocomplete-list"></div></div>
               <button class="swap-btn" onclick="swapLocs()" title="Swap">⇅</button>
             </div>
           </div>
@@ -1683,8 +1766,32 @@ function swapLocs() {
 function searchCabs() {
   const p = document.getElementById('pickup').value.trim();
   const d = document.getElementById('drop').value.trim();
-  if (!p || !d) { alert('Please enter both pickup and drop locations.'); return; }
-  window.location = `booking.html?from=${encodeURIComponent(p)}&to=${encodeURIComponent(d)}`;
+  const pickupInput = document.getElementById('pickup');
+  const dropInput   = document.getElementById('drop');
+  pickupInput.style.borderColor = '';
+  dropInput.style.borderColor   = '';
+  let hasError = false;
+  if (!p) { pickupInput.style.borderColor = '#e53e3e'; pickupInput.focus(); hasError = true; }
+  if (!d) { dropInput.style.borderColor = '#e53e3e'; if (!hasError) dropInput.focus(); hasError = true; }
+  if (hasError) {
+    let msg = document.getElementById('search-error-msg');
+    if (!msg) { msg = document.createElement('p'); msg.id = 'search-error-msg'; msg.style.cssText = 'color:#fc8181;font-size:12px;text-align:center;margin-top:8px;font-weight:600;'; document.querySelector('.search-btn').insertAdjacentElement('afterend', msg); }
+    msg.textContent = !p && !d ? 'Please enter both pickup and drop locations.' : !p ? 'Please enter a pickup location.' : 'Please enter a drop location.';
+    return;
+  }
+  const msg = document.getElementById('search-error-msg');
+  if (msg) msg.remove();
+  // Build URL with coordinates if available from Places API
+  let url = 'booking.html?from=' + encodeURIComponent(p) + '&to=' + encodeURIComponent(d);
+  if (pickupPlaceData && pickupPlaceData.lat) {
+    url += '&fromLat=' + pickupPlaceData.lat + '&fromLng=' + pickupPlaceData.lng;
+    url += '&fromId=' + encodeURIComponent(pickupPlaceData.place_id || '');
+  }
+  if (dropPlaceData && dropPlaceData.lat) {
+    url += '&toLat=' + dropPlaceData.lat + '&toLng=' + dropPlaceData.lng;
+    url += '&toId=' + encodeURIComponent(dropPlaceData.place_id || '');
+  }
+  window.location = url;
 }
 
 // ── Fare Calc ──────────────────────────────────────────
@@ -1755,6 +1862,108 @@ const ro = new IntersectionObserver(entries => {
   entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
 }, { threshold: 0.08 });
 document.querySelectorAll('.reveal').forEach(el => ro.observe(el));
+
+// ══════════════════════════════════════════════════════════════
+//  GOOGLE PLACES AUTOCOMPLETE SETUP
+//  Replace YOUR_GOOGLE_API_KEY in the <script src> tag above
+//  with your real key from https://console.cloud.google.com
+//  Enable: "Places API" and "Maps JavaScript API"
+//  Restrict key to your domain for security
+// ══════════════════════════════════════════════════════════════
+
+let pickupAutocomplete, dropAutocomplete;
+let pickupPlaceData = {}, dropPlaceData = {};
+
+// ── Session token for billing efficiency (group autocomplete + detail calls) ──
+function newSessionToken() {
+  return Math.random().toString(36).substring(2) + Date.now().toString(36);
+}
+let sessionToken = newSessionToken();
+
+// ── Debounce helper ──────────────────────────────────────────────────────────
+function debounce(fn, delay) {
+  let t; return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), delay); };
+}
+
+// ── Attach autocomplete to an input ─────────────────────────────────────────
+function attachAutocomplete(inputId, listId, onSelect) {
+  const input = document.getElementById(inputId);
+  const list  = document.getElementById(listId);
+
+  const fetchSuggestions = debounce(async (query) => {
+    if (query.length < 2) { list.innerHTML = ''; return; }
+    try {
+      const res  = await fetch(`/api/places?input=${encodeURIComponent(query)}&sessiontoken=${sessionToken}`);
+      const data = await res.json();
+      renderList(list, data.predictions || [], onSelect, input);
+    } catch(e) { console.warn('Autocomplete fetch failed', e); }
+  }, 280);
+
+  input.addEventListener('input', () => fetchSuggestions(input.value.trim()));
+
+  // Close list on outside click
+  document.addEventListener('click', (e) => {
+    if (!input.contains(e.target) && !list.contains(e.target)) list.innerHTML = '';
+  });
+}
+
+// ── Render dropdown list ─────────────────────────────────────────────────────
+function renderList(list, predictions, onSelect, input) {
+  list.innerHTML = '';
+  predictions.forEach(p => {
+    const item = document.createElement('div');
+    item.className = 'autocomplete-item';
+    item.innerHTML = `
+      <span class="ac-icon">📍</span>
+      <span>
+        <div class="ac-main">${p.main_text || p.description}</div>
+        <div class="ac-sub">${p.secondary_text || ''}</div>
+      </span>`;
+    item.addEventListener('mousedown', async (e) => {
+      e.preventDefault();
+      input.value = p.main_text || p.description;
+      list.innerHTML = '';
+      // Fetch details (lat/lng) via proxy
+      try {
+        const res  = await fetch(`/api/place-details?place_id=${p.place_id}&sessiontoken=${sessionToken}`);
+        const detail = await res.json();
+        onSelect({ name: detail.name, address: detail.address, lat: detail.lat, lng: detail.lng, place_id: p.place_id });
+        sessionToken = newSessionToken(); // reset after completed session
+      } catch(e) { console.warn('Place details fetch failed', e); }
+    });
+    list.appendChild(item);
+  });
+}
+
+// ── Init both inputs ─────────────────────────────────────────────────────────
+function initAutocomplete() {
+  attachAutocomplete('pickup', 'pickup-list', (data) => {
+    pickupPlaceData = data;
+    document.getElementById('pickup').style.borderColor = '';
+  });
+  attachAutocomplete('drop', 'drop-list', (data) => {
+    dropPlaceData = data;
+    document.getElementById('drop').style.borderColor = '';
+  });
+
+  // Hide the API key missing banner since worker is serving the page
+  const banner = document.getElementById('api-key-banner');
+  if (banner) banner.style.display = 'none';
+}
+
+// Auto-init (worker page doesn't need Google SDK callback)
+document.addEventListener('DOMContentLoaded', initAutocomplete);
+
+// Fallback: if Google API key is not set, show helpful banner
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    if (typeof google === 'undefined') {
+      const banner = document.getElementById('api-key-banner');
+      if (banner) banner.style.display = 'flex';
+    }
+  }, 2000);
+});
+
 </script>
 </body>
 </html>
