@@ -8,8 +8,19 @@
 <meta property="og:title" content="One-Way Bhaarat – India's Premium One-Way Taxi Service">
 <meta property="og:description" content="Book premium one-way cabs across India. Starting ₹13/km. Verified drivers, transparent fares, 20,000+ locations.">
 <title>One-Way Bhaarat Pvt. Ltd. | India's Premium One-Way Taxi Service</title>
-<!-- ═══ Google Places API — Replace YOUR_GOOGLE_API_KEY below ═══ -->
-<script src="https://maps.googleapis.com/maps/api/js?key=__GOOGLE_PLACES_API_KEY__&libraries=places&callback=initAutocomplete" async defer></script>
+<!-- Google Places SDK: loads on local with real key, skipped on prod (proxy used instead) -->
+<script>
+(function() {
+  var key = '__GOOGLE_PLACES_API_KEY__';
+  // Only load SDK if key is real (local dev) OR we are on local file
+  if (key && key !== '__GOOGLE_PLACES_API_KEY__') {
+    var s = document.createElement('script');
+    s.src = 'https://maps.googleapis.com/maps/api/js?key=' + key + '&libraries=places&callback=initAutocomplete';
+    s.async = true; s.defer = true;
+    document.head.appendChild(s);
+  }
+})();
+</script>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -496,7 +507,7 @@ header.scrolled {
   letter-spacing: 1.5px; text-transform: uppercase;
   color: rgba(255,255,255,0.35); margin-bottom: 6px;
 }
-.field-wrap { position: relative; }
+.field-wrap { position: relative; z-index: 10; }
 .field-icon {
   position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
   font-size: 16px; pointer-events: none; z-index: 1;
@@ -1076,7 +1087,7 @@ footer {
 .pac-container::after { display: none !important; }
 /* Inline suggestion fallback list */
 .autocomplete-list {
-  position: absolute; left: 0; right: 0; top: calc(100% + 4px);
+  position: absolute; left: 0; right: 0; top: calc(100% + 2px);
   background: #0B1F3A;
   border: 1px solid rgba(244,123,0,0.35);
   border-radius: 12px;
@@ -1358,6 +1369,7 @@ input:-webkit-autofill:focus {
             <div class="field-wrap">
               <div class="field-icon">📍</div>
               <input class="field-input" type="text" id="pickup" placeholder="City, railway stn. or airport" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-form-type="other">
+              <div id="pickup-list" class="autocomplete-list"></div>
             </div>
           </div>
           <div class="field-group" style="margin-bottom:0">
@@ -1365,6 +1377,7 @@ input:-webkit-autofill:focus {
             <div class="field-wrap">
               <div class="field-icon">🏁</div>
               <input class="field-input" type="text" id="drop" placeholder="Where are you headed?" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-form-type="other">
+              <div id="drop-list" class="autocomplete-list"></div>
               <button class="swap-btn" onclick="swapLocs()" title="Swap">⇅</button>
             </div>
           </div>
@@ -1896,71 +1909,150 @@ const ro = new IntersectionObserver(entries => {
 document.querySelectorAll('.reveal').forEach(el => ro.observe(el));
 
 // ══════════════════════════════════════════════════════════════
-//  GOOGLE PLACES AUTOCOMPLETE SETUP
-//  Replace YOUR_GOOGLE_API_KEY in the <script src> tag above
-//  with your real key from https://console.cloud.google.com
-//  Enable: "Places API" and "Maps JavaScript API"
-//  Restrict key to your domain for security
+//  LOCATION AUTOCOMPLETE
+//  - On Cloudflare (one-waybharat.com): uses /api/places proxy
+//    so the Google key stays hidden server-side
+//  - Local file / direct open: uses Google SDK directly
+//    (key is injected by Cloudflare worker at runtime)
 // ══════════════════════════════════════════════════════════════
 
-let pickupAutocomplete, dropAutocomplete;
 let pickupPlaceData = {}, dropPlaceData = {};
 
+// ── Detect environment ────────────────────────────────────────
+const IS_LOCAL = location.protocol === 'file:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+
+// ── Session token (groups autocomplete + detail = 1 billing call) ──
+function newSessionToken() {
+  return Math.random().toString(36).slice(2) + Date.now().toString(36);
+}
+let sessionToken = newSessionToken();
+
+// ── Debounce ──────────────────────────────────────────────────
+function debounce(fn, ms) {
+  let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); };
+}
+
+// ── Render dropdown list ──────────────────────────────────────
+function renderDropdown(listEl, predictions, onPick) {
+  listEl.innerHTML = '';
+  if (!predictions.length) return;
+  predictions.forEach(p => {
+    const item = document.createElement('div');
+    item.className = 'autocomplete-item';
+    item.innerHTML = `
+      <span class="ac-icon">📍</span>
+      <span>
+        <div class="ac-main">${p.main_text || p.description}</div>
+        <div class="ac-sub">${p.secondary_text || ''}</div>
+      </span>`;
+    item.addEventListener('mousedown', e => { e.preventDefault(); onPick(p); listEl.innerHTML = ''; });
+    listEl.appendChild(item);
+  });
+}
+
+// ── Fetch via Cloudflare proxy (production) ───────────────────
+async function fetchPredictionsProxy(query) {
+  const res = await fetch(`/api/places?input=${encodeURIComponent(query)}&sessiontoken=${sessionToken}`);
+  const data = await res.json();
+  return data.predictions || [];
+}
+
+async function fetchDetailsProxy(placeId) {
+  const res = await fetch(`/api/place-details?place_id=${placeId}&sessiontoken=${sessionToken}`);
+  return await res.json();
+}
+
+// ── Fetch via Google SDK (local / fallback) ───────────────────
+let _sdkService = null;
+function getSDKService() {
+  if (!_sdkService && window.google) {
+    _sdkService = new google.maps.places.AutocompleteService();
+  }
+  return _sdkService;
+}
+
+function fetchPredictionsSDK(query) {
+  return new Promise((resolve) => {
+    const svc = getSDKService();
+    if (!svc) return resolve([]);
+    svc.getPlacePredictions(
+      { input: query, componentRestrictions: { country: 'in' }, types: ['(cities)'] },
+      (preds, status) => {
+        if (status !== google.maps.places.PlacesServiceStatus.OK || !preds) return resolve([]);
+        resolve(preds.map(p => ({
+          place_id:       p.place_id,
+          description:    p.description,
+          main_text:      p.structured_formatting?.main_text,
+          secondary_text: p.structured_formatting?.secondary_text
+        })));
+      }
+    );
+  });
+}
+
+function fetchDetailsSDK(placeId) {
+  return new Promise((resolve) => {
+    const dummy = document.createElement('div');
+    const svc   = new google.maps.places.PlacesService(dummy);
+    svc.getDetails(
+      { placeId, fields: ['name', 'formatted_address', 'geometry'] },
+      (place, status) => {
+        if (status !== google.maps.places.PlacesServiceStatus.OK) return resolve({});
+        resolve({
+          name:    place.name,
+          address: place.formatted_address,
+          lat:     place.geometry.location.lat(),
+          lng:     place.geometry.location.lng()
+        });
+      }
+    );
+  });
+}
+
+// ── Attach autocomplete to one input ─────────────────────────
+function attachAutocomplete(inputId, listId, onSelect) {
+  const input  = document.getElementById(inputId);
+  const listEl = document.getElementById(listId);
+
+  const suggest = debounce(async (query) => {
+    if (query.length < 2) { listEl.innerHTML = ''; return; }
+    try {
+      const preds = IS_LOCAL
+        ? await fetchPredictionsSDK(query)
+        : await fetchPredictionsProxy(query);
+      renderDropdown(listEl, preds, async (p) => {
+        input.value = p.main_text || p.description;
+        input.style.borderColor = '';
+        try {
+          const detail = IS_LOCAL
+            ? await fetchDetailsSDK(p.place_id)
+            : await fetchDetailsProxy(p.place_id);
+          onSelect({ ...detail, place_id: p.place_id });
+          sessionToken = newSessionToken();
+        } catch(e) { console.warn('Place detail error', e); }
+      });
+    } catch(e) { console.warn('Autocomplete error', e); }
+  }, 280);
+
+  input.addEventListener('input', () => suggest(input.value.trim()));
+  document.addEventListener('click', e => {
+    if (!input.contains(e.target) && !listEl.contains(e.target)) listEl.innerHTML = '';
+  });
+}
+
+// ── Init (called by Google SDK callback OR on DOMContentLoaded) ──
 function initAutocomplete() {
-  const options = {
-    componentRestrictions: { country: 'in' }, // India only
-    fields: ['formatted_address', 'geometry', 'name', 'place_id'],
-    types: ['(cities)'] // cities, airports, railway stations
-  };
-
-  pickupAutocomplete = new google.maps.places.Autocomplete(
-    document.getElementById('pickup'), options
-  );
-  dropAutocomplete = new google.maps.places.Autocomplete(
-    document.getElementById('drop'), options
-  );
-
-  pickupAutocomplete.addListener('place_changed', () => {
-    const place = pickupAutocomplete.getPlace();
-    if (place.geometry) {
-      pickupPlaceData = {
-        name: place.name,
-        address: place.formatted_address,
-        lat: place.geometry.location.lat(),
-        lng: place.geometry.location.lng(),
-        place_id: place.place_id
-      };
-      document.getElementById('pickup').style.borderColor = '';
-    }
-  });
-
-  dropAutocomplete.addListener('place_changed', () => {
-    const place = dropAutocomplete.getPlace();
-    if (place.geometry) {
-      dropPlaceData = {
-        name: place.name,
-        address: place.formatted_address,
-        lat: place.geometry.location.lat(),
-        lng: place.geometry.location.lng(),
-        place_id: place.place_id
-      };
-      document.getElementById('drop').style.borderColor = '';
-    }
-  });
-
-  // Hide the "API key missing" banner since API loaded successfully
+  attachAutocomplete('pickup', 'pickup-list', d => { pickupPlaceData = d; });
+  attachAutocomplete('drop',   'drop-list',   d => { dropPlaceData   = d; });
   const banner = document.getElementById('api-key-banner');
   if (banner) banner.style.display = 'none';
 }
 
-// Fallback: if Google API key is not set, show helpful banner
-window.addEventListener('load', () => {
-  setTimeout(() => {
-    if (typeof google === 'undefined') {
-      const banner = document.getElementById('api-key-banner');
-      if (banner) banner.style.display = 'flex';
-    }
-  }, 2000);
+document.addEventListener('DOMContentLoaded', () => {
+  // If SDK already loaded (local with key), init now; else wait for callback
+  if (window.google && google.maps && google.maps.places) initAutocomplete();
+  // Always attach even without SDK so proxy works on production
+  else if (!IS_LOCAL) initAutocomplete();
 });
 
 </script>
