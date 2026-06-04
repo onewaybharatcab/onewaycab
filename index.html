@@ -1111,6 +1111,33 @@ footer {
 .api-key-banner strong { color: #FF9D2F; }
 .api-key-banner a { color: #FF9D2F; text-decoration: underline; }
 
+
+/* ── Block Chrome/Edge autofill suggestion icons ── */
+input::-webkit-contacts-auto-fill-button,
+input::-webkit-credentials-auto-fill-button,
+input::-webkit-textfield-decoration-container,
+input::-webkit-search-cancel-button,
+input::-webkit-search-decoration,
+input::-webkit-inner-spin-button,
+input::-webkit-outer-spin-button {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  position: absolute !important;
+  right: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+/* Block autofill background color change */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0px 1000px rgba(255,255,255,0.05) inset !important;
+  -webkit-text-fill-color: #fff !important;
+  caret-color: #fff !important;
+  transition: background-color 5000s ease-in-out 0s !important;
+}
+
 </style>
 </head>
 <body>
@@ -1330,14 +1357,14 @@ footer {
             <label class="field-label">Pickup Location</label>
             <div class="field-wrap">
               <div class="field-icon">📍</div>
-              <input class="field-input" type="text" id="pickup" placeholder="City, railway stn. or airport">
+              <input class="field-input" type="text" id="pickup" placeholder="City, railway stn. or airport" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-form-type="other">
             </div>
           </div>
           <div class="field-group" style="margin-bottom:0">
             <label class="field-label">Drop Location</label>
             <div class="field-wrap">
               <div class="field-icon">🏁</div>
-              <input class="field-input" type="text" id="drop" placeholder="Where are you headed?">
+              <input class="field-input" type="text" id="drop" placeholder="Where are you headed?" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-form-type="other">
               <button class="swap-btn" onclick="swapLocs()" title="Swap">⇅</button>
             </div>
           </div>
