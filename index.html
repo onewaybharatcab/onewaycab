@@ -254,6 +254,10 @@ header.scrolled {
   font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
   color: rgba(255,255,255,0.4); display: block; margin-top: 1px;
 }
+.logo-subtitle {
+  font-size: 9px; letter-spacing: 1px; text-transform: capitalize;
+  color: var(--sf-400); display: block; margin-top: 2px; font-weight: 600;
+}
 
 .header-nav { display: flex; align-items: center; gap: 2px; }
 .nav-link {
@@ -335,9 +339,17 @@ header.scrolled {
   position: relative; z-index: 2;
   max-width: 1240px; margin: 0 auto;
   padding: 60px 5% 100px;
-  display: grid; grid-template-columns: 1.05fr 0.95fr;
+  display: grid; grid-template-columns: 0.9fr 1.1fr;
   gap: 64px; align-items: center;
   width: 100%;
+}
+
+/* Swap visual order: booking widget on left, content on right */
+.hero-inner > div:first-child {
+  order: 2;
+}
+.hero-inner > .booking-widget {
+  order: 1;
 }
 
 /* LEFT: Copy */
@@ -979,10 +991,34 @@ footer {
 /* ═══════════════════════ RESPONSIVE ═══════════════════════ */
 @media (max-width: 960px) {
   .hero-inner { grid-template-columns: 1fr; gap: 40px; padding-top: 40px; }
+  .hero-inner > div:first-child { order: unset; }
+  .hero-inner > .booking-widget { order: unset; }
   .hero-stats { justify-content: flex-start; }
   .header-nav { display: none; }
   .footer-top { grid-template-columns: 1fr 1fr; }
 }
+
+/* MOBILE REORDERING: Loader → Booking → Header → Routes */
+@media (max-width: 768px) {
+  body {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  #loader { order: 0; }
+  .hero { order: 1; }
+  #header { order: 2; }
+  .trust-bar { order: 3; }
+  #routes { order: 4; }
+  .fleet-section { order: 5; }
+  .calc-section { order: 6; }
+  #why { order: 7; }
+  #reviews { order: 8; }
+  .cta-section { order: 9; }
+  footer { order: 10; }
+  .chat-float { order: 11; }
+}
+
 @media (max-width: 620px) {
   .footer-top { grid-template-columns: 1fr; }
   .trust-bar { gap: 0; }
@@ -1120,6 +1156,7 @@ footer {
     <div>
       <span class="logo-name">One-Way Bhaarat</span>
       <span class="logo-tagline">Pvt. Ltd. • Est. 2022</span>
+      <span class="logo-subtitle">India's #1 Premium One-Way Cab</span>
     </div>
   </a>
   <nav class="header-nav">
