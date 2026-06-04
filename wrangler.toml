@@ -1,59 +1,19 @@
-# ╔══════════════════════════════════════════════════════════════╗
-# ║          One-Way Bhaarat — Wrangler Configuration           ║
-# ║                                                              ║
-# ║  Deploy command:  npx wrangler deploy                       ║
-# ║  Dev command:     npx wrangler dev                          ║
-# ╚══════════════════════════════════════════════════════════════╝
+name                   = "oneway-bhaarat"
+main                   = "worker.js"
+compatibility_date     = "2024-01-01"
 
-name       = "oneway-bhaarat"        # Worker name in Cloudflare dashboard
-main       = "src/worker.js"         # Entry point
-compatibility_date = "2024-01-01"
-
-# ── Bundle the HTML file so the worker can import it ─────────────
-[rules]
 [[rules]]
-type    = "Text"
-globs   = ["**/*.html"]
+type        = "Text"
+globs       = ["**/*.html"]
 fallthrough = true
 
-# ── Static assets (public folder) ────────────────────────────────
 [assets]
-directory = "./public"
+directory = "./"
 
-# ── Custom domain (optional — set after deploying) ───────────────
-# [[routes]]
-# pattern = "one-waybharat.com/*"
-# zone_name = "one-waybharat.com"
-
-# ══════════════════════════════════════════════════════════════════
-#  ENVIRONMENT VARIABLES
-#  Plain variables go here.
-#  ⚠️  NEVER put secrets (API keys) here — use wrangler secret put
-# ══════════════════════════════════════════════════════════════════
 [vars]
-SITE_ENV = "production"             # "production" or "staging"
+SITE_ENV  = "production"
 SITE_NAME = "One-Way Bhaarat"
 SITE_URL  = "https://one-waybharat.com"
 
-# ── Staging environment override ─────────────────────────────────
-[env.staging]
-name = "oneway-bhaarat-staging"
-
-[env.staging.vars]
-SITE_ENV  = "staging"
-SITE_URL  = "https://staging.one-waybharat.com"
-
-# ══════════════════════════════════════════════════════════════════
-#  SECRETS — DO NOT add values here
-#  Add secrets via CLI:
-#
-#    npx wrangler secret put GOOGLE_PLACES_API_KEY
-#    (it will prompt you to paste the value securely)
-#
-#  Or via Cloudflare Dashboard:
-#    Workers & Pages → oneway-bhaarat → Settings →
-#    Variables and Secrets → Add Secret
-#
-#  Secret name used in this project:
-#    GOOGLE_PLACES_API_KEY
-# ══════════════════════════════════════════════════════════════════
+# SECRETS — add via CLI or Dashboard, never here:
+#   npx wrangler secret put GOOGLE_PLACES_API_KEY

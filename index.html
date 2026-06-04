@@ -997,9 +997,10 @@ footer {
 
 /* ═══════════════════════ RESPONSIVE ═══════════════════════ */
 @media (max-width: 960px) {
-  .hero-inner { grid-template-columns: 1fr; gap: 40px; padding-top: 40px; }
-  .hero-inner > div:first-child { order: unset; }
-  .hero-inner > .booking-widget { order: unset; }
+  .hero-inner { grid-template-columns: 1fr; gap: 32px; padding-top: 20px; padding-bottom: 60px; }
+  /* Mobile: widget first, hero copy second */
+  .hero-inner > div:first-child { order: 2; }
+  .hero-inner > .booking-widget { order: 1; }
   .hero-stats { justify-content: flex-start; }
   .header-nav { display: none; }
   .footer-top { grid-template-columns: 1fr 1fr; }
