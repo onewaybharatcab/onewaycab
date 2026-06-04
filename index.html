@@ -436,7 +436,7 @@ header.scrolled {
   border-radius: var(--r-xl);
   backdrop-filter: blur(20px);
   box-shadow: var(--shadow-card), inset 0 1px 0 rgba(255,255,255,0.06);
-  overflow: hidden;
+  overflow: visible;
   position: relative;
 }
 .widget-top-bar {
@@ -444,6 +444,8 @@ header.scrolled {
   border-bottom: 1px solid rgba(244,123,0,0.2);
   padding: 20px 28px;
   display: flex; align-items: center; justify-content: space-between;
+  border-radius: var(--r-xl) var(--r-xl) 0 0;
+  overflow: hidden;
 }
 .widget-title {
   font-family: 'Cinzel', serif;
@@ -462,7 +464,7 @@ header.scrolled {
 }
 .widget-instant::before { content:''; width:6px;height:6px;border-radius:50%;background:var(--gr-400);animation:eyePulse 1.5s infinite; }
 
-.widget-body { padding: 24px 28px; }
+.widget-body { padding: 24px 28px; position: relative; }
 
 /* Trip type tabs */
 .trip-tabs {
@@ -488,7 +490,7 @@ header.scrolled {
 }
 
 /* Inputs */
-.field-group { margin-bottom: 14px; position: relative; }
+.field-group { margin-bottom: 14px; position: relative; z-index: 1; }
 .field-label {
   display: block; font-size: 10px; font-weight: 700;
   letter-spacing: 1.5px; text-transform: uppercase;
@@ -518,7 +520,7 @@ header.scrolled {
 
 /* Connector between from/to */
 .location-connector {
-  position: relative; margin-bottom: 14px;
+  position: relative; margin-bottom: 14px; z-index: 10;
 }
 .connector-line {
   position: absolute; left: 21px; top: -6px; bottom: -6px;
@@ -564,6 +566,8 @@ header.scrolled {
   padding: 14px 28px;
   border-top: 1px solid rgba(255,255,255,0.05);
   display: flex; align-items: center; justify-content: center; gap: 16px;
+  border-radius: 0 0 var(--r-xl) var(--r-xl);
+  overflow: hidden;
 }
 .wf-item {
   display: flex; align-items: center; gap: 5px;
@@ -1325,14 +1329,14 @@ footer {
             <label class="field-label">Pickup Location</label>
             <div class="field-wrap">
               <div class="field-icon">📍</div>
-              <input class="field-input" type="text" id="pickup" placeholder="City, railway stn. or airport"><div id="pickup-list" class="autocomplete-list"></div></div>
+              <input class="field-input" type="text" id="pickup" placeholder="City, railway stn. or airport">
             </div>
           </div>
           <div class="field-group" style="margin-bottom:0">
             <label class="field-label">Drop Location</label>
             <div class="field-wrap">
               <div class="field-icon">🏁</div>
-              <input class="field-input" type="text" id="drop" placeholder="Where are you headed?"><div id="drop-list" class="autocomplete-list"></div></div>
+              <input class="field-input" type="text" id="drop" placeholder="Where are you headed?">
               <button class="swap-btn" onclick="swapLocs()" title="Swap">⇅</button>
             </div>
           </div>
@@ -1874,85 +1878,52 @@ document.querySelectorAll('.reveal').forEach(el => ro.observe(el));
 let pickupAutocomplete, dropAutocomplete;
 let pickupPlaceData = {}, dropPlaceData = {};
 
-// ── Session token for billing efficiency (group autocomplete + detail calls) ──
-function newSessionToken() {
-  return Math.random().toString(36).substring(2) + Date.now().toString(36);
-}
-let sessionToken = newSessionToken();
-
-// ── Debounce helper ──────────────────────────────────────────────────────────
-function debounce(fn, delay) {
-  let t; return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), delay); };
-}
-
-// ── Attach autocomplete to an input ─────────────────────────────────────────
-function attachAutocomplete(inputId, listId, onSelect) {
-  const input = document.getElementById(inputId);
-  const list  = document.getElementById(listId);
-
-  const fetchSuggestions = debounce(async (query) => {
-    if (query.length < 2) { list.innerHTML = ''; return; }
-    try {
-      const res  = await fetch(`/api/places?input=${encodeURIComponent(query)}&sessiontoken=${sessionToken}`);
-      const data = await res.json();
-      renderList(list, data.predictions || [], onSelect, input);
-    } catch(e) { console.warn('Autocomplete fetch failed', e); }
-  }, 280);
-
-  input.addEventListener('input', () => fetchSuggestions(input.value.trim()));
-
-  // Close list on outside click
-  document.addEventListener('click', (e) => {
-    if (!input.contains(e.target) && !list.contains(e.target)) list.innerHTML = '';
-  });
-}
-
-// ── Render dropdown list ─────────────────────────────────────────────────────
-function renderList(list, predictions, onSelect, input) {
-  list.innerHTML = '';
-  predictions.forEach(p => {
-    const item = document.createElement('div');
-    item.className = 'autocomplete-item';
-    item.innerHTML = `
-      <span class="ac-icon">📍</span>
-      <span>
-        <div class="ac-main">${p.main_text || p.description}</div>
-        <div class="ac-sub">${p.secondary_text || ''}</div>
-      </span>`;
-    item.addEventListener('mousedown', async (e) => {
-      e.preventDefault();
-      input.value = p.main_text || p.description;
-      list.innerHTML = '';
-      // Fetch details (lat/lng) via proxy
-      try {
-        const res  = await fetch(`/api/place-details?place_id=${p.place_id}&sessiontoken=${sessionToken}`);
-        const detail = await res.json();
-        onSelect({ name: detail.name, address: detail.address, lat: detail.lat, lng: detail.lng, place_id: p.place_id });
-        sessionToken = newSessionToken(); // reset after completed session
-      } catch(e) { console.warn('Place details fetch failed', e); }
-    });
-    list.appendChild(item);
-  });
-}
-
-// ── Init both inputs ─────────────────────────────────────────────────────────
 function initAutocomplete() {
-  attachAutocomplete('pickup', 'pickup-list', (data) => {
-    pickupPlaceData = data;
-    document.getElementById('pickup').style.borderColor = '';
-  });
-  attachAutocomplete('drop', 'drop-list', (data) => {
-    dropPlaceData = data;
-    document.getElementById('drop').style.borderColor = '';
+  const options = {
+    componentRestrictions: { country: 'in' }, // India only
+    fields: ['formatted_address', 'geometry', 'name', 'place_id'],
+    types: ['(cities)'] // cities, airports, railway stations
+  };
+
+  pickupAutocomplete = new google.maps.places.Autocomplete(
+    document.getElementById('pickup'), options
+  );
+  dropAutocomplete = new google.maps.places.Autocomplete(
+    document.getElementById('drop'), options
+  );
+
+  pickupAutocomplete.addListener('place_changed', () => {
+    const place = pickupAutocomplete.getPlace();
+    if (place.geometry) {
+      pickupPlaceData = {
+        name: place.name,
+        address: place.formatted_address,
+        lat: place.geometry.location.lat(),
+        lng: place.geometry.location.lng(),
+        place_id: place.place_id
+      };
+      document.getElementById('pickup').style.borderColor = '';
+    }
   });
 
-  // Hide the API key missing banner since worker is serving the page
+  dropAutocomplete.addListener('place_changed', () => {
+    const place = dropAutocomplete.getPlace();
+    if (place.geometry) {
+      dropPlaceData = {
+        name: place.name,
+        address: place.formatted_address,
+        lat: place.geometry.location.lat(),
+        lng: place.geometry.location.lng(),
+        place_id: place.place_id
+      };
+      document.getElementById('drop').style.borderColor = '';
+    }
+  });
+
+  // Hide the "API key missing" banner since API loaded successfully
   const banner = document.getElementById('api-key-banner');
   if (banner) banner.style.display = 'none';
 }
-
-// Auto-init (worker page doesn't need Google SDK callback)
-document.addEventListener('DOMContentLoaded', initAutocomplete);
 
 // Fallback: if Google API key is not set, show helpful banner
 window.addEventListener('load', () => {
