@@ -509,17 +509,18 @@ async function fetchDetailsProxy(placeId) {
 .sec-center .sec-sub { margin: 0 auto; }
 
 /* ═══════════════════════ FLEET SECTION ═══════════════════════ */
-.fleet-section { background: var(--nv-800); }
-.fleet-grid {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(250px,1fr));
-  gap: 20px; margin-top: 52px;
+// ── Fetch via Cloudflare proxy (production) ───────────────────
+async function fetchPredictionsProxy(query) {
+  const workerUrl = 'https://onewaycab.onewaybharatcab.workers.dev/api/places/autocomplete';
+  const res = await fetch(`${workerUrl}?input=${encodeURIComponent(query)}&sessiontoken=${sessionToken}`);
+  const data = await res.json();
+  return data.predictions || [];
 }
-.fleet-card {
-  background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: var(--r-xl); overflow: hidden;
-  transition: all 0.35s; cursor: pointer;
-  position: relative;
+
+async function fetchDetailsProxy(placeId) {
+  const workerUrl = 'https://onewaycab.onewaybharatcab.workers.dev/api/places/details';
+  const res = await fetch(`${workerUrl}?place_id=${placeId}&sessiontoken=${sessionToken}`);
+  return await res.json();
 }
 .fleet-card:hover {
   border-color: rgba(244,123,0,0.4);
