@@ -7,9 +7,6 @@ type        = "Text"
 globs       = ["**/*.html"]
 fallthrough = true
 
-[assets]
-directory = "./"
-
 [vars]
 SITE_ENV  = "production"
 SITE_NAME = "One-Way Bhaarat"

@@ -83,6 +83,551 @@ footer a{color:var(--saffron);text-decoration:none}
 
 @media(max-width:900px){.featured-post,.blog-layout{grid-template-columns:1fr}.blog-grid{grid-template-columns:1fr 1fr}nav{display:none}}
 @media(max-width:600px){.blog-grid{grid-template-columns:1fr}}
+
+/* ═══════════════════ CHAKRA BEHIND GIRL LOADER ═══════════════════ */
+#loader {
+  position: fixed; inset: 0; z-index: 9999;
+  background: linear-gradient(175deg, #F2F4FA 0%, #E8ECF7 45%, #DDE3F4 100%);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  transition: opacity 0.9s ease, visibility 0.9s ease;
+  overflow: hidden;
+}
+#loader.out { opacity: 0; visibility: hidden; pointer-events: none; }
+
+#loader::before {
+  content: '';
+  position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(ellipse 65% 55% at 50% 38%,
+    rgba(255,255,255,0.78) 0%, rgba(255,255,255,0.28) 55%, transparent 100%);
+}
+
+/* ── LAYER STACK ── */
+.ld-scene {
+  position: relative;
+  width: min(320px, 86vw);
+  height: min(400px, 108vw);
+  animation: ldSceneReveal 0.9s 0.2s cubic-bezier(0.34,1.1,0.64,1) both,
+             ldFloat 4.5s 1.2s ease-in-out infinite;
+}
+@keyframes ldSceneReveal {
+  from { opacity: 0; transform: scale(0.82) translateY(18px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+@keyframes ldFloat {
+  0%,100% { transform: translateY(0); }
+  50%     { transform: translateY(-7px); }
+}
+
+/* LAYER 1 — India map (bottom) */
+.ld-map-img {
+  position: absolute;
+  inset: 0; width: 100%; height: 100%;
+  object-fit: contain;
+  object-position: center 30%;
+  z-index: 1;
+  opacity: 0.85;
+}
+
+/* LAYER 2 — Spinning Ashoka Chakra (behind girl, in front of map) */
+.ld-chakra-svg {
+  position: absolute;
+  /* centre it over the chakra position in the map photo */
+  left: 50%; top: 46%;
+  transform: translate(-50%, -50%);
+  width: 85%; height: auto;
+  z-index: 2;
+  animation: ldChakraSpin 8s linear infinite;
+  transform-origin: center center;
+  filter: drop-shadow(0 6px 24px rgba(4,12,60,0.35));
+}
+@keyframes ldChakraSpin {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to   { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* LAYER 3 — Girl photo (front, on top of chakra) */
+.ld-girl-img {
+  position: absolute;
+  left: 50%; top: 46%;
+  transform: translate(-50%, -50%);
+  width: 58%; height: auto;
+  z-index: 3;
+  object-fit: contain;
+}
+
+/* bottom text */
+.loader-bottom {
+  position: relative; z-index: 6;
+  text-align: center; margin-top: 14px;
+  animation: ldTextReveal 0.7s 0.9s ease both;
+}
+@keyframes ldTextReveal {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.loader-brand {
+  font-family: 'Playfair Display','Cinzel', Georgia, serif;
+  font-size: clamp(20px,5vw,26px); font-weight: 700;
+  color: #040C1E; letter-spacing:-0.01em;
+  margin-bottom: 5px; line-height: 1.25;
+}
+.loader-tagline {
+  font-family: 'Nunito', sans-serif;
+  font-size: 13px; font-weight: 500;
+  color: rgba(4,12,30,0.52); line-height: 1.65; margin-bottom: 16px;
+}
+.ld-badge {
+  width: 72px; height: 72px; border-radius: 50%;
+  overflow: hidden; margin: 0 auto;
+  box-shadow: 0 2px 14px rgba(4,12,30,0.14),
+              0 0 0 2px rgba(201,162,39,0.45);
+  animation: ldBadgePop 0.6s 1.2s cubic-bezier(0.34,1.4,0.64,1) both;
+}
+@keyframes ldBadgePop {
+  from { opacity: 0; transform: scale(0.5); }
+  to   { opacity: 1; transform: scale(1); }
+}
+.ld-badge img { width:100%; height:100%; object-fit:cover; }
+.loader-bar {
+  width: 180px; height: 2px;
+  background: rgba(4,12,30,0.08);
+  border-radius: 2px; margin: 14px auto 0; overflow: hidden;
+}
+.loader-bar-fill {
+  height: 100%; width: 0; border-radius: 2px;
+  background: linear-gradient(90deg, #F47B00, #C9A227, #138808);
+  animation: ldFill 2.6s cubic-bezier(0.4,0,0.2,1) forwards;
+}
+@keyframes ldFill { to { width: 100%; } }
+
+/* ═══════════════════════════════════════════════
+   WARM PEACH THEME — Token Override
+═══════════════════════════════════════════════ */
+:root {
+  /* Swap navy backgrounds → warm peach family */
+  --nv-900: #FFF0E8;   /* page base — warm peach */
+  --nv-800: #FFE8DC;   /* alt sections */
+  --nv-700: #FFD9C8;   /* deeper peach */
+  --nv-600: #F5C4AC;   /* borders */
+  --nv-400: #D4956A;   /* muted accent */
+  --nv-200: #A86840;   /* sub-text */
+  --nv-100: #7A4420;   /* dark-on-light */
+
+  /* Flip text to dark */
+  --wh:     #1A0800;
+  --cream:  #FFF0E8;
+  --muted:  rgba(60,25,5,0.55);
+  --faint:  rgba(60,25,5,0.09);
+
+  /* Softer shadows on light bg */
+  --shadow-card: 0 4px 24px rgba(180,90,30,0.12), 0 1px 4px rgba(180,90,30,0.07);
+  --shadow-hero:  0 20px 80px rgba(180,90,30,0.14);
+  --glow-sf: 0 0 40px rgba(244,123,0,0.20);
+  --glow-gd: 0 0 30px rgba(201,162,39,0.14);
+}
+
+/* ── PAGE BASE ── */
+body { background: #FFF0E8 !important; color: #1A0800 !important; }
+
+/* ── HEADER ── */
+header {
+  background: rgba(255,240,232,0.96) !important;
+  border-bottom: 2px solid rgba(244,123,0,0.25) !important;
+  box-shadow: 0 2px 24px rgba(180,90,30,0.12) !important;
+}
+header::before {
+  background: linear-gradient(90deg,#F47B00,#E8BD3A,#138808) !important;
+}
+header.scrolled {
+  background: rgba(255,240,232,0.99) !important;
+  box-shadow: 0 4px 32px rgba(180,90,30,0.18) !important;
+}
+.logo-name, .logo-tagline { color: #1A0800 !important; -webkit-text-fill-color: #1A0800 !important; }
+.logo-name {
+  background: linear-gradient(135deg,#F47B00,#E8BD3A) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+}
+.logo-subtitle { color: rgba(60,25,5,0.45) !important; }
+.nav-link { color: rgba(26,8,0,0.70) !important; font-weight:700 !important; }
+.nav-link:hover { color: #F47B00 !important; background: rgba(244,123,0,0.10) !important; }
+
+/* ── HERO ── */
+.hero { background: #FFF0E8 !important; }
+.hero-grid {
+  background-image: radial-gradient(circle, rgba(180,90,30,0.10) 1px, transparent 1px) !important;
+}
+.blob-1 { background: radial-gradient(ellipse,rgba(244,123,0,0.10) 0%,transparent 70%) !important; }
+.blob-2 { background: radial-gradient(ellipse,rgba(201,162,39,0.07) 0%,transparent 70%) !important; }
+.blob-3 { background: radial-gradient(ellipse,rgba(19,136,8,0.05) 0%,transparent 70%) !important; }
+.hero-headline, .hero-eyebrow, .hero-sub { color: #1A0800 !important; }
+.hero-sub { color: rgba(60,25,5,0.60) !important; }
+.hero-eyebrow {
+  background: rgba(244,123,0,0.12) !important;
+  border-color: rgba(244,123,0,0.28) !important;
+  color: #D46800 !important;
+}
+.hstat-num { background: linear-gradient(135deg,#F47B00,#E8BD3A); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+.hstat-label { color: rgba(60,25,5,0.45) !important; }
+.trust-badge {
+  background: rgba(60,25,5,0.06) !important;
+  border-color: rgba(60,25,5,0.12) !important;
+  color: rgba(60,25,5,0.65) !important;
+}
+
+/* ── BOOKING WIDGET ── */
+.booking-widget {
+  background: rgba(255,255,255,0.85) !important;
+  border-color: rgba(244,123,0,0.22) !important;
+  box-shadow: 0 8px 48px rgba(180,90,30,0.16) !important;
+}
+.widget-top-bar {
+  background: linear-gradient(135deg,rgba(244,123,0,0.12),rgba(201,162,39,0.06)) !important;
+  border-bottom-color: rgba(244,123,0,0.18) !important;
+}
+.widget-title { color: #1A0800 !important; }
+.trip-tab { color: rgba(60,25,5,0.45) !important; }
+.trip-tab.active { background: linear-gradient(135deg,#F47B00,#A85200) !important; color:#fff !important; }
+.trip-tabs { background: rgba(60,25,5,0.06) !important; border-color: rgba(60,25,5,0.10) !important; }
+.field-label { color: rgba(60,25,5,0.45) !important; }
+.field-input {
+  background: rgba(255,255,255,0.90) !important;
+  border-color: rgba(60,25,5,0.14) !important;
+  color: #1A0800 !important;
+}
+.field-input::placeholder { color: rgba(60,25,5,0.32) !important; }
+.field-input:focus {
+  border-color: rgba(244,123,0,0.55) !important;
+  box-shadow: 0 0 0 3px rgba(244,123,0,0.12) !important;
+  background: #fff !important;
+}
+.field-input option { background: #FFF0E8; color: #1A0800; }
+.widget-footer { border-top-color: rgba(60,25,5,0.07) !important; }
+.wf-item { color: rgba(60,25,5,0.40) !important; }
+
+/* autocomplete */
+.autocomplete-list, .pac-container {
+  background: #FFF0E8 !important;
+  border-color: rgba(244,123,0,0.35) !important;
+  box-shadow: 0 16px 48px rgba(180,90,30,0.18) !important;
+}
+.autocomplete-item:hover { background: rgba(244,123,0,0.09) !important; }
+.autocomplete-item .ac-sub { color: rgba(60,25,5,0.42) !important; }
+
+/* ── TRUST BAR ── */
+.trust-bar { background: #FFE8DC !important; border-color: rgba(60,25,5,0.06) !important; }
+.tb-item { color: rgba(60,25,5,0.62) !important; border-right-color: rgba(60,25,5,0.08) !important; }
+
+/* ── SECTION LABELS / TITLES ── */
+.sec-tag { background: rgba(244,123,0,0.10) !important; border-color: rgba(244,123,0,0.22) !important; }
+.sec-title { color: #1A0800 !important; }
+.sec-sub { color: rgba(60,25,5,0.55) !important; }
+
+/* ── FLEET ── */
+.fleet-section { background: #FFE8DC !important; }
+.fleet-card {
+  background: rgba(255,255,255,0.70) !important;
+  border-color: rgba(60,25,5,0.10) !important;
+  box-shadow: 0 2px 14px rgba(180,90,30,0.08) !important;
+}
+.fleet-card:hover { border-color: rgba(244,123,0,0.40) !important; box-shadow: 0 16px 40px rgba(180,90,30,0.16) !important; }
+.fleet-name { color: #1A0800 !important; }
+.fleet-models { color: rgba(60,25,5,0.38) !important; }
+.fleet-spec { background: rgba(60,25,5,0.06) !important; border-color: rgba(60,25,5,0.09) !important; color: rgba(60,25,5,0.58) !important; }
+.fleet-price-box { background: rgba(60,25,5,0.04) !important; border-color: rgba(60,25,5,0.08) !important; }
+.fp-unit, .fp-type { color: rgba(60,25,5,0.35) !important; }
+.fleet-book { background: rgba(244,123,0,0.10) !important; border-color: rgba(244,123,0,0.28) !important; color: #D46800 !important; }
+
+/* ── CALC ── */
+.calc-section { background: #FFF0E8 !important; }
+.calc-glass { background: rgba(255,255,255,0.70) !important; border-color: rgba(60,25,5,0.10) !important; }
+.cr-row { border-bottom-color: rgba(60,25,5,0.06) !important; }
+.cr-row .lbl { color: rgba(60,25,5,0.52) !important; }
+.cr-row .val { color: #1A0800 !important; }
+.crs-balance { background: rgba(60,25,5,0.05) !important; border-color: rgba(60,25,5,0.09) !important; }
+
+/* ── ROUTES ── */
+.routes-section { background: #FFE8DC !important; }
+.route-card { background: rgba(255,255,255,0.60) !important; border-color: rgba(60,25,5,0.09) !important; }
+.route-card:hover { background: rgba(244,123,0,0.06) !important; border-color: rgba(244,123,0,0.28) !important; }
+.route-name { color: #1A0800 !important; }
+.route-meta, .route-dist { color: rgba(60,25,5,0.40) !important; }
+
+/* ── WHY ── */
+.why-section { background: #FFF0E8 !important; }
+.why-card { background: rgba(255,255,255,0.65) !important; border-color: rgba(60,25,5,0.09) !important; }
+.why-card:hover { border-color: rgba(244,123,0,0.22) !important; box-shadow: 0 12px 40px rgba(180,90,30,0.12) !important; }
+.why-icon-wrap { background: rgba(244,123,0,0.10) !important; border-color: rgba(244,123,0,0.20) !important; }
+.why-title { color: #1A0800 !important; }
+.why-text { color: rgba(60,25,5,0.58) !important; }
+
+/* ── TESTIMONIALS ── */
+.testi-section { background: #FFE8DC !important; }
+.testi-card { background: rgba(255,255,255,0.65) !important; border-color: rgba(60,25,5,0.09) !important; }
+.testi-card:hover { border-color: rgba(201,162,39,0.28) !important; box-shadow: 0 12px 36px rgba(180,90,30,0.13) !important; }
+.testi-text { color: rgba(60,25,5,0.62) !important; }
+.testi-name { color: #1A0800 !important; }
+.testi-route { color: rgba(60,25,5,0.40) !important; }
+.testi-quote-mark { color: rgba(244,123,0,0.12) !important; }
+
+/* ── CTA ── */
+.cta-section { background: #FFF0E8 !important; }
+.cta-title { color: #1A0800 !important; }
+.cta-sub { color: rgba(60,25,5,0.58) !important; }
+.btn-secondary {
+  background: rgba(60,25,5,0.07) !important;
+  border-color: rgba(60,25,5,0.16) !important;
+  color: #1A0800 !important;
+}
+.btn-secondary:hover { background: rgba(60,25,5,0.13) !important; }
+
+/* ── FOOTER ── */
+
+
+
+
+
+
+
+
+/* ── INNER PAGE HERO ── */
+.page-hero { background: linear-gradient(160deg,#FFE8DC,#FFD9C8) !important; border-bottom-color: rgba(244,123,0,0.15) !important; }
+.ph { color: #1A0800 !important; }
+.ps { color: rgba(60,25,5,0.52) !important; }
+.ptag { background: rgba(244,123,0,0.10) !important; border-color: rgba(244,123,0,0.22) !important; }
+
+/* ── CARDS — inner pages ── */
+.icard { background: rgba(255,255,255,0.65) !important; border-color: rgba(60,25,5,0.09) !important; }
+.icard:hover { border-color: rgba(244,123,0,0.28) !important; }
+.icard-label { color: rgba(60,25,5,0.40) !important; }
+.icard-value { color: #1A0800 !important; }
+.icard-sub { color: rgba(60,25,5,0.32) !important; }
+.hours-card { background: rgba(255,255,255,0.50) !important; border-color: rgba(60,25,5,0.10) !important; }
+.hours-title { color: #1A0800 !important; }
+.hours-day { color: rgba(60,25,5,0.52) !important; }
+.hours-row { border-bottom-color: rgba(60,25,5,0.06) !important; }
+
+/* ── CONTACT FORM ── */
+.content { background: #FFF0E8 !important; }
+.form-card { background: rgba(255,255,255,0.78) !important; border-color: rgba(60,25,5,0.10) !important; box-shadow: 0 4px 24px rgba(180,90,30,0.10) !important; }
+.form-title { color: #1A0800 !important; }
+.form-sub { color: rgba(60,25,5,0.45) !important; }
+.field label { color: rgba(60,25,5,0.45) !important; }
+.finput { background: rgba(255,255,255,0.88) !important; border-color: rgba(60,25,5,0.12) !important; color: #1A0800 !important; }
+.finput::placeholder { color: rgba(60,25,5,0.30) !important; }
+.finput:focus { border-color: rgba(244,123,0,0.50) !important; background: #fff !important; }
+.finput option { background: #FFF0E8; color: #1A0800; }
+.qc-strip { background: linear-gradient(135deg,rgba(244,123,0,0.09),rgba(232,189,58,0.05)) !important; border-color: rgba(244,123,0,0.20) !important; }
+.qc-text h2 { color: #1A0800 !important; }
+.qc-text p { color: rgba(60,25,5,0.48) !important; }
+.map-card { background: rgba(255,255,255,0.50) !important; border-color: rgba(60,25,5,0.08) !important; }
+.map-hdr { border-bottom-color: rgba(60,25,5,0.07) !important; }
+.map-hdr h3, .map-body p { color: #1A0800 !important; }
+
+/* ── POLICIES ── */
+.layout { background: #FFF0E8 !important; }
+.policy-panel { background: rgba(255,255,255,0.60) !important; border-color: rgba(60,25,5,0.09) !important; }
+.policy-sec { border-bottom-color: rgba(60,25,5,0.06) !important; }
+.policy-title { color: #1A0800 !important; }
+.policy-sub { color: rgba(60,25,5,0.52) !important; }
+.hbox { background: rgba(244,123,0,0.08) !important; border-left-color: #F47B00 !important; }
+.hbox p { color: rgba(60,25,5,0.82) !important; }
+.snav-item { color: rgba(60,25,5,0.52) !important; }
+.snav-item:hover { color: #1A0800 !important; background: rgba(60,25,5,0.05) !important; }
+.snav-item.act { background: rgba(244,123,0,0.10) !important; border-left-color: #F47B00 !important; color: #D46800 !important; }
+.snav h3 { color: rgba(60,25,5,0.32) !important; }
+.snav-help { background: rgba(255,255,255,0.50) !important; border-color: rgba(60,25,5,0.12) !important; }
+.snav-help h4 { color: #1A0800 !important; }
+.snav-help small { color: rgba(60,25,5,0.35) !important; }
+
+/* ── FAQ ── */
+.faq-item { background: rgba(255,255,255,0.65) !important; border-color: rgba(60,25,5,0.09) !important; }
+.faq-item:hover { border-color: rgba(244,123,0,0.25) !important; }
+.faq-q { color: #1A0800 !important; }
+.faq-a { color: rgba(60,25,5,0.58) !important; }
+
+/* ── BLOG ── */
+.blog-card { background: rgba(255,255,255,0.65) !important; border-color: rgba(60,25,5,0.09) !important; }
+.blog-card:hover { border-color: rgba(244,123,0,0.28) !important; }
+.blog-title { color: #1A0800 !important; }
+.blog-excerpt { color: rgba(60,25,5,0.58) !important; }
+.blog-meta { color: rgba(60,25,5,0.42) !important; }
+
+/* ── DASHBOARDS ── */
+.dash-card, .stat-card, .booking-row {
+  background: rgba(255,255,255,0.70) !important;
+  border-color: rgba(60,25,5,0.09) !important;
+}
+.dash-label, .stat-label { color: rgba(60,25,5,0.42) !important; }
+.dash-value, .stat-value { color: #1A0800 !important; }
+
+/* ── AUTOFILL ── */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0px 1000px rgba(255,255,255,0.95) inset !important;
+  -webkit-text-fill-color: #1A0800 !important;
+  caret-color: #1A0800 !important;
+}
+
+/* ── PROSE (p, h3, li) — inner pages ── */
+h3 { color: #1A0800 !important; }
+p  { color: rgba(60,25,5,0.58) !important; }
+ul li { color: rgba(60,25,5,0.58) !important; }
+
+/* ══════════════════ VIBRANT PEACH FOOTER ══════════════════ */
+footer {
+  background: linear-gradient(160deg, #2C0A00 0%, #1A0800 50%, #0F0400 100%) !important;
+  border-top: none !important;
+  position: relative;
+  overflow: hidden;
+}
+/* Saffron glow top edge */
+footer::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, #F47B00, #E8BD3A, #138808, #E8BD3A, #F47B00);
+  background-size: 200% 100%;
+  animation: footerBorderShimmer 4s linear infinite;
+}
+@keyframes footerBorderShimmer {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+/* Warm radial glow */
+footer::after {
+  content: '';
+  position: absolute; top: -60px; left: 50%;
+  transform: translateX(-50%);
+  width: 800px; height: 300px; border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(244,123,0,0.10) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.footer-top {
+  max-width: 1200px; margin: 0 auto;
+  padding: 64px 5% 48px;
+  display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 48px;
+  position: relative; z-index: 1;
+}
+
+/* Brand column */
+.footer-brand .fb-name {
+  font-family: 'Cinzel', serif; font-size: 22px; font-weight: 700;
+  background: linear-gradient(135deg, #FF9D2F, #E8BD3A, #FF9D2F);
+  background-size: 200% 100%;
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text; margin-bottom: 14px; display: block;
+  animation: footerBorderShimmer 4s linear infinite;
+}
+.footer-brand p {
+  font-size: 13px; color: rgba(255,220,180,0.55);
+  line-height: 1.85; margin-bottom: 22px;
+}
+.footer-contact-row {
+  display: flex; align-items: flex-start; gap: 10px;
+  font-size: 13px; color: rgba(255,220,180,0.60);
+  margin-bottom: 10px; transition: color 0.2s;
+}
+.footer-contact-row:hover { color: rgba(255,220,180,0.90); }
+.footer-contact-row .ic { color: #F47B00; font-size: 15px; margin-top: 1px; flex-shrink: 0; }
+.footer-contact-row a { color: inherit; text-decoration: none; }
+.footer-contact-row a:hover { color: #FF9D2F; }
+
+/* Social icons row */
+.footer-socials {
+  display: flex; gap: 10px; margin-top: 20px;
+}
+.footer-social-btn {
+  width: 38px; height: 38px; border-radius: 10px;
+  background: rgba(244,123,0,0.15);
+  border: 1px solid rgba(244,123,0,0.28);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; text-decoration: none;
+  transition: all 0.2s; cursor: pointer;
+}
+.footer-social-btn:hover {
+  background: rgba(244,123,0,0.30);
+  border-color: rgba(244,123,0,0.55);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(244,123,0,0.25);
+}
+
+/* Nav columns */
+.footer-col h4 {
+  font-family: 'Cinzel', serif; font-size: 11px; font-weight: 700;
+  letter-spacing: 2.5px; text-transform: uppercase;
+  color: #E8BD3A !important;
+  margin-bottom: 18px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(232,189,58,0.22);
+}
+.footer-col ul { list-style: none; }
+.footer-col ul li { margin-bottom: 10px; }
+.footer-col ul li a {
+  font-size: 13px; color: rgba(255,220,180,0.55) !important;
+  text-decoration: none; transition: all 0.2s;
+  display: flex; align-items: center; gap: 6px;
+}
+.footer-col ul li a::before {
+  content: '›';
+  color: #F47B00; font-size: 16px; line-height: 1;
+  opacity: 0; transform: translateX(-4px);
+  transition: all 0.2s;
+}
+.footer-col ul li a:hover {
+  color: #FF9D2F !important;
+  transform: translateX(4px);
+}
+.footer-col ul li a:hover::before {
+  opacity: 1; transform: translateX(0);
+}
+
+/* Trust badges row above footer-bottom */
+.footer-trust {
+  max-width: 1200px; margin: 0 auto;
+  padding: 0 5% 32px;
+  display: flex; gap: 12px; flex-wrap: wrap;
+  position: relative; z-index: 1;
+}
+.footer-trust-badge {
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(244,123,0,0.09);
+  border: 1px solid rgba(244,123,0,0.20);
+  border-radius: 100px; padding: 7px 16px;
+  font-size: 12px; font-weight: 700;
+  color: rgba(255,220,180,0.70);
+}
+
+/* Footer bottom bar */
+.footer-bottom {
+  border-top: 1px solid rgba(244,123,0,0.12) !important;
+  padding: 20px 5%;
+  max-width: 1200px; margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 12px;
+  position: relative; z-index: 1;
+}
+.fb-copy { font-size: 12px; color: rgba(255,220,180,0.35) !important; }
+.fb-made {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 11px; color: rgba(255,220,180,0.40) !important;
+  letter-spacing: 1px;
+}
+.mini-flag { display: flex; flex-direction: column; width: 20px; height: 14px; border-radius: 2px; overflow: hidden; }
+.mini-flag span { flex: 1; }
+.mini-flag span:nth-child(1) { background: #F47B00 !important; }
+.mini-flag span:nth-child(2) { background: rgba(255,255,255,0.85) !important; }
+.mini-flag span:nth-child(3) { background: #138808 !important; }
+.fb-links { display: flex; gap: 16px; }
+.fb-links a {
+  font-size: 12px; color: rgba(255,220,180,0.35) !important;
+  text-decoration: none; transition: color 0.2s;
+}
+.fb-links a:hover { color: #FF9D2F !important; }
+
 </style>
 </head>
 <body>
@@ -187,9 +732,84 @@ footer a{color:var(--saffron);text-decoration:none}
 </div>
 
 <footer>
-  <p>© 2024 One-Way Bhaarat Private Limited | <a href="index.html">Home</a> | <a href="booking.html">Book Now</a> | <a href="routes.html">Routes</a> | <a href="faq.html">FAQ</a></p>
-  <p style="margin-top:8px;font-size:12px">+91-93557 57579 | onewaybharatcab@gmail.com</p>
+  <div class="footer-top">
+    <!-- Brand -->
+    <div class="footer-brand">
+      <span class="fb-name">🚕 One-Way Bhaarat</span>
+      <p>India's most trusted premium one-way taxi service. Connecting cities, towns and villages across Bhaarat with affordable, safe and transparent cab travel since 2022.</p>
+      <div class="footer-contact-row"><span class="ic">📍</span><span>Shop No. 7, Radha Kunj 2, Ghaziabad, Uttar Pradesh – 203207</span></div>
+      <div class="footer-contact-row"><span class="ic">📞</span><a href="tel:+919355757579">+91-93557 57579</a></div>
+      <div class="footer-contact-row"><span class="ic">✉️</span><a href="mailto:onewaybharatcab@gmail.com">onewaybharatcab@gmail.com</a></div>
+      <div class="footer-contact-row"><span class="ic">🌐</span><a href="https://one-waybharat.com">one-waybharat.com</a></div>
+      <div class="footer-socials">
+        <a href="https://wa.me/919355757579" class="footer-social-btn" title="WhatsApp">💬</a>
+        <a href="tel:+919355757579" class="footer-social-btn" title="Call">📞</a>
+        <a href="mailto:onewaybharatcab@gmail.com" class="footer-social-btn" title="Email">✉️</a>
+        <a href="https://one-waybharat.com" class="footer-social-btn" title="Website">🌐</a>
+      </div>
+    </div>
+    <!-- Services -->
+    <div class="footer-col">
+      <h4>Services</h4>
+      <ul>
+        <li><a href="booking.html">One Way Cabs</a></li>
+        <li><a href="booking.html">Round Trip</a></li>
+        <li><a href="booking.html">Airport Transfer</a></li>
+        <li><a href="booking.html">Corporate Cabs</a></li>
+        <li><a href="routes.html">All Routes</a></li>
+        <li><a href="fleet.html">Our Fleet</a></li>
+      </ul>
+    </div>
+    <!-- Quick Links -->
+    <div class="footer-col">
+      <h4>Quick Links</h4>
+      <ul>
+        <li><a href="about.html">About Us</a></li>
+        <li><a href="blog.html">Travel Blog</a></li>
+        <li><a href="faq.html">FAQs</a></li>
+        <li><a href="contact.html">Contact Us</a></li>
+        <li><a href="admin.html">Admin Panel</a></li>
+        <li><a href="driver.html">Driver Panel</a></li>
+      </ul>
+    </div>
+    <!-- Legal -->
+    <div class="footer-col">
+      <h4>Legal</h4>
+      <ul>
+        <li><a href="policies.html">Terms & Conditions</a></li>
+        <li><a href="policies.html">Privacy Policy</a></li>
+        <li><a href="policies.html">Cancellation Policy</a></li>
+        <li><a href="policies.html">Refund Policy</a></li>
+        <li><a href="customer.html">My Account</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Trust badges -->
+  <div class="footer-trust">
+    <div class="footer-trust-badge">✅ Verified Drivers</div>
+    <div class="footer-trust-badge">🔒 Secure Payments</div>
+    <div class="footer-trust-badge">📍 GPS Tracked</div>
+    <div class="footer-trust-badge">🕐 24×7 Support</div>
+    <div class="footer-trust-badge">💯 No Hidden Fees</div>
+    <div class="footer-trust-badge">🇮🇳 Proudly Indian</div>
+  </div>
+
+  <div class="footer-bottom">
+    <div class="fb-copy">© 2024 One-Way Bhaarat Private Limited. All rights reserved.</div>
+    <div class="fb-made">
+      <div class="mini-flag"><span></span><span></span><span></span></div>
+      Proudly Made in India
+    </div>
+    <div class="fb-links">
+      <a href="policies.html">Privacy</a>
+      <a href="policies.html">Terms</a>
+      <a href="sitemap.xml">Sitemap</a>
+    </div>
+  </div>
 </footer>
+
+
 
 <script>
 const posts = [
