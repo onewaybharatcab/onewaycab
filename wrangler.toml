@@ -12,5 +12,10 @@ SITE_ENV  = "production"
 SITE_NAME = "One-Way Bhaarat"
 SITE_URL  = "https://one-waybharat.com"
 
+# ── Routes — intercept /api/* on the main domain ─────────────────────────────
+[[routes]]
+pattern  = "one-waybharat.com/api/*"
+zone_name = "one-waybharat.com"
+
 # SECRETS — add via CLI or Dashboard, never here:
 #   npx wrangler secret put GOOGLE_PLACES_API_KEY

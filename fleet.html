@@ -103,123 +103,6 @@ footer a:hover{color:var(--gd)}
 @media(max-width:800px){.fleet-grid{grid-template-columns:1fr}nav{display:none}}
 @media(max-width:600px){.fspecs,.frates{grid-template-columns:1fr}}
 
-/* ═══════════════════ CHAKRA BEHIND GIRL LOADER ═══════════════════ */
-#loader {
-  position: fixed; inset: 0; z-index: 9999;
-  background: linear-gradient(175deg, #F2F4FA 0%, #E8ECF7 45%, #DDE3F4 100%);
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  transition: opacity 0.9s ease, visibility 0.9s ease;
-  overflow: hidden;
-}
-#loader.out { opacity: 0; visibility: hidden; pointer-events: none; }
-
-#loader::before {
-  content: '';
-  position: absolute; inset: 0; pointer-events: none;
-  background: radial-gradient(ellipse 65% 55% at 50% 38%,
-    rgba(255,255,255,0.78) 0%, rgba(255,255,255,0.28) 55%, transparent 100%);
-}
-
-/* ── LAYER STACK ── */
-.ld-scene {
-  position: relative;
-  width: min(320px, 86vw);
-  height: min(400px, 108vw);
-  animation: ldSceneReveal 0.9s 0.2s cubic-bezier(0.34,1.1,0.64,1) both,
-             ldFloat 4.5s 1.2s ease-in-out infinite;
-}
-@keyframes ldSceneReveal {
-  from { opacity: 0; transform: scale(0.82) translateY(18px); }
-  to   { opacity: 1; transform: scale(1) translateY(0); }
-}
-@keyframes ldFloat {
-  0%,100% { transform: translateY(0); }
-  50%     { transform: translateY(-7px); }
-}
-
-/* LAYER 1 — India map (bottom) */
-.ld-map-img {
-  position: absolute;
-  inset: 0; width: 100%; height: 100%;
-  object-fit: contain;
-  object-position: center 30%;
-  z-index: 1;
-  opacity: 0.85;
-}
-
-/* LAYER 2 — Spinning Ashoka Chakra (behind girl, in front of map) */
-.ld-chakra-svg {
-  position: absolute;
-  /* centre it over the chakra position in the map photo */
-  left: 50%; top: 46%;
-  transform: translate(-50%, -50%);
-  width: 85%; height: auto;
-  z-index: 2;
-  animation: ldChakraSpin 8s linear infinite;
-  transform-origin: center center;
-  filter: drop-shadow(0 6px 24px rgba(4,12,60,0.35));
-}
-@keyframes ldChakraSpin {
-  from { transform: translate(-50%, -50%) rotate(0deg); }
-  to   { transform: translate(-50%, -50%) rotate(360deg); }
-}
-
-/* LAYER 3 — Girl photo (front, on top of chakra) */
-.ld-girl-img {
-  position: absolute;
-  left: 50%; top: 46%;
-  transform: translate(-50%, -50%);
-  width: 58%; height: auto;
-  z-index: 3;
-  object-fit: contain;
-}
-
-/* bottom text */
-.loader-bottom {
-  position: relative; z-index: 6;
-  text-align: center; margin-top: 14px;
-  animation: ldTextReveal 0.7s 0.9s ease both;
-}
-@keyframes ldTextReveal {
-  from { opacity: 0; transform: translateY(12px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-.loader-brand {
-  font-family: 'Playfair Display','Cinzel', Georgia, serif;
-  font-size: clamp(20px,5vw,26px); font-weight: 700;
-  color: #040C1E; letter-spacing:-0.01em;
-  margin-bottom: 5px; line-height: 1.25;
-}
-.loader-tagline {
-  font-family: 'Nunito', sans-serif;
-  font-size: 13px; font-weight: 500;
-  color: rgba(4,12,30,0.52); line-height: 1.65; margin-bottom: 16px;
-}
-.ld-badge {
-  width: 72px; height: 72px; border-radius: 50%;
-  overflow: hidden; margin: 0 auto;
-  box-shadow: 0 2px 14px rgba(4,12,30,0.14),
-              0 0 0 2px rgba(201,162,39,0.45);
-  animation: ldBadgePop 0.6s 1.2s cubic-bezier(0.34,1.4,0.64,1) both;
-}
-@keyframes ldBadgePop {
-  from { opacity: 0; transform: scale(0.5); }
-  to   { opacity: 1; transform: scale(1); }
-}
-.ld-badge img { width:100%; height:100%; object-fit:cover; }
-.loader-bar {
-  width: 180px; height: 2px;
-  background: rgba(4,12,30,0.08);
-  border-radius: 2px; margin: 14px auto 0; overflow: hidden;
-}
-.loader-bar-fill {
-  height: 100%; width: 0; border-radius: 2px;
-  background: linear-gradient(90deg, #F47B00, #C9A227, #138808);
-  animation: ldFill 2.6s cubic-bezier(0.4,0,0.2,1) forwards;
-}
-@keyframes ldFill { to { width: 100%; } }
-
 /* ═══════════════════════════════════════════════
    WARM PEACH THEME — Token Override
 ═══════════════════════════════════════════════ */
@@ -736,6 +619,104 @@ footer, footer p, footer span, footer a, footer li,
 /* ─── Typography Readability Improvements ─── */
 body { text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
 p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
+
+/* ─── COMPARISON TABLE — peach theme fixes ─── */
+.table-wrap {
+  background: rgba(255,255,255,0.75) !important;
+  border-color: rgba(60,25,5,0.12) !important;
+  box-shadow: 0 4px 24px rgba(180,90,30,0.10) !important;
+}
+.ctable th {
+  background: rgba(244,123,0,0.10) !important;
+  color: rgba(60,25,5,0.65) !important;
+  border-bottom-color: rgba(60,25,5,0.08) !important;
+}
+.ctable td {
+  color: rgba(60,25,5,0.75) !important;
+  border-bottom-color: rgba(60,25,5,0.06) !important;
+}
+.ctable tr:hover td { background: rgba(244,123,0,0.05) !important; }
+.ctable .feat { color: #1A0800 !important; font-weight: 700 !important; }
+.ck { color: #138808 !important; }
+.cx { color: rgba(60,25,5,0.20) !important; }
+.rate-pill {
+  background: rgba(244,123,0,0.12) !important;
+  border-color: rgba(244,123,0,0.30) !important;
+  color: #D46800 !important;
+}
+
+/* ─── PAGE HERO — peach theme fixes ─── */
+.page-hero {
+  background: linear-gradient(160deg, #FFE8DC 0%, #FFD9C8 100%) !important;
+  border-bottom-color: rgba(60,25,5,0.08) !important;
+}
+.page-hero::after {
+  background: linear-gradient(90deg, transparent, #F47B00, #E8BD3A, #F47B00, transparent) !important;
+}
+.ptag { background: rgba(244,123,0,0.10) !important; border-color: rgba(244,123,0,0.25) !important; color: #D46800 !important; }
+.ph { color: #1A0800 !important; }
+.ps { color: rgba(60,25,5,0.58) !important; }
+
+/* ─── SECTION TITLES — peach theme fixes ─── */
+.stitle { color: #1A0800 !important; }
+.ssub { color: rgba(60,25,5,0.55) !important; }
+
+/* ─── FLEET DETAIL CARDS — peach theme fixes ─── */
+.fcard {
+  background: rgba(255,255,255,0.85) !important;
+  border-color: rgba(60,25,5,0.10) !important;
+  box-shadow: 0 4px 20px rgba(180,90,30,0.10) !important;
+}
+.fcard:hover {
+  border-color: rgba(244,123,0,0.40) !important;
+  box-shadow: 0 24px 64px rgba(180,90,30,0.18) !important;
+}
+.fname { color: #1A0800 !important; }
+.fmodels { color: rgba(60,25,5,0.45) !important; }
+.fspec {
+  background: rgba(60,25,5,0.04) !important;
+  border-color: rgba(60,25,5,0.08) !important;
+}
+.fsl { color: rgba(60,25,5,0.40) !important; }
+.fsv { color: #1A0800 !important; }
+.frate-ow { background: rgba(244,123,0,0.09) !important; border-color: rgba(244,123,0,0.20) !important; }
+.frate-rt { background: rgba(60,25,5,0.05) !important; border-color: rgba(60,25,5,0.10) !important; }
+.frate-ow .frl { color: #D46800 !important; }
+.frate-rt .frl { color: rgba(60,25,5,0.45) !important; }
+.frate-ow .fra { color: #D46800 !important; }
+.frate-rt .fra { color: rgba(60,25,5,0.65) !important; }
+.fru { color: rgba(60,25,5,0.45) !important; }
+.fbtn {
+  background: rgba(244,123,0,0.09) !important;
+  border-color: rgba(244,123,0,0.25) !important;
+  color: #D46800 !important;
+}
+.fbtn:hover {
+  background: linear-gradient(135deg, #F47B00, #A85200) !important;
+  color: #fff !important;
+  border-color: transparent !important;
+}
+
+/* ─── CTA STRIP — peach theme fixes ─── */
+.cta-strip {
+  background: linear-gradient(135deg,rgba(244,123,0,0.10),rgba(201,162,39,0.05)) !important;
+  border-color: rgba(244,123,0,0.22) !important;
+}
+.cta-text h2 { color: #1A0800 !important; }
+.cta-text p { color: rgba(60,25,5,0.60) !important; }
+
+/* ─── FAQ — peach theme fixes ─── */
+.faq-head { color: #1A0800 !important; }
+.faq-head::after { background: rgba(244,123,0,0.25) !important; }
+.faq {
+  background: rgba(255,255,255,0.70) !important;
+  border-color: rgba(60,25,5,0.10) !important;
+}
+.faq.open { border-color: rgba(244,123,0,0.35) !important; }
+.faq-qt { color: #1A0800 !important; }
+.faq-ic { background: rgba(60,25,5,0.06) !important; color: rgba(60,25,5,0.40) !important; }
+.faq.open .faq-ic { background: #F47B00 !important; color: #fff !important; }
+.faq-a { color: rgba(60,25,5,0.58) !important; }
 
 </style>
 </head>
