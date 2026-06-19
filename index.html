@@ -484,13 +484,13 @@ header.scrolled {
 /* ═══════════════════════ SECTION BASE ═══════════════════════ */
 // ── Fetch via Cloudflare proxy (production) ───────────────────
 async function fetchPredictionsProxy(query) {
-  const res = await fetch(`/api/places/autocomplete?input=${encodeURIComponent(query)}&sessiontoken=${sessionToken}`);
+  const res = await fetch(`/api/places?input=${encodeURIComponent(query)}&sessiontoken=${sessionToken}`);
   const data = await res.json();
   return data.predictions || [];
 }
 
 async function fetchDetailsProxy(placeId) {
-  const res = await fetch(`/api/places/details?place_id=${placeId}&sessiontoken=${sessionToken}`);
+  const res = await fetch(`/api/place-details?place_id=${placeId}&sessiontoken=${sessionToken}`);
   return await res.json();
 }
 .sec-title {
@@ -511,15 +511,15 @@ async function fetchDetailsProxy(placeId) {
 /* ═══════════════════════ FLEET SECTION ═══════════════════════ */
 // ── Fetch via Cloudflare proxy (production) ───────────────────
 async function fetchPredictionsProxy(query) {
-  const workerUrl = 'https://onewaycab.onewaybharatcab.workers.dev/api/places/autocomplete';
-  const res = await fetch(`${workerUrl}?input=${encodeURIComponent(query)}&sessiontoken=${sessionToken}`);
+  // Relative proxy endpoint
+  const res = await fetch(`/api/places?input=${encodeURIComponent(query)}&sessiontoken=${sessionToken}`);
   const data = await res.json();
   return data.predictions || [];
 }
 
 async function fetchDetailsProxy(placeId) {
-  const workerUrl = 'https://onewaycab.onewaybharatcab.workers.dev/api/places/details';
-  const res = await fetch(`${workerUrl}?place_id=${placeId}&sessiontoken=${sessionToken}`);
+  // Relative proxy endpoint
+  const res = await fetch(`/api/place-details?place_id=${placeId}&sessiontoken=${sessionToken}`);
   return await res.json();
 }
 .fleet-card:hover {
@@ -2192,13 +2192,13 @@ function renderDropdown(listEl, predictions, onPick) {
 
 // ── Fetch via Cloudflare proxy (production) ───────────────────
 async function fetchPredictionsProxy(query) {
-  const res = await fetch(`/api/places/autocomplete?input=${encodeURIComponent(query)}&sessiontoken=${sessionToken}`);
+  const res = await fetch(`/api/places?input=${encodeURIComponent(query)}&sessiontoken=${sessionToken}`);
   const data = await res.json();
   return data.predictions || [];
 }
 
 async function fetchDetailsProxy(placeId) {
-  const res = await fetch(`/api/places/details?place_id=${placeId}&sessiontoken=${sessionToken}`);
+  const res = await fetch(`/api/place-details?place_id=${placeId}&sessiontoken=${sessionToken}`);
   return await res.json();
 }
 
