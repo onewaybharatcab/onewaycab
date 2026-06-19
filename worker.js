@@ -1,68 +1,24 @@
 var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 
-// worker.js
-import INDEX_HTML from "./41635db7140708565d4a3f491d1d2760327521ca-index.html";
-import BOOKING_HTML from "./043fe5e4e605b217846ce378f134ac7cd71cce6d-booking.html";
-import ABOUT_HTML from "./6e0314baf43f05d15db77c27a8a5ae85fda8e400-about.html";
-import ADMIN_HTML from "./a16bfcac6f9a1f0fc86c633af3ba69e1efb0ebb1-admin.html";
-import BLOG_HTML from "./6ee79f77a9d8b68ffc132177e450a2729322742d-blog.html";
-import CONTACT_HTML from "./0b6dee1f686187439dfee33719c86acecbc471b4-contact.html";
-import CUSTOMER_HTML from "./e0514d66a8ef7df30ef0269acba2cec684258f89-customer.html";
-import DRIVER_HTML from "./0be7650ff9c3a73c1f926e0e27363e09261878fe-driver.html";
-import FAQ_HTML from "./54fedc74274208f118bce556a36d4c66b623d5d0-faq.html";
-import FLEET_HTML from "./8a78ef380e0deb61d2432c0f9efc3d533b45222b-fleet.html";
-import POLICIES_HTML from "./ba25a31e8f585b0dfdae2b36b87118275cea6822-policies.html";
-import ROUTES_HTML from "./141ebca493952b59cf33362f0160f322baf9e13e-routes.html";
-
-var PAGES = {
-  "/": INDEX_HTML,
-  "/index.html": INDEX_HTML,
-  "/booking.html": BOOKING_HTML,
-  "/about.html": ABOUT_HTML,
-  "/admin.html": ADMIN_HTML,
-  "/blog.html": BLOG_HTML,
-  "/contact.html": CONTACT_HTML,
-  "/customer.html": CUSTOMER_HTML,
-  "/driver.html": DRIVER_HTML,
-  "/faq.html": FAQ_HTML,
-  "/fleet.html": FLEET_HTML,
-  "/policies.html": POLICIES_HTML,
-  "/routes.html": ROUTES_HTML
-};
-
 var worker_default = {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     
-    // 1. Check details FIRST so it doesn't get caught by the general places path
+    // 1. Details endpoint logic (Matches /api/places/details or /api/place-details)
     if (url.pathname.includes("detail")) {
       return handlePlaceDetails(url, env);
     }
     
-    // 2. Safely handle any variations of the autocomplete route
+    // 2. Autocomplete endpoint logic (Matches /api/places or /api/places/autocomplete)
     if (url.pathname.startsWith("/api/places")) {
       return handlePlacesProxy(request, url, env);
     }
     
-    // 3. Serve frontend static views
-    const html = PAGES[url.pathname];
-    if (html) return serveHTML(html, env);
-    return new Response("Not found", { status: 404 });
+    // Fallback response if asset router runs out of scope
+    return new Response("Asset mapping requires direct static build configuration or asset binding.", { status: 404 });
   }
 };
-
-function serveHTML(html, env) {
-  const finalHTML = html.replace("__GOOGLE_PLACES_API_KEY__", env.GOOGLE_PLACES_API_KEY || "");
-  return new Response(finalHTML, {
-    headers: {
-      "Content-Type": "text/html; charset=UTF-8",
-      "Cache-Control": "public, max-age=300",
-      "X-Content-Type-Options": "nosniff"
-    }
-  });
-}
-__name(serveHTML, "serveHTML");
 
 async function handlePlacesProxy(request, url, env) {
   if (request.method === "OPTIONS") return corsPreflight();
