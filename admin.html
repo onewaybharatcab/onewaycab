@@ -16,7 +16,7 @@ body{font-family:'Nunito',sans-serif;background:var(--nv);color:var(--wh);displa
 .sb-ls{font-size:9px;color:rgba(255,255,255,0.3);letter-spacing:1.5px;text-transform:uppercase;display:block;margin-top:1px}
 .sb-nav{flex:1;padding:12px 0;overflow-y:auto}
 .sb-nav::-webkit-scrollbar{width:3px}.sb-nav::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:2px}
-.nav-sec{font-size:9px;font-weight:700;color:rgba(255,255,255,0.25);letter-spacing:2px;text-transform:uppercase;padding:10px 18px 4px}
+.nav-sec{font-size:9px;font-weight:700;color:rgba(255,255,255,0.72);letter-spacing:2px;text-transform:uppercase;padding:10px 18px 4px}
 .ni{display:flex;align-items:center;gap:10px;padding:10px 18px;color:rgba(255,255,255,0.5);cursor:pointer;transition:all .2s;border-left:2px solid transparent;font-size:13px;font-weight:600}
 .ni:hover{background:rgba(255,255,255,0.04);color:var(--wh)}
 .ni.act{background:rgba(244,123,0,0.1);color:var(--wh);border-left-color:var(--sf)}
@@ -25,13 +25,13 @@ body{font-family:'Nunito',sans-serif;background:var(--nv);color:var(--wh);displa
 .sb-user{padding:16px 18px;border-top:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;gap:10px}
 .sb-av{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--sf),var(--sf3));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
 .sb-un{font-size:13px;font-weight:700;color:var(--wh)}
-.sb-ur{font-size:10px;color:rgba(255,255,255,0.35)}
+.sb-ur{font-size:10px;color:rgba(255,255,255,0.80)}
 /* MAIN */
 .main{margin-left:230px;flex:1;display:flex;flex-direction:column}
 .topbar{background:var(--nv2);border-bottom:1px solid rgba(255,255,255,0.05);padding:0 24px;height:58px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:40}
 .tb-title{font-family:'Cinzel',serif;font-size:15px;font-weight:700;color:var(--wh)}
 .tb-right{display:flex;align-items:center;gap:12px}
-.tb-date{font-size:12px;color:rgba(255,255,255,0.35)}
+.tb-date{font-size:12px;color:rgba(255,255,255,0.80)}
 .nb{position:relative;width:34px;height:34px;background:var(--fa);border-radius:var(--r12);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px}
 .nb-dot{position:absolute;top:5px;right:5px;width:7px;height:7px;background:var(--rd);border-radius:50%;border:2px solid var(--nv2)}
 .content{padding:24px;flex:1}
@@ -51,13 +51,13 @@ body{font-family:'Nunito',sans-serif;background:var(--nv);color:var(--wh);displa
 .charts-row{display:grid;grid-template-columns:1.5fr 1fr;gap:18px;margin-bottom:24px}
 .chart-card{background:var(--nv3);border:1px solid rgba(255,255,255,0.06);border-radius:var(--r20);padding:22px}
 .cc-title{font-family:'Cinzel',serif;font-size:14px;font-weight:700;color:var(--wh);margin-bottom:2px}
-.cc-sub{font-size:11px;color:rgba(255,255,255,0.35);margin-bottom:18px}
+.cc-sub{font-size:11px;color:rgba(255,255,255,0.80);margin-bottom:18px}
 .bar-chart{display:flex;align-items:flex-end;gap:10px;height:120px}
 .bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px}
 .bar-fill{width:100%;border-radius:4px 4px 0 0;background:rgba(255,255,255,0.08);transition:all .5s;cursor:pointer;position:relative}
 .bar-fill.sf{background:linear-gradient(to top,var(--sf3),var(--sf))}
 .bar-fill:hover{opacity:0.8}
-.bar-lbl{font-size:9px;color:rgba(255,255,255,0.35);font-weight:700}
+.bar-lbl{font-size:9px;color:rgba(255,255,255,0.80);font-weight:700}
 /* Donut */
 .donut-wrap{display:flex;align-items:center;gap:18px}
 .legend{display:flex;flex-direction:column;gap:8px}
@@ -79,7 +79,7 @@ body{font-family:'Nunito',sans-serif;background:var(--nv);color:var(--wh);displa
 .tbl-input:focus{border-color:rgba(244,123,0,0.4)}
 .tbl-input option{background:var(--nv3)}
 table{width:100%;border-collapse:collapse;font-size:13px}
-th{background:rgba(255,255,255,0.03);padding:11px 16px;text-align:left;font-size:10px;font-weight:700;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap}
+th{background:rgba(255,255,255,0.03);padding:11px 16px;text-align:left;font-size:10px;font-weight:700;color:rgba(255,255,255,0.80);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap}
 td{padding:13px 16px;border-bottom:1px solid rgba(255,255,255,0.04);vertical-align:middle;color:rgba(255,255,255,0.7)}
 tr:last-child td{border-bottom:none}
 tr:hover td{background:rgba(244,123,0,0.03)}
@@ -353,7 +353,7 @@ header.scrolled {
 /* ── FLEET ── */
 .fleet-section { background: #FFE8DC !important; }
 .fleet-card {
-  background: rgba(255,255,255,0.70) !important;
+  background: rgba(255,255,255,0.88) !important;
   border-color: rgba(60,25,5,0.10) !important;
   box-shadow: 0 2px 14px rgba(180,90,30,0.08) !important;
 }
@@ -367,7 +367,7 @@ header.scrolled {
 
 /* ── CALC ── */
 .calc-section { background: #FFF0E8 !important; }
-.calc-glass { background: rgba(255,255,255,0.70) !important; border-color: rgba(60,25,5,0.10) !important; }
+.calc-glass { background: rgba(255,255,255,0.88) !important; border-color: rgba(60,25,5,0.10) !important; }
 .cr-row { border-bottom-color: rgba(60,25,5,0.06) !important; }
 .cr-row .lbl { color: rgba(60,25,5,0.52) !important; }
 .cr-row .val { color: #1A0800 !important; }
@@ -375,7 +375,7 @@ header.scrolled {
 
 /* ── ROUTES ── */
 .routes-section { background: #FFE8DC !important; }
-.route-card { background: rgba(255,255,255,0.60) !important; border-color: rgba(60,25,5,0.09) !important; }
+.route-card { background: rgba(255,255,255,0.85) !important; border-color: rgba(60,25,5,0.09) !important; }
 .route-card:hover { background: rgba(244,123,0,0.06) !important; border-color: rgba(244,123,0,0.28) !important; }
 .route-name { color: #1A0800 !important; }
 .route-meta, .route-dist { color: rgba(60,25,5,0.40) !important; }
@@ -429,7 +429,7 @@ header.scrolled {
 .icard-label { color: rgba(60,25,5,0.40) !important; }
 .icard-value { color: #1A0800 !important; }
 .icard-sub { color: rgba(60,25,5,0.32) !important; }
-.hours-card { background: rgba(255,255,255,0.50) !important; border-color: rgba(60,25,5,0.10) !important; }
+.hours-card { background: rgba(255,255,255,0.75) !important; border-color: rgba(60,25,5,0.10) !important; }
 .hours-title { color: #1A0800 !important; }
 .hours-day { color: rgba(60,25,5,0.52) !important; }
 .hours-row { border-bottom-color: rgba(60,25,5,0.06) !important; }
@@ -447,13 +447,13 @@ header.scrolled {
 .qc-strip { background: linear-gradient(135deg,rgba(244,123,0,0.09),rgba(232,189,58,0.05)) !important; border-color: rgba(244,123,0,0.20) !important; }
 .qc-text h2 { color: #1A0800 !important; }
 .qc-text p { color: rgba(60,25,5,0.48) !important; }
-.map-card { background: rgba(255,255,255,0.50) !important; border-color: rgba(60,25,5,0.08) !important; }
+.map-card { background: rgba(255,255,255,0.75) !important; border-color: rgba(60,25,5,0.08) !important; }
 .map-hdr { border-bottom-color: rgba(60,25,5,0.07) !important; }
 .map-hdr h3, .map-body p { color: #1A0800 !important; }
 
 /* ── POLICIES ── */
 .layout { background: #FFF0E8 !important; }
-.policy-panel { background: rgba(255,255,255,0.60) !important; border-color: rgba(60,25,5,0.09) !important; }
+.policy-panel { background: rgba(255,255,255,0.85) !important; border-color: rgba(60,25,5,0.09) !important; }
 .policy-sec { border-bottom-color: rgba(60,25,5,0.06) !important; }
 .policy-title { color: #1A0800 !important; }
 .policy-sub { color: rgba(60,25,5,0.52) !important; }
@@ -463,7 +463,7 @@ header.scrolled {
 .snav-item:hover { color: #1A0800 !important; background: rgba(60,25,5,0.05) !important; }
 .snav-item.act { background: rgba(244,123,0,0.10) !important; border-left-color: #F47B00 !important; color: #D46800 !important; }
 .snav h3 { color: rgba(60,25,5,0.32) !important; }
-.snav-help { background: rgba(255,255,255,0.50) !important; border-color: rgba(60,25,5,0.12) !important; }
+.snav-help { background: rgba(255,255,255,0.75) !important; border-color: rgba(60,25,5,0.12) !important; }
 .snav-help h4 { color: #1A0800 !important; }
 .snav-help small { color: rgba(60,25,5,0.35) !important; }
 
@@ -482,7 +482,7 @@ header.scrolled {
 
 /* ── DASHBOARDS ── */
 .dash-card, .stat-card, .booking-row {
-  background: rgba(255,255,255,0.70) !important;
+  background: rgba(255,255,255,0.88) !important;
   border-color: rgba(60,25,5,0.09) !important;
 }
 .dash-label, .stat-label { color: rgba(60,25,5,0.42) !important; }
@@ -548,12 +548,12 @@ footer::after {
   animation: footerBorderShimmer 4s linear infinite;
 }
 .footer-brand p {
-  font-size: 13px; color: rgba(255,220,180,0.55);
+  font-size: 13px; color: rgba(255,220,180,0.80);
   line-height: 1.85; margin-bottom: 22px;
 }
 .footer-contact-row {
   display: flex; align-items: flex-start; gap: 10px;
-  font-size: 13px; color: rgba(255,220,180,0.60);
+  font-size: 13px; color: rgba(255,220,180,0.85);
   margin-bottom: 10px; transition: color 0.2s;
 }
 .footer-contact-row:hover { color: rgba(255,220,180,0.90); }
@@ -592,7 +592,7 @@ footer::after {
 .footer-col ul { list-style: none; }
 .footer-col ul li { margin-bottom: 10px; }
 .footer-col ul li a {
-  font-size: 13px; color: rgba(255,220,180,0.55) !important;
+  font-size: 13px; color: rgba(255,220,180,0.80) !important;
   text-decoration: none; transition: all 0.2s;
   display: flex; align-items: center; gap: 6px;
 }
@@ -635,10 +635,10 @@ footer::after {
   flex-wrap: wrap; gap: 12px;
   position: relative; z-index: 1;
 }
-.fb-copy { font-size: 12px; color: rgba(255,220,180,0.35) !important; }
+.fb-copy { font-size: 12px; color: rgba(255,220,180,0.60) !important; }
 .fb-made {
   display: flex; align-items: center; gap: 8px;
-  font-size: 11px; color: rgba(255,220,180,0.40) !important;
+  font-size: 11px; color: rgba(255,220,180,0.65) !important;
   letter-spacing: 1px;
 }
 .mini-flag { display: flex; flex-direction: column; width: 20px; height: 14px; border-radius: 2px; overflow: hidden; }
@@ -648,10 +648,15 @@ footer::after {
 .mini-flag span:nth-child(3) { background: #138808 !important; }
 .fb-links { display: flex; gap: 16px; }
 .fb-links a {
-  font-size: 12px; color: rgba(255,220,180,0.35) !important;
+  font-size: 12px; color: rgba(255,220,180,0.60) !important;
   text-decoration: none; transition: color 0.2s;
 }
 .fb-links a:hover { color: #FF9D2F !important; }
+
+
+/* ─── Typography Readability Improvements ─── */
+body { text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
 
 </style>
 </head>
@@ -837,7 +842,7 @@ const payments=[
   {id:'PAY-003',bid:'OWB-2024-M9N0O',cust:'Arun Mishra',amt:'₹260',method:'Razorpay/Card',date:'2024-01-12',status:'Refunded'},
 ];
 function badge(s){const m={Confirmed:'sb-conf',Completed:'sb-comp',Pending:'sb-pend',Cancelled:'sb-canc',Active:'sb-act',Inactive:'sb-inact',Verified:'sb-act',Pending:'sb-pend',Success:'sb-conf',Refunded:'sb-pend'};return`<span class="sbadge ${m[s]||''}">${s}</span>`;}
-function renderBookings(data,id,lim){const items=lim?data.slice(0,lim):data;document.getElementById(id).innerHTML=`<table><thead><tr><th>Booking ID</th><th>Customer</th><th>Route</th><th>Vehicle</th><th>Date</th><th>Fare</th><th>Status</th><th>Actions</th></tr></thead><tbody>${items.map(b=>`<tr><td><span style="font-size:11px;font-family:monospace;color:#93c5fd">${b.id}</span></td><td><div style="font-weight:700">${b.cust}</div><div style="font-size:11px;color:rgba(255,255,255,0.35)">${b.mob}</div></td><td style="font-weight:600">${b.route}</td><td>${b.veh}</td><td style="font-size:12px;color:rgba(255,255,255,0.45)">${b.date}</td><td><div style="font-weight:700">${b.fare}</div><div style="font-size:11px;color:rgba(255,255,255,0.35)">Adv: ${b.adv}</div></td><td>${badge(b.status)}</td><td><div class="action-row"><button class="ab ab-v">View</button><button class="ab ab-e">Edit</button><button class="ab ab-d">×</button></div></td></tr>`).join('')}</tbody></table>`;}
+function renderBookings(data,id,lim){const items=lim?data.slice(0,lim):data;document.getElementById(id).innerHTML=`<table><thead><tr><th>Booking ID</th><th>Customer</th><th>Route</th><th>Vehicle</th><th>Date</th><th>Fare</th><th>Status</th><th>Actions</th></tr></thead><tbody>${items.map(b=>`<tr><td><span style="font-size:11px;font-family:monospace;color:#93c5fd">${b.id}</span></td><td><div style="font-weight:700">${b.cust}</div><div style="font-size:11px;color:rgba(255,255,255,0.80)">${b.mob}</div></td><td style="font-weight:600">${b.route}</td><td>${b.veh}</td><td style="font-size:12px;color:rgba(255,255,255,0.72)">${b.date}</td><td><div style="font-weight:700">${b.fare}</div><div style="font-size:11px;color:rgba(255,255,255,0.80)">Adv: ${b.adv}</div></td><td>${badge(b.status)}</td><td><div class="action-row"><button class="ab ab-v">View</button><button class="ab ab-e">Edit</button><button class="ab ab-d">×</button></div></td></tr>`).join('')}</tbody></table>`;}
 function renderDrivers(){document.getElementById('driversTbl').innerHTML=`<table><thead><tr><th>Driver ID</th><th>Name</th><th>Vehicle</th><th>Trips</th><th>Rating</th><th>KYC</th><th>Status</th><th>Actions</th></tr></thead><tbody>${drivers.map(d=>`<tr><td style="font-size:11px;font-family:monospace;color:#93c5fd">${d.id}</td><td><div style="font-weight:700">${d.name}</div><div style="font-size:11px;color:rgba(255,255,255,.35)">${d.mob}</div></td><td style="font-size:12px">${d.veh}</td><td style="font-weight:700">${d.trips}</td><td style="color:#E8BD3A;font-weight:700">★ ${d.rating}</td><td>${badge(d.kyc)}</td><td>${badge(d.status)}</td><td><div class="action-row"><button class="ab ab-v">View</button><button class="ab ab-e">Edit</button></div></td></tr>`).join('')}</tbody></table>`;}
 function renderCustomers(){document.getElementById('custTbl').innerHTML=`<table><thead><tr><th>ID</th><th>Name</th><th>Mobile</th><th>Trips</th><th>Spent</th><th>Joined</th><th>Status</th></tr></thead><tbody>${customers.map(c=>`<tr><td style="font-size:11px;font-family:monospace;color:#93c5fd">${c.id}</td><td style="font-weight:700">${c.name}</td><td>${c.mob}</td><td style="font-weight:700;text-align:center">${c.trips}</td><td style="font-weight:700;color:var(--gr3)">${c.spent}</td><td style="font-size:12px;color:rgba(255,255,255,.4)">${c.joined}</td><td>${badge(c.status)}</td></tr>`).join('')}</tbody></table>`;}
 function renderPayments(){document.getElementById('payTbl').innerHTML=`<table><thead><tr><th>Pay ID</th><th>Booking ID</th><th>Customer</th><th>Amount</th><th>Method</th><th>Date</th><th>Status</th></tr></thead><tbody>${payments.map(p=>`<tr><td style="font-size:11px;font-weight:700">${p.id}</td><td style="font-size:11px;font-family:monospace;color:#93c5fd">${p.bid}</td><td style="font-weight:600">${p.cust}</td><td style="font-weight:700;color:var(--gr3)">${p.amt}</td><td>${p.method}</td><td style="font-size:12px;color:rgba(255,255,255,.4)">${p.date}</td><td>${badge(p.status)}</td></tr>`).join('')}</tbody></table>`;}

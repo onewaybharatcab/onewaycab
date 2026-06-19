@@ -16,30 +16,44 @@ export default {
   }
 };
 
+// ── Places Autocomplete ───────────────────────────────────────────────────────
+
 async function handlePlacesProxy(request, url, env) {
   const input = url.searchParams.get("input") || "";
   const sessionToken = url.searchParams.get("sessiontoken") || "";
 
-  if (input.length < 2) return jsonResponse({ predictions: [], status: "ZERO_RESULTS" });
+  if (input.length < 2) {
+    return jsonResponse({ predictions: [], status: "ZERO_RESULTS" });
+  }
 
   const apiKey = env.GOOGLE_PLACES_API_KEY;
-  if (!apiKey) return jsonResponse({ error: "GOOGLE_PLACES_API_KEY not set in Cloudflare secrets" }, 500);
+  if (!apiKey) {
+    return jsonResponse({ error: "GOOGLE_PLACES_API_KEY not set in Cloudflare secrets" }, 500);
+  }
+
+  const gUrl = "https://places.googleapis.com/v1/places:autocomplete";
 
   const payload = {
-    input,
-    includedRegionCodes: ["in"],
-    includedPrimaryTypes: ["geocode"],
+    input: input,
+    includedRegionCodes: ["in"],       // India only
+    includedPrimaryTypes: ["geocode"], // Address/location results
     languageCode: "en"
   };
+
   if (sessionToken) payload.sessionToken = sessionToken;
 
   try {
-    const res = await fetch("https://places.googleapis.com/v1/places:autocomplete", {
+    const res = await fetch(gUrl, {
       method: "POST",
-      headers: { "Content-Type": "application/json", "X-Goog-Api-Key": apiKey },
+      headers: {
+        "Content-Type": "application/json",
+        "X-Goog-Api-Key": apiKey
+      },
       body: JSON.stringify(payload)
     });
+
     const data = await res.json();
+
     const predictions = (data.suggestions || []).map((s) => {
       const p = s.placePrediction;
       return {
@@ -49,21 +63,30 @@ async function handlePlacesProxy(request, url, env) {
         secondary_text: p.structuredFormat?.secondaryText?.text
       };
     });
-    return jsonResponse({ status: predictions.length > 0 ? "OK" : "ZERO_RESULTS", predictions });
+
+    return jsonResponse({
+      status: predictions.length > 0 ? "OK" : "ZERO_RESULTS",
+      predictions: predictions
+    });
   } catch (err) {
     return jsonResponse({ error: err.message }, 502);
   }
 }
 
+// ── Place Details ─────────────────────────────────────────────────────────────
+
 async function handlePlaceDetails(url, env) {
   const placeId = url.searchParams.get("place_id") || "";
+
   if (!placeId) return jsonResponse({ error: "place_id required" }, 400);
 
   const apiKey = env.GOOGLE_PLACES_API_KEY;
   if (!apiKey) return jsonResponse({ error: "GOOGLE_PLACES_API_KEY not set" }, 500);
 
+  const gUrl = `https://places.googleapis.com/v1/places/${placeId}`;
+
   try {
-    const res = await fetch(`https://places.googleapis.com/v1/places/${placeId}`, {
+    const res = await fetch(gUrl, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -71,8 +94,13 @@ async function handlePlaceDetails(url, env) {
         "X-Goog-FieldMask": "displayName,formattedAddress,location"
       }
     });
+
     const data = await res.json();
-    if (!data || data.error) return jsonResponse({ error: data.error?.message || "Error fetching details" }, 400);
+
+    if (!data || data.error) {
+      return jsonResponse({ error: data.error?.message || "Error fetching details" }, 400);
+    }
+
     return jsonResponse({
       name: data.displayName?.text || "",
       address: data.formattedAddress || "",
@@ -84,10 +112,15 @@ async function handlePlaceDetails(url, env) {
   }
 }
 
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
 function jsonResponse(data, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
-    headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
+    headers: {
+      "Content-Type": "application/json",
+      "Access-Control-Allow-Origin": "*"
+    }
   });
 }
 
