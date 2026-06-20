@@ -7,7 +7,7 @@ var worker_default = {
     
     // 1. Details endpoint logic (Matches detail, details, or place_id queries)
     if (url.pathname.includes("detail") || url.searchParams.has("place_id")) {
-      return handlePlaceDetails(url, env);
+      return handlePlaceDetails(request, url, env);
     }
     
     // 2. Broad Autocomplete logic (Matches /api/places, /api/place, /api/autocomplete)
@@ -51,7 +51,8 @@ async function handlePlacesProxy(request, url, env) {
 }
 __name(handlePlacesProxy, "handlePlacesProxy");
 
-async function handlePlaceDetails(url, env) {
+async function handlePlaceDetails(request, url, env) {
+  if (request.method === "OPTIONS") return corsPreflight();
   const placeId = url.searchParams.get("place_id") || "";
   const sessionToken = url.searchParams.get("sessiontoken") || "";
   if (!placeId) return jsonResponse({ error: "place_id required" }, 400);
