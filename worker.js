@@ -5,13 +5,13 @@ var worker_default = {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     
-    // 1. Details endpoint logic (Matches /api/places/details or /api/place-details)
-    if (url.pathname.includes("detail")) {
+    // 1. Details endpoint logic (Matches detail, details, or place_id queries)
+    if (url.pathname.includes("detail") || url.searchParams.has("place_id")) {
       return handlePlaceDetails(url, env);
     }
     
-    // 2. Autocomplete endpoint logic (Matches /api/places or /api/places/autocomplete)
-    if (url.pathname.startsWith("/api/places")) {
+    // 2. Broad Autocomplete logic (Matches /api/places, /api/place, /api/autocomplete)
+    if (url.pathname.includes("place") || url.pathname.includes("autocomplete")) {
       return handlePlacesProxy(request, url, env);
     }
     
@@ -28,7 +28,7 @@ async function handlePlacesProxy(request, url, env) {
 
   const apiKey = env.GOOGLE_PLACES_API_KEY;
   if (!apiKey) {
-    return jsonResponse({ error: "GOOGLE_PLACES_API_KEY not set in Cloudflare secrets" }, 500);
+    return jsonResponse({ error: "GOOGLE_PLACES_API_KEY not set in Cloudflare configuration" }, 500);
   }
 
   const gUrl = new URL("https://maps.googleapis.com/maps/api/place/autocomplete/json");
@@ -42,17 +42,11 @@ async function handlePlacesProxy(request, url, env) {
   try {
     const res = await fetch(gUrl.toString());
     const data = await res.json();
-    return jsonResponse({
-      status: data.status,
-      predictions: (data.predictions || []).map((p) => ({
-        place_id: p.place_id,
-        description: p.description,
-        main_text: p.structured_formatting?.main_text,
-        secondary_text: p.structured_formatting?.secondary_text
-      }))
-    });
+    
+    // Pass back the complete raw payload structure so the frontend parser can read it cleanly
+    return jsonResponse(data);
   } catch (err) {
-    return jsonResponse({ error: err.message }, 502);
+    return jsonResponse({ error: err.message, status: "UNKNOWN_ERROR" }, 502);
   }
 }
 __name(handlePlacesProxy, "handlePlacesProxy");
@@ -76,14 +70,7 @@ async function handlePlaceDetails(url, env) {
   try {
     const res = await fetch(gUrl.toString());
     const data = await res.json();
-    if (data.status !== "OK") return jsonResponse({ error: data.status }, 400);
-    const r = data.result;
-    return jsonResponse({
-      name: r.name,
-      address: r.formatted_address,
-      lat: r.geometry?.location?.lat,
-      lng: r.geometry?.location?.lng
-    });
+    return jsonResponse(data);
   } catch (err) {
     return jsonResponse({ error: err.message }, 502);
   }
@@ -95,7 +82,9 @@ function jsonResponse(data, status = 200) {
     status,
     headers: {
       "Content-Type": "application/json",
-      "Access-Control-Allow-Origin": "*"
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type"
     }
   });
 }

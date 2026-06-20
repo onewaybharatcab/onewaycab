@@ -231,7 +231,7 @@ tr:last-child td{border-bottom:none}
 @keyframes ldFill { to { width: 100%; } }
 
 /* ═══════════════════════════════════════════════
-   WARM PEACH THEME — Token Override
+   /* ═══════════════════ WARM PEACH THEME — Token Override
 ═══════════════════════════════════════════════ */
 :root {
   /* Swap navy backgrounds → warm peach family */
@@ -280,8 +280,8 @@ header.scrolled {
   background-clip: text !important;
 }
 .logo-subtitle { color: rgba(60,25,5,0.45) !important; }
-.nav-link { color: rgba(26,8,0,0.70) !important; font-weight:700 !important; }
-.nav-link:hover { color: #F47B00 !important; background: rgba(244,123,0,0.10) !important; }
+nav a { color: rgba(26,8,0,0.70) !important; font-weight:700 !important; }
+nav a:hover { color: #F47B00 !important; background: rgba(244,123,0,0.10) !important; }
 
 /* ── HERO ── */
 .hero { background: #FFF0E8 !important; }
@@ -506,6 +506,74 @@ h3 { color: #1A0800 !important; }
 p  { color: rgba(60,25,5,0.58) !important; }
 ul li { color: rgba(60,25,5,0.58) !important; }
 
+/* ══════════════════ DASHBOARD PAGE — Component Overrides ══════════════════ */
+/* This page has its own sidebar-dashboard layout, separate from the shared
+   site classes above — sidebar, stat cards, booking list, wallet, etc. */
+
+/* ── SIDEBAR ── */
+.sidebar { background: #FFE8DC !important; border-right-color: rgba(60,25,5,0.08) !important; }
+.sb-top { border-bottom-color: rgba(60,25,5,0.08) !important; }
+.sb-name { color: #1A0800 !important; }
+.sb-mob { color: rgba(60,25,5,0.45) !important; }
+.ni { color: rgba(60,25,5,0.55) !important; }
+.ni:hover { background: rgba(60,25,5,0.05) !important; color: #1A0800 !important; }
+.ni.act { background: rgba(244,123,0,0.10) !important; color: #1A0800 !important; border-left-color: #F47B00 !important; }
+.sb-foot { border-top-color: rgba(60,25,5,0.08) !important; }
+.sb-foot a { color: rgba(60,25,5,0.45) !important; }
+.sb-foot a:hover { color: #D46800 !important; }
+
+/* ── TOPBAR ── */
+.topbar { background: rgba(255,255,255,0.70) !important; border-bottom-color: rgba(60,25,5,0.08) !important; }
+.tb-title { color: #1A0800 !important; }
+
+/* ── STAT CARDS ── */
+.sc { background: rgba(255,255,255,0.80) !important; border-color: rgba(60,25,5,0.09) !important; }
+.sc-lbl { color: rgba(60,25,5,0.45) !important; }
+.sc-val { color: #1A0800 !important; }
+
+/* ── SECTION HEADERS / BUTTONS ── */
+.sec-title { color: #1A0800 !important; }
+.btn-ol { background: rgba(60,25,5,0.06) !important; color: rgba(60,25,5,0.60) !important; border-color: rgba(60,25,5,0.14) !important; }
+
+/* ── BOOKING LIST CARDS ── */
+.bcard { background: rgba(255,255,255,0.78) !important; border-color: rgba(60,25,5,0.09) !important; }
+.bcard:hover { border-color: rgba(244,123,0,0.30) !important; }
+.bcard.upcoming { border-color: rgba(244,123,0,0.30) !important; background: rgba(244,123,0,0.05) !important; }
+.bdate { color: rgba(60,25,5,0.50) !important; }
+.bcity { color: #1A0800 !important; }
+.bmeta { color: rgba(60,25,5,0.55) !important; }
+.bacts { border-top-color: rgba(60,25,5,0.08) !important; }
+.ab-i { background: rgba(60,25,5,0.06) !important; color: rgba(60,25,5,0.55) !important; }
+
+/* ── WALLET CARD ── */
+.wallet-card { background: linear-gradient(135deg,rgba(244,123,0,0.10),rgba(232,189,58,0.06)) !important; border-color: rgba(244,123,0,0.22) !important; }
+.wl { color: rgba(60,25,5,0.45) !important; }
+.wsub { color: rgba(60,25,5,0.55) !important; }
+.wb-out { background: rgba(60,25,5,0.07) !important; color: rgba(60,25,5,0.60) !important; border-color: rgba(60,25,5,0.14) !important; }
+
+/* ── SAVED ROUTES ── */
+.srcard { background: rgba(255,255,255,0.78) !important; border-color: rgba(60,25,5,0.09) !important; }
+.srcard:hover { border-color: rgba(244,123,0,0.30) !important; background: rgba(244,123,0,0.05) !important; }
+.sr-name { color: #1A0800 !important; }
+.sr-meta { color: rgba(60,25,5,0.50) !important; }
+
+/* ── REFERRAL ── */
+.ref-card { background: linear-gradient(135deg,rgba(244,123,0,0.08),rgba(232,189,58,0.05)) !important; border-color: rgba(244,123,0,0.18) !important; }
+.ref-title { color: #1A0800 !important; }
+.ref-sub { color: rgba(60,25,5,0.55) !important; }
+.ref-code-box { background: rgba(255,255,255,0.70) !important; border-color: rgba(244,123,0,0.35) !important; }
+.rs-lbl { color: rgba(60,25,5,0.50) !important; }
+
+/* ── PROFILE FORM (dashboard variant) ── */
+.field label { color: rgba(60,25,5,0.45) !important; }
+.finput { background: rgba(255,255,255,0.85) !important; border-color: rgba(60,25,5,0.14) !important; color: #1A0800 !important; }
+.finput:focus { border-color: rgba(244,123,0,0.50) !important; background: #fff !important; }
+
+/* ── TRANSACTIONS TABLE ── */
+.tbl-wrap { background: rgba(255,255,255,0.78) !important; border-color: rgba(60,25,5,0.09) !important; }
+th { background: rgba(60,25,5,0.05) !important; color: rgba(60,25,5,0.45) !important; }
+td { border-bottom-color: rgba(60,25,5,0.06) !important; color: rgba(60,25,5,0.62) !important; }
+
 /* ══════════════════ VIBRANT PEACH FOOTER ══════════════════ */
 /* ─── FOOTER COMPLETE REDESIGN ─── */
 footer {
@@ -575,20 +643,22 @@ footer::after {
   display: flex; gap: 10px; margin-top: 22px;
 }
 .footer-social-btn {
-  width: 40px; height: 40px; border-radius: 12px;
-  background: rgba(244,123,0,0.18);
-  border: 1px solid rgba(244,123,0,0.40);
+  width: 38px; height: 38px; border-radius: 9px;
   display: flex; align-items: center; justify-content: center;
-  font-size: 18px; text-decoration: none;
+  text-decoration: none;
   transition: all 0.22s; cursor: pointer;
   box-shadow: 0 2px 8px rgba(0,0,0,0.3);
 }
+.footer-social-btn svg { width: 20px; height: 20px; }
 .footer-social-btn:hover {
-  background: rgba(244,123,0,0.38);
-  border-color: rgba(244,123,0,0.70);
   transform: translateY(-3px);
-  box-shadow: 0 8px 24px rgba(244,123,0,0.30);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.35);
 }
+.footer-social-btn.fb { background: #1877F2; }
+.footer-social-btn.ig { background: linear-gradient(135deg, #F58529, #DD2A7B, #8134AF, #515BD4); }
+.footer-social-btn.li { background: #0A66C2; }
+.footer-social-btn.x  { background: #000000; border: 1px solid rgba(255,255,255,0.15); }
+.footer-social-btn.yt { background: #FF0000; }
 
 /* ── Nav Columns ── */
 .footer-col h4 {
@@ -690,6 +760,60 @@ footer, footer p, footer span, footer a, footer li,
 /* ─── Typography Readability Improvements ─── */
 body { text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
 p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
+
+/* ═══════════════════════ FLOATING CALL + WHATSAPP ═══════════════════════ */
+.float-actions {
+  position: fixed; top: 50%; right: 28px; transform: translateY(-50%); z-index: 300;
+  display: flex; flex-direction: column; gap: 14px;
+  align-items: center;
+}
+.float-btn {
+  width: 58px; height: 58px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; text-decoration: none;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.35);
+  transition: transform 0.2s, box-shadow 0.2s;
+  position: relative;
+}
+.float-btn:hover { transform: scale(1.08); }
+.float-btn svg { width: 28px; height: 28px; }
+
+.float-btn.call {
+  background: linear-gradient(135deg, #F47B00, #A85200);
+  box-shadow: 0 8px 28px rgba(244,123,0,0.35);
+  animation: floatPulseCall 2.6s ease-in-out infinite;
+}
+.float-btn.whatsapp {
+  background: linear-gradient(135deg, #3DDC58, #1DA851);
+  box-shadow: 0 8px 28px rgba(29,168,81,0.45);
+  animation: floatPulseWA 2.6s ease-in-out infinite 0.4s;
+}
+@keyframes floatPulseCall {
+  0%,100% { box-shadow: 0 8px 28px var(--sf-glow), 0 0 0 0 rgba(244,123,0,0.45); }
+  50%     { box-shadow: 0 8px 28px var(--sf-glow), 0 0 0 10px rgba(244,123,0,0); }
+}
+@keyframes floatPulseWA {
+  0%,100% { box-shadow: 0 8px 28px rgba(29,168,81,0.45), 0 0 0 0 rgba(29,168,81,0.45); }
+  50%     { box-shadow: 0 8px 28px rgba(29,168,81,0.45), 0 0 0 10px rgba(29,168,81,0); }
+}
+.float-label {
+  position: absolute; right: 70px; top: 50%; transform: translateY(-50%);
+  background: var(--nv-900); color: var(--wh);
+  font-size: 12.5px; font-weight: 600; white-space: nowrap;
+  padding: 7px 14px; border-radius: 8px;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.2s, transform 0.2s;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+}
+.float-btn:hover .float-label { opacity: 1; transform: translateY(-50%) translateX(-4px); }
+@media (max-width: 768px) {
+  .float-actions { top: 50%; right: 16px; transform: translateY(-50%); gap: 12px; }
+  .float-btn { width: 52px; height: 52px; }
+  .float-btn svg { width: 25px; height: 25px; }
+  .float-label { display: none; }
+}
+
+
 
 </style>
 </head>
@@ -855,7 +979,7 @@ const bookings=[
   {id:'OWB-2024-D3E4F',from:'Delhi',to:'Agra',veh:'Sedan',date:'2024-01-10',fare:'₹3,900',status:'completed'},
   {id:'OWB-2024-G5H6I',from:'Delhi',to:'Haridwar',veh:'Innova',date:'2024-01-05',fare:'₹6,900',status:'completed'},
   {id:'OWB-2024-J7K8L',from:'Delhi',to:'Chandigarh',veh:'Ertiga',date:'2023-12-28',fare:'₹5,200',status:'completed'},
-  {id:'OWB-2024-M9N0O',from:'Delhi',to:'Mathura',veh:'Hatchback',date:'2023-12-15',fare:'₹2,600',status:'cancelled'},
+  {id:'OWB-2024-M9N0O',from:'Delhi',to:'Mathura',veh:'Sedan',date:'2023-12-15',fare:'₹2,600',status:'cancelled'},
 ];
 const smap={confirmed:'sb-conf',completed:'sb-comp',pending:'sb-pend',cancelled:'sb-canc'};
 const slbl={confirmed:'✓ Confirmed',completed:'Completed',pending:'Pending',cancelled:'Cancelled'};

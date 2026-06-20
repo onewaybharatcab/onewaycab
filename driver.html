@@ -273,7 +273,7 @@ tr:last-child td{border-bottom:none}
 @keyframes ldFill { to { width: 100%; } }
 
 /* ═══════════════════════════════════════════════
-   WARM PEACH THEME — Token Override
+   /* ═══════════════════ WARM PEACH THEME — Token Override
 ═══════════════════════════════════════════════ */
 :root {
   /* Swap navy backgrounds → warm peach family */
@@ -322,8 +322,8 @@ header.scrolled {
   background-clip: text !important;
 }
 .logo-subtitle { color: rgba(60,25,5,0.45) !important; }
-.nav-link { color: rgba(26,8,0,0.70) !important; font-weight:700 !important; }
-.nav-link:hover { color: #F47B00 !important; background: rgba(244,123,0,0.10) !important; }
+nav a { color: rgba(26,8,0,0.70) !important; font-weight:700 !important; }
+nav a:hover { color: #F47B00 !important; background: rgba(244,123,0,0.10) !important; }
 
 /* ── HERO ── */
 .hero { background: #FFF0E8 !important; }
@@ -548,6 +548,89 @@ h3 { color: #1A0800 !important; }
 p  { color: rgba(60,25,5,0.58) !important; }
 ul li { color: rgba(60,25,5,0.58) !important; }
 
+/* ══════════════════ DRIVER DASHBOARD — Component Overrides ══════════════════ */
+/* Sidebar-dashboard layout, separate from the shared site classes above —
+   sidebar, stat cards, current trip, earnings, KYC, attendance, etc. */
+
+/* ── SIDEBAR ── */
+.sidebar { background: #FFE8DC !important; border-right-color: rgba(60,25,5,0.08) !important; }
+.sb-top { border-bottom-color: rgba(60,25,5,0.08) !important; }
+.sb-name { color: #1A0800 !important; }
+.sb-vehicle { color: rgba(60,25,5,0.45) !important; }
+.online-lbl { color: rgba(60,25,5,0.50) !important; }
+.toggle.off { background: rgba(60,25,5,0.18) !important; }
+.toggle.off ~ .online-status { color: rgba(60,25,5,0.40) !important; }
+.ni { color: rgba(60,25,5,0.55) !important; }
+.ni:hover { background: rgba(60,25,5,0.05) !important; color: #1A0800 !important; }
+.ni.act { background: rgba(244,123,0,0.10) !important; color: #1A0800 !important; border-left-color: #F47B00 !important; }
+.sb-foot { border-top-color: rgba(60,25,5,0.08) !important; }
+.sb-foot a { color: rgba(60,25,5,0.45) !important; }
+.sb-foot a:hover { color: #D46800 !important; }
+
+/* ── TOPBAR ── */
+.topbar { background: rgba(255,255,255,0.70) !important; border-bottom-color: rgba(60,25,5,0.08) !important; }
+.tb-title { color: #1A0800 !important; }
+
+/* ── STAT CARDS ── */
+.sc { background: rgba(255,255,255,0.80) !important; border-color: rgba(60,25,5,0.09) !important; }
+.sc:hover { border-color: rgba(244,123,0,0.25) !important; }
+.sc-lbl { color: rgba(60,25,5,0.45) !important; }
+.sc-val { color: #1A0800 !important; }
+
+/* ── CURRENT TRIP CARD ── */
+.current-trip { background: linear-gradient(135deg,rgba(244,123,0,0.10),rgba(232,189,58,0.06)) !important; border-color: rgba(244,123,0,0.22) !important; }
+.ct-title { color: #1A0800 !important; }
+.ct-city { color: #1A0800 !important; }
+.ctm { background: rgba(60,25,5,0.05) !important; }
+.ctm-lbl { color: rgba(60,25,5,0.45) !important; }
+.ctm-val { color: #1A0800 !important; }
+.cb-call { background: rgba(60,25,5,0.07) !important; color: rgba(60,25,5,0.60) !important; border-color: rgba(60,25,5,0.14) !important; }
+.cb-call:hover { background: rgba(60,25,5,0.12) !important; }
+
+/* ── TRIPS LIST ── */
+.sec-title { color: #1A0800 !important; }
+.btn-ol { background: rgba(60,25,5,0.06) !important; color: rgba(60,25,5,0.60) !important; border-color: rgba(60,25,5,0.14) !important; }
+.tcard { background: rgba(255,255,255,0.78) !important; border-color: rgba(60,25,5,0.09) !important; }
+.tcard:hover { border-color: rgba(244,123,0,0.25) !important; }
+.tc-date { color: rgba(60,25,5,0.50) !important; }
+.tc-city { color: #1A0800 !important; }
+.tc-meta { color: rgba(60,25,5,0.55) !important; }
+
+/* ── EARNINGS ── */
+.earn-card { background: rgba(255,255,255,0.78) !important; border-color: rgba(60,25,5,0.09) !important; }
+.earn-sub { color: rgba(60,25,5,0.50) !important; }
+.wc-fill { background: rgba(60,25,5,0.10) !important; }
+.wc-day { color: rgba(60,25,5,0.50) !important; }
+.es-box { background: rgba(60,25,5,0.05) !important; }
+.es-lbl { color: rgba(60,25,5,0.40) !important; }
+.es-val { color: #1A0800 !important; }
+
+/* ── KYC ── */
+.kyc-item { border-color: rgba(60,25,5,0.10) !important; background: rgba(255,255,255,0.55) !important; }
+.kyc-item.verified { border-color: rgba(19,136,8,0.25) !important; background: rgba(19,136,8,0.06) !important; }
+.kyc-item.pending { border-color: rgba(234,179,8,0.30) !important; background: rgba(234,179,8,0.08) !important; }
+.kyc-lbl { color: #1A0800 !important; }
+
+/* ── ATTENDANCE ── */
+.att-wrap { background: rgba(255,255,255,0.78) !important; border-color: rgba(60,25,5,0.09) !important; }
+.cal-day-hdr { color: rgba(60,25,5,0.40) !important; }
+.cal-empty { background: rgba(60,25,5,0.05) !important; color: rgba(60,25,5,0.20) !important; }
+
+/* ── PROFILE FORM (driver variant) ── */
+.field label { color: rgba(60,25,5,0.45) !important; }
+.finput { background: rgba(255,255,255,0.85) !important; border-color: rgba(60,25,5,0.14) !important; color: #1A0800 !important; }
+.finput:focus { border-color: rgba(244,123,0,0.50) !important; background: #fff !important; }
+
+/* ── MAP PLACEHOLDER ── */
+.map-ph { background: linear-gradient(135deg,rgba(244,123,0,0.08),rgba(232,189,58,0.05)) !important; border-color: rgba(244,123,0,0.20) !important; }
+.map-ph p { color: #1A0800 !important; }
+.map-ph small { color: rgba(60,25,5,0.50) !important; }
+
+/* ── TRANSACTIONS TABLE ── */
+.tbl-wrap { background: rgba(255,255,255,0.78) !important; border-color: rgba(60,25,5,0.09) !important; }
+th { background: rgba(60,25,5,0.05) !important; color: rgba(60,25,5,0.45) !important; }
+td { border-bottom-color: rgba(60,25,5,0.06) !important; color: rgba(60,25,5,0.62) !important; }
+
 /* ══════════════════ VIBRANT PEACH FOOTER ══════════════════ */
 /* ─── FOOTER COMPLETE REDESIGN ─── */
 footer {
@@ -617,20 +700,22 @@ footer::after {
   display: flex; gap: 10px; margin-top: 22px;
 }
 .footer-social-btn {
-  width: 40px; height: 40px; border-radius: 12px;
-  background: rgba(244,123,0,0.18);
-  border: 1px solid rgba(244,123,0,0.40);
+  width: 38px; height: 38px; border-radius: 9px;
   display: flex; align-items: center; justify-content: center;
-  font-size: 18px; text-decoration: none;
+  text-decoration: none;
   transition: all 0.22s; cursor: pointer;
   box-shadow: 0 2px 8px rgba(0,0,0,0.3);
 }
+.footer-social-btn svg { width: 20px; height: 20px; }
 .footer-social-btn:hover {
-  background: rgba(244,123,0,0.38);
-  border-color: rgba(244,123,0,0.70);
   transform: translateY(-3px);
-  box-shadow: 0 8px 24px rgba(244,123,0,0.30);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.35);
 }
+.footer-social-btn.fb { background: #1877F2; }
+.footer-social-btn.ig { background: linear-gradient(135deg, #F58529, #DD2A7B, #8134AF, #515BD4); }
+.footer-social-btn.li { background: #0A66C2; }
+.footer-social-btn.x  { background: #000000; border: 1px solid rgba(255,255,255,0.15); }
+.footer-social-btn.yt { background: #FF0000; }
 
 /* ── Nav Columns ── */
 .footer-col h4 {
@@ -732,6 +817,60 @@ footer, footer p, footer span, footer a, footer li,
 /* ─── Typography Readability Improvements ─── */
 body { text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
 p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
+
+/* ═══════════════════════ FLOATING CALL + WHATSAPP ═══════════════════════ */
+.float-actions {
+  position: fixed; top: 50%; right: 28px; transform: translateY(-50%); z-index: 300;
+  display: flex; flex-direction: column; gap: 14px;
+  align-items: center;
+}
+.float-btn {
+  width: 58px; height: 58px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; text-decoration: none;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.35);
+  transition: transform 0.2s, box-shadow 0.2s;
+  position: relative;
+}
+.float-btn:hover { transform: scale(1.08); }
+.float-btn svg { width: 28px; height: 28px; }
+
+.float-btn.call {
+  background: linear-gradient(135deg, #F47B00, #A85200);
+  box-shadow: 0 8px 28px rgba(244,123,0,0.35);
+  animation: floatPulseCall 2.6s ease-in-out infinite;
+}
+.float-btn.whatsapp {
+  background: linear-gradient(135deg, #3DDC58, #1DA851);
+  box-shadow: 0 8px 28px rgba(29,168,81,0.45);
+  animation: floatPulseWA 2.6s ease-in-out infinite 0.4s;
+}
+@keyframes floatPulseCall {
+  0%,100% { box-shadow: 0 8px 28px var(--sf-glow), 0 0 0 0 rgba(244,123,0,0.45); }
+  50%     { box-shadow: 0 8px 28px var(--sf-glow), 0 0 0 10px rgba(244,123,0,0); }
+}
+@keyframes floatPulseWA {
+  0%,100% { box-shadow: 0 8px 28px rgba(29,168,81,0.45), 0 0 0 0 rgba(29,168,81,0.45); }
+  50%     { box-shadow: 0 8px 28px rgba(29,168,81,0.45), 0 0 0 10px rgba(29,168,81,0); }
+}
+.float-label {
+  position: absolute; right: 70px; top: 50%; transform: translateY(-50%);
+  background: var(--nv-900); color: var(--wh);
+  font-size: 12.5px; font-weight: 600; white-space: nowrap;
+  padding: 7px 14px; border-radius: 8px;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.2s, transform 0.2s;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+}
+.float-btn:hover .float-label { opacity: 1; transform: translateY(-50%) translateX(-4px); }
+@media (max-width: 768px) {
+  .float-actions { top: 50%; right: 16px; transform: translateY(-50%); gap: 12px; }
+  .float-btn { width: 52px; height: 52px; }
+  .float-btn svg { width: 25px; height: 25px; }
+  .float-label { display: none; }
+}
+
+
 
 </style>
 </head>

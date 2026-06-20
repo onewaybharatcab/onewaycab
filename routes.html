@@ -20,13 +20,13 @@ nav a:hover{color:var(--wh);background:rgba(244,123,0,.1)}
 .ncta{background:linear-gradient(135deg,var(--sf),var(--sf3))!important;color:var(--wh)!important;box-shadow:0 4px 14px var(--sfg)}
 .accent{background:linear-gradient(135deg,var(--sf2),#F5D060);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 
-.page-hero{background:linear-gradient(160deg,var(--nv2),var(--nv3));border-bottom:1px solid rgba(244,123,0,.12);padding:64px 5%;position:relative;overflow:hidden}
+.page-hero{background:linear-gradient(160deg,var(--nv2),var(--nv3));border-bottom:1px solid rgba(244,123,0,.12);padding:40px 5%;position:relative;overflow:hidden}
 .page-hero::before{content:'';position:absolute;top:-80px;right:-80px;width:400px;height:400px;background:radial-gradient(ellipse,rgba(244,123,0,.08),transparent 70%);pointer-events:none}
 .page-hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--sf),#E8BD3A,var(--sf),transparent)}
 .ph-inner{max-width:1200px;margin:0 auto;position:relative;z-index:1}
 .ptag{display:inline-flex;align-items:center;gap:8px;background:rgba(244,123,0,.1);border:1px solid rgba(244,123,0,.22);border-radius:var(--rp);padding:5px 16px;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--sf2);margin-bottom:14px}
 .ph{font-family:'Cinzel',serif;font-size:clamp(26px,4vw,50px);font-weight:700;color:var(--wh);margin-bottom:12px;line-height:1.15}
-.ps{font-size:14px;color:rgba(255,255,255,.75);max-width:520px;line-height:1.75;margin-bottom:24px}
+.ps{font-size:14px;color:rgba(255,255,255,.75);max-width:600px;line-height:1.75;margin-bottom:24px}
 
 /* Search hero */
 .hero-search{display:flex;gap:10px;max-width:560px}
@@ -51,6 +51,8 @@ nav a:hover{color:var(--wh);background:rgba(244,123,0,.1)}
 .fbtn.act{background:rgba(244,123,0,.12);border-color:rgba(244,123,0,.3);color:var(--sf2)}
 
 .content{max-width:1200px;margin:0 auto;padding:40px 5%}
+.region-intro{font-size:13px;color:rgba(255,255,255,.45);max-width:760px;line-height:1.7;margin-bottom:28px}
+.region-desc{font-size:12px;color:rgba(255,255,255,.4);line-height:1.6;max-width:680px;margin:6px 0 18px}
 
 /* Fare banner */
 .fare-banner{background:linear-gradient(135deg,rgba(244,123,0,.1),rgba(232,189,58,.06));border:1px solid rgba(244,123,0,.18);border-radius:var(--r28);padding:28px 32px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:20px;margin-bottom:40px}
@@ -202,7 +204,7 @@ footer a{color:var(--sf2);text-decoration:none}
 @keyframes ldFill { to { width: 100%; } }
 
 /* ═══════════════════════════════════════════════
-   WARM PEACH THEME — Token Override
+   /* ═══════════════════ WARM PEACH THEME — Token Override
 ═══════════════════════════════════════════════ */
 :root {
   /* Swap navy backgrounds → warm peach family */
@@ -251,10 +253,8 @@ header.scrolled {
   background-clip: text !important;
 }
 .logo-subtitle { color: rgba(60,25,5,0.45) !important; }
-.nav-link { color: rgba(26,8,0,0.80) !important; font-weight:700 !important; }
-nav a { color: rgba(26,8,0,0.80) !important; font-weight:700 !important; }
-.nav-link:hover { color: #F47B00 !important; background: rgba(244,123,0,0.10) !important; }
-nav a:not(.ncta):not(.btn-book-nav):hover { color: #F47B00 !important; background: rgba(244,123,0,0.10) !important; }
+nav a { color: rgba(26,8,0,0.70) !important; font-weight:700 !important; }
+nav a:hover { color: #F47B00 !important; background: rgba(244,123,0,0.10) !important; }
 
 /* ── HERO ── */
 .hero { background: #FFF0E8 !important; }
@@ -479,6 +479,45 @@ h3 { color: #1A0800 !important; }
 p  { color: rgba(60,25,5,0.58) !important; }
 ul li { color: rgba(60,25,5,0.58) !important; }
 
+/* ══════════════════ ROUTES PAGE — Component Overrides ══════════════════ */
+/* Search hero, stats strip, filter bar, fare banner, region/route cards —
+   this page's own classes, separate from the shared site classes above. */
+
+/* ── SEARCH HERO ── */
+.hs-input { background: rgba(255,255,255,0.85) !important; border-color: rgba(60,25,5,0.14) !important; color: #1A0800 !important; }
+.hs-input::placeholder { color: rgba(60,25,5,0.32) !important; }
+.hs-input:focus { border-color: rgba(244,123,0,0.45) !important; background: #fff !important; }
+
+/* ── STATS STRIP ── */
+.stats-strip { background: #FFE8DC !important; border-bottom-color: rgba(60,25,5,0.06) !important; }
+.sstat { border-right-color: rgba(60,25,5,0.10) !important; }
+.sstat-l { color: rgba(60,25,5,0.42) !important; }
+
+/* ── FILTER BAR ── */
+.filter-bar { background: rgba(255,255,255,0.45) !important; border-bottom-color: rgba(60,25,5,0.07) !important; }
+.fbtn { border-color: rgba(60,25,5,0.14) !important; color: rgba(60,25,5,0.55) !important; }
+.fbtn:hover { border-color: rgba(244,123,0,0.35) !important; color: #D46800 !important; }
+.fbtn.act { background: rgba(244,123,0,0.12) !important; border-color: rgba(244,123,0,0.35) !important; color: #D46800 !important; }
+
+/* ── FARE BANNER ── */
+.fare-banner { background: linear-gradient(135deg,rgba(244,123,0,0.10),rgba(232,189,58,0.06)) !important; border-color: rgba(244,123,0,0.20) !important; }
+.fb-text h2 { color: #1A0800 !important; }
+.fb-text p { color: rgba(60,25,5,0.50) !important; }
+.fb-rate { background: rgba(255,255,255,0.65) !important; border-color: rgba(60,25,5,0.10) !important; }
+.fb-rate-l { color: rgba(60,25,5,0.42) !important; }
+
+/* ── REGION SECTIONS ── */
+.region-hdr { border-bottom-color: rgba(244,123,0,0.18) !important; }
+.region-name { color: #1A0800 !important; }
+.region-count { background: rgba(244,123,0,0.10) !important; border-color: rgba(244,123,0,0.22) !important; color: #D46800 !important; }
+
+/* ── ROUTE CARDS ── */
+.rcard { background: rgba(255,255,255,0.68) !important; border-color: rgba(60,25,5,0.09) !important; }
+.rcard:hover { background: rgba(244,123,0,0.08) !important; border-color: rgba(244,123,0,0.30) !important; box-shadow: 0 8px 28px rgba(180,90,30,0.14) !important; }
+.rname { color: #1A0800 !important; }
+.rmeta { color: rgba(60,25,5,0.42) !important; }
+.rpd { color: rgba(60,25,5,0.35) !important; }
+
 /* ══════════════════ VIBRANT PEACH FOOTER ══════════════════ */
 /* ─── FOOTER COMPLETE REDESIGN ─── */
 footer {
@@ -564,58 +603,6 @@ footer::after {
 .footer-social-btn.li { background: #0A66C2; }
 .footer-social-btn.x  { background: #000000; border: 1px solid rgba(255,255,255,0.15); }
 .footer-social-btn.yt { background: #FF0000; }
-
-/* ═══════════════════════ FLOATING CALL + WHATSAPP ═══════════════════════ */
-.float-actions {
-  position: fixed; bottom: 28px; right: 28px; z-index: 300;
-  display: flex; flex-direction: column; gap: 14px;
-  align-items: center;
-}
-.float-btn {
-  width: 58px; height: 58px; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer; text-decoration: none;
-  box-shadow: 0 8px 28px rgba(0,0,0,0.35);
-  transition: transform 0.2s, box-shadow 0.2s;
-  position: relative;
-}
-.float-btn:hover { transform: scale(1.08); }
-.float-btn svg { width: 28px; height: 28px; }
-
-.float-btn.call {
-  background: linear-gradient(135deg, var(--sf-500), var(--sf-700));
-  box-shadow: 0 8px 28px var(--sf-glow);
-  animation: floatPulseCall 2.6s ease-in-out infinite;
-}
-.float-btn.whatsapp {
-  background: linear-gradient(135deg, #3DDC58, #1DA851);
-  box-shadow: 0 8px 28px rgba(29,168,81,0.45);
-  animation: floatPulseWA 2.6s ease-in-out infinite 0.4s;
-}
-@keyframes floatPulseCall {
-  0%,100% { box-shadow: 0 8px 28px var(--sf-glow), 0 0 0 0 rgba(244,123,0,0.45); }
-  50%     { box-shadow: 0 8px 28px var(--sf-glow), 0 0 0 10px rgba(244,123,0,0); }
-}
-@keyframes floatPulseWA {
-  0%,100% { box-shadow: 0 8px 28px rgba(29,168,81,0.45), 0 0 0 0 rgba(29,168,81,0.45); }
-  50%     { box-shadow: 0 8px 28px rgba(29,168,81,0.45), 0 0 0 10px rgba(29,168,81,0); }
-}
-.float-label {
-  position: absolute; right: 70px; top: 50%; transform: translateY(-50%);
-  background: var(--nv-900); color: var(--wh);
-  font-size: 12.5px; font-weight: 600; white-space: nowrap;
-  padding: 7px 14px; border-radius: 8px;
-  opacity: 0; pointer-events: none;
-  transition: opacity 0.2s, transform 0.2s;
-  box-shadow: 0 4px 14px rgba(0,0,0,0.25);
-}
-.float-btn:hover .float-label { opacity: 1; transform: translateY(-50%) translateX(-4px); }
-@media (max-width: 768px) {
-  .float-actions { bottom: 18px; right: 16px; gap: 12px; }
-  .float-btn { width: 52px; height: 52px; }
-  .float-btn svg { width: 25px; height: 25px; }
-  .float-label { display: none; }
-}
 
 /* ── Nav Columns ── */
 .footer-col h4 {
@@ -718,6 +705,60 @@ footer, footer p, footer span, footer a, footer li,
 body { text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
 p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
 
+/* ═══════════════════════ FLOATING CALL + WHATSAPP ═══════════════════════ */
+.float-actions {
+  position: fixed; top: 50%; right: 28px; transform: translateY(-50%); z-index: 300;
+  display: flex; flex-direction: column; gap: 14px;
+  align-items: center;
+}
+.float-btn {
+  width: 58px; height: 58px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; text-decoration: none;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.35);
+  transition: transform 0.2s, box-shadow 0.2s;
+  position: relative;
+}
+.float-btn:hover { transform: scale(1.08); }
+.float-btn svg { width: 28px; height: 28px; }
+
+.float-btn.call {
+  background: linear-gradient(135deg, #F47B00, #A85200);
+  box-shadow: 0 8px 28px rgba(244,123,0,0.35);
+  animation: floatPulseCall 2.6s ease-in-out infinite;
+}
+.float-btn.whatsapp {
+  background: linear-gradient(135deg, #3DDC58, #1DA851);
+  box-shadow: 0 8px 28px rgba(29,168,81,0.45);
+  animation: floatPulseWA 2.6s ease-in-out infinite 0.4s;
+}
+@keyframes floatPulseCall {
+  0%,100% { box-shadow: 0 8px 28px var(--sf-glow), 0 0 0 0 rgba(244,123,0,0.45); }
+  50%     { box-shadow: 0 8px 28px var(--sf-glow), 0 0 0 10px rgba(244,123,0,0); }
+}
+@keyframes floatPulseWA {
+  0%,100% { box-shadow: 0 8px 28px rgba(29,168,81,0.45), 0 0 0 0 rgba(29,168,81,0.45); }
+  50%     { box-shadow: 0 8px 28px rgba(29,168,81,0.45), 0 0 0 10px rgba(29,168,81,0); }
+}
+.float-label {
+  position: absolute; right: 70px; top: 50%; transform: translateY(-50%);
+  background: var(--nv-900); color: var(--wh);
+  font-size: 12.5px; font-weight: 600; white-space: nowrap;
+  padding: 7px 14px; border-radius: 8px;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.2s, transform 0.2s;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+}
+.float-btn:hover .float-label { opacity: 1; transform: translateY(-50%) translateX(-4px); }
+@media (max-width: 768px) {
+  .float-actions { top: 50%; right: 16px; transform: translateY(-50%); gap: 12px; }
+  .float-btn { width: 52px; height: 52px; }
+  .float-btn svg { width: 25px; height: 25px; }
+  .float-label { display: none; }
+}
+
+
+
 </style>
 </head>
 <body>
@@ -736,7 +777,7 @@ p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
   <div class="ph-inner">
     <div class="ptag">🗺️ 500+ Routes</div>
     <h1 class="ph">Intercity Cab Routes <span class="accent">Across India</span></h1>
-    <p class="ps">One-way taxi from any city, town or village. Best fares, verified drivers, zero hidden charges.</p>
+    <p class="ps">One-way taxi from any city, town or village — no return fare, no waiting charges. Pick a route below or search any city pair to see live fares, distance and estimated travel time, all run by drivers who know the road.</p>
     <div class="hero-search">
       <input class="hs-input" type="text" id="rsearch" placeholder="Search e.g. Delhi to Jaipur..." onkeyup="filterRoutes()">
       <button class="hs-btn" onclick="filterRoutes()">🔍 Search</button>
@@ -762,6 +803,7 @@ p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
 </div>
 
 <div class="content">
+  <p class="region-intro" id="regionIntro">Browse 500+ verified one-way routes covering every major Indian region — from hill stations and pilgrimage circuits to metro-to-metro transfers and airport runs. Fares below are flat per-km, so the price you see is the price you pay.</p>
   <div class="fare-banner">
     <div class="fb-text"><h2>Flat Per-km Rates. Zero Surprises.</h2><p>Same transparent rate for all distances. Driver charges and taxes shown upfront.</p></div>
     <div class="fb-rates">
@@ -779,13 +821,13 @@ p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
     <!-- Brand -->
     <div class="footer-brand">
       <span class="fb-name">🚕 One-Way Bhaarat</span>
-      <p>India's most trusted premium one-way taxi service. Connecting cities, towns and villages across Bhaarat with affordable, safe and transparent cab travel since 2022.</p>
+      <p>One Destination, One Fare. One Way Bharat.</p>
       <div class="footer-contact-row"><span class="ic">📍</span><span>Shop No. 7, Radha Kunj 2, Ghaziabad, Uttar Pradesh – 203207</span></div>
       <div class="footer-contact-row"><span class="ic">📞</span><a href="tel:+919355757579">+91-93557 57579</a></div>
       <div class="footer-contact-row"><span class="ic">✉️</span><a href="mailto:onewaybharatcab@gmail.com">onewaybharatcab@gmail.com</a></div>
       <div class="footer-contact-row"><span class="ic">🌐</span><a href="https://one-waybharat.com">one-waybharat.com</a></div>
       <div class="footer-socials">
-        <a href="#" class="footer-social-btn fb" title="Facebook" aria-label="Facebook" target="_blank" rel="noopener">
+        <a href="https://www.facebook.com/profile.php?id=61590974556339" class="footer-social-btn fb" title="Facebook" aria-label="Facebook" target="_blank" rel="noopener">
           <svg viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M22 12.06C22 6.5 17.52 2 12 2S2 6.5 2 12.06c0 5 3.66 9.15 8.44 9.94v-7.03H7.9v-2.91h2.54V9.41c0-2.51 1.49-3.89 3.77-3.89 1.09 0 2.23.2 2.23.2v2.45h-1.26c-1.24 0-1.63.78-1.63 1.57v1.87h2.78l-.45 2.91h-2.33V22c4.78-.79 8.44-4.94 8.44-9.94z"/></svg>
         </a>
         <a href="#" class="footer-social-btn ig" title="Instagram" aria-label="Instagram" target="_blank" rel="noopener">
@@ -880,7 +922,7 @@ p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
 
 <script>
 const allRoutes=[
-  {region:'north',name:'North India',icon:'🏔️',routes:[
+  {region:'north',name:'North India',icon:'🏔️',desc:'Skip the bus queues and book a cab straight to the hills, the temples or the forts of Rajasthan — one flat fare, zero haggling, door-to-door comfort all the way.',routes:[
     {f:'Delhi',t:'Jaipur',d:281,ic:'🏯',p:4800},{f:'Delhi',t:'Agra',d:233,ic:'🕌',p:3900},
     {f:'Delhi',t:'Chandigarh',d:248,ic:'🌿',p:4200},{f:'Delhi',t:'Haridwar',d:214,ic:'🕍',p:3700},
     {f:'Delhi',t:'Dehradun',d:302,ic:'🏔️',p:5200},{f:'Delhi',t:'Shimla',d:342,ic:'❄️',p:6000},
@@ -894,7 +936,7 @@ const allRoutes=[
     {f:'Chandigarh',t:'Shimla',d:120,ic:'❄️',p:2200},{f:'Chandigarh',t:'Manali',d:310,ic:'🏔️',p:5300},
     {f:'Amritsar',t:'Jammu',d:210,ic:'🛕',p:3600},{f:'Delhi',t:'Jaisalmer',d:772,ic:'🏜️',p:12800},
   ]},
-  {region:'west',name:'West India',icon:'🌊',routes:[
+  {region:'west',name:'West India',icon:'🌊',desc:'Mumbai-Pune weekend run or a Goa escape? Book once, ride in comfort, and let your driver handle the traffic while you plan the trip.',routes:[
     {f:'Mumbai',t:'Pune',d:155,ic:'🏙️',p:2800},{f:'Mumbai',t:'Nashik',d:170,ic:'🍇',p:3000},
     {f:'Mumbai',t:'Goa',d:590,ic:'🏖️',p:9800},{f:'Mumbai',t:'Aurangabad',d:340,ic:'🗿',p:5800},
     {f:'Mumbai',t:'Shirdi',d:242,ic:'🙏',p:4200},{f:'Mumbai',t:'Mahabaleshwar',d:265,ic:'🌿',p:4600},
@@ -905,7 +947,7 @@ const allRoutes=[
     {f:'Surat',t:'Mumbai',d:285,ic:'🏙️',p:4900},{f:'Goa',t:'Hampi',d:340,ic:'🏛️',p:5800},
     {f:'Udaipur',t:'Jodhpur',d:265,ic:'🏯',p:4600},{f:'Jaisalmer',t:'Jodhpur',d:293,ic:'🏜️',p:5000},
   ]},
-  {region:'south',name:'South India',icon:'🌴',routes:[
+  {region:'south',name:'South India',icon:'🌴',desc:'From Bangalore\'s hill-station weekends to Chennai\'s temple runs — book your South India route now and lock in today\'s flat-fare price.',routes:[
     {f:'Bangalore',t:'Mysore',d:143,ic:'🏰',p:2500},{f:'Bangalore',t:'Coorg',d:246,ic:'☕',p:4200},
     {f:'Bangalore',t:'Chennai',d:345,ic:'🌊',p:5900},{f:'Bangalore',t:'Ooty',d:268,ic:'🌿',p:4600},
     {f:'Bangalore',t:'Hyderabad',d:567,ic:'🍖',p:9500},{f:'Bangalore',t:'Hampi',d:342,ic:'🏛️',p:5800},
@@ -916,20 +958,20 @@ const allRoutes=[
     {f:'Coimbatore',t:'Ooty',d:84,ic:'🌿',p:1600},{f:'Madurai',t:'Rameswaram',d:173,ic:'🛕',p:3100},
     {f:'Chennai',t:'Vellore',d:140,ic:'🛕',p:2500},{f:'Hyderabad',t:'Warangal',d:148,ic:'🏰',p:2600},
   ]},
-  {region:'east',name:'East India',icon:'🍵',routes:[
+  {region:'east',name:'East India',icon:'🍵',desc:'Darjeeling\'s tea gardens, Puri\'s beaches, Bodhgaya\'s calm — get there in one comfortable ride, fare locked in before you leave Kolkata.',routes:[
     {f:'Kolkata',t:'Digha',d:180,ic:'🏖️',p:3200},{f:'Kolkata',t:'Darjeeling',d:590,ic:'🍵',p:9800},
     {f:'Kolkata',t:'Siliguri',d:562,ic:'🏔️',p:9400},{f:'Kolkata',t:'Bhubaneswar',d:444,ic:'🛕',p:7500},
     {f:'Bhubaneswar',t:'Puri',d:64,ic:'🛕',p:1400},{f:'Patna',t:'Bodhgaya',d:115,ic:'☸️',p:2100},
     {f:'Patna',t:'Varanasi',d:290,ic:'🙏',p:5000},{f:'Guwahati',t:'Shillong',d:100,ic:'⛰️',p:1900},
     {f:'Kolkata',t:'Shantiniketan',d:160,ic:'🌿',p:2800},{f:'Bhubaneswar',t:'Konark',d:65,ic:'☀️',p:1400},
   ]},
-  {region:'central',name:'Central India',icon:'🌿',routes:[
+  {region:'central',name:'Central India',icon:'🌿',desc:'Tiger reserves, temple towns, riverside ghats — Madhya Pradesh\'s best is one easy booking away from Indore, Bhopal or Nagpur.',routes:[
     {f:'Indore',t:'Bhopal',d:190,ic:'🌆',p:3300},{f:'Indore',t:'Ujjain',d:57,ic:'🛕',p:1200},
     {f:'Indore',t:'Omkareshwar',d:77,ic:'🛕',p:1500},{f:'Nagpur',t:'Amravati',d:156,ic:'🌆',p:2700},
     {f:'Nagpur',t:'Jabalpur',d:333,ic:'🌿',p:5700},{f:'Bhopal',t:'Pachmarhi',d:195,ic:'⛰️',p:3400},
     {f:'Nagpur',t:'Wardha',d:73,ic:'🌿',p:1500},{f:'Jabalpur',t:'Kanha',d:165,ic:'🐯',p:2900},
   ]},
-  {region:'airport',name:'Airport Transfers',icon:'✈️',routes:[
+  {region:'airport',name:'Airport Transfers',icon:'✈️',desc:'Land, walk out, and your cab is waiting — flight-tracked pickup, fixed fare, no surge pricing ever. Book ahead and skip the airport taxi line.',routes:[
     {f:'Delhi IGI Airport',t:'Noida',d:42,ic:'✈️',p:800},{f:'Delhi IGI Airport',t:'Gurgaon',d:14,ic:'✈️',p:400},
     {f:'Mumbai Airport',t:'Pune',d:165,ic:'✈️',p:2900},{f:'Bangalore Airport',t:'Mysore',d:165,ic:'✈️',p:2900},
     {f:'Chennai Airport',t:'Pondicherry',d:175,ic:'✈️',p:3100},{f:'Hyderabad Airport',t:'Warangal',d:155,ic:'✈️',p:2700},
@@ -950,6 +992,7 @@ function renderRoutes(){
     if(!routes.length) return;
     const s=document.createElement('div'); s.className='region';
     s.innerHTML=`<div class="region-hdr"><span class="region-icon">${reg.icon}</span><span class="region-name">${reg.name}</span><span class="region-count">${routes.length} routes</span></div>
+    ${reg.desc?`<p class="region-desc">${reg.desc}</p>`:''}
     <div class="routes-grid">${routes.map(r=>`
       <a class="rcard" href="booking.html?from=${encodeURIComponent(r.f)}&to=${encodeURIComponent(r.t)}">
         <div class="remoji">${r.ic}</div>

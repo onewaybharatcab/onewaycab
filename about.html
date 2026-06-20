@@ -211,7 +211,7 @@ footer a{color:var(--sf2);text-decoration:none}
 @keyframes ldFill { to { width: 100%; } }
 
 /* ═══════════════════════════════════════════════
-   WARM PEACH THEME — Token Override
+   /* ═══════════════════ WARM PEACH THEME — Token Override
 ═══════════════════════════════════════════════ */
 :root {
   /* Swap navy backgrounds → warm peach family */
@@ -260,10 +260,8 @@ header.scrolled {
   background-clip: text !important;
 }
 .logo-subtitle { color: rgba(60,25,5,0.45) !important; }
-.nav-link { color: rgba(26,8,0,0.80) !important; font-weight:700 !important; }
-nav a { color: rgba(26,8,0,0.80) !important; font-weight:700 !important; }
+.nav-link { color: rgba(26,8,0,0.70) !important; font-weight:700 !important; }
 .nav-link:hover { color: #F47B00 !important; background: rgba(244,123,0,0.10) !important; }
-nav a:not(.ncta):not(.btn-book-nav):hover { color: #F47B00 !important; background: rgba(244,123,0,0.10) !important; }
 
 /* ── HERO ── */
 .hero { background: #FFF0E8 !important; }
@@ -488,6 +486,68 @@ h3 { color: #1A0800 !important; }
 p  { color: rgba(60,25,5,0.58) !important; }
 ul li { color: rgba(60,25,5,0.58) !important; }
 
+/* ══════════════════ ABOUT PAGE — Component Overrides ══════════════════ */
+/* This page uses its own header/hero/section classes (.hero-h, .story-sec,
+   .vcard, .tcard, .timeline, etc.) — separate from the shared site classes
+   above. The base design leans on near-0% white overlays for card surfaces,
+   which read fine on navy but vanish on peach — give them real definition. */
+
+/* ── HEADER (about page variant) ── */
+header { background: rgba(255,240,232,0.96) !important; border-bottom-color: rgba(244,123,0,0.22) !important; }
+.ln { background: linear-gradient(135deg,#F47B00,#E8BD3A) !important; -webkit-background-clip: text !important; -webkit-text-fill-color: transparent !important; background-clip: text !important; }
+.ls { color: rgba(60,25,5,0.40) !important; }
+nav a { color: rgba(26,8,0,0.70) !important; }
+nav a:hover { color: #F47B00 !important; background: rgba(244,123,0,0.10) !important; }
+
+/* ── HERO ── */
+.hero { background: linear-gradient(150deg,#FFF0E8 0%,#FFE2D0 60%,#FFF0E8 100%) !important; }
+.hero::before { background: radial-gradient(ellipse,rgba(244,123,0,0.10),transparent 70%) !important; }
+.ptag { background: rgba(244,123,0,0.10) !important; border-color: rgba(244,123,0,0.24) !important; color: #D46800 !important; }
+.hero-h { color: #1A0800 !important; }
+.hero-p { color: rgba(60,25,5,0.62) !important; }
+.btn-s { background: rgba(60,25,5,0.06) !important; border-color: rgba(60,25,5,0.16) !important; color: #1A0800 !important; }
+.btn-s:hover { background: rgba(60,25,5,0.11) !important; }
+.stats-card { background: rgba(255,255,255,0.80) !important; border-color: rgba(60,25,5,0.10) !important; box-shadow: 0 8px 36px rgba(180,90,30,0.12) !important; }
+.slbl { color: rgba(60,25,5,0.45) !important; }
+
+/* ── SECTION LABELS / TITLES (about page variant) ── */
+.sec-tag { background: rgba(244,123,0,0.10) !important; border-color: rgba(244,123,0,0.22) !important; color: #D46800 !important; }
+.sec-title { color: #1A0800 !important; }
+.sec-sub { color: rgba(60,25,5,0.55) !important; }
+
+/* ── STORY SECTION ── */
+.story-sec { background: #FFF0E8 !important; }
+.story-visual { background: linear-gradient(135deg,rgba(244,123,0,0.08),rgba(232,189,58,0.06)) !important; border-color: rgba(244,123,0,0.18) !important; }
+.story-quote { color: #1A0800 !important; }
+.story-text p { color: rgba(60,25,5,0.65) !important; }
+.story-text strong { color: #1A0800 !important; }
+
+/* ── VALUES SECTION ── */
+.values-sec { background: #FFE8DC !important; }
+.vcard { background: rgba(255,255,255,0.78) !important; border-color: rgba(60,25,5,0.09) !important; }
+.vcard:hover { border-color: rgba(244,123,0,0.32) !important; box-shadow: 0 16px 44px rgba(180,90,30,0.14) !important; }
+.vcard-title { color: #1A0800 !important; }
+.vcard-text { color: rgba(60,25,5,0.62) !important; }
+
+/* ── TIMELINE SECTION ── */
+.timeline-sec { background: #FFF0E8 !important; }
+.timeline::before { background: linear-gradient(to bottom,#F47B00,rgba(244,123,0,0.12)) !important; }
+.mile::before { background: #F47B00 !important; border-color: #FFF0E8 !important; box-shadow: 0 0 0 3px rgba(244,123,0,0.20) !important; }
+.mile-title { color: #1A0800 !important; }
+.mile-text { color: rgba(60,25,5,0.52) !important; }
+
+/* ── TRUST SECTION ── */
+.trust-sec { background: #FFE8DC !important; }
+.tcard { background: rgba(255,255,255,0.78) !important; border-color: rgba(60,25,5,0.09) !important; }
+.tcard:hover { border-color: rgba(244,123,0,0.28) !important; box-shadow: 0 12px 36px rgba(180,90,30,0.12) !important; }
+.tcard-title { color: #1A0800 !important; }
+.tcard-sub { color: rgba(60,25,5,0.40) !important; }
+
+/* ── CTA SECTION ── */
+.cta-sec { background: linear-gradient(150deg,#FFE2D0 0%,#FFD9C8 100%) !important; }
+.cta-sec h2 { color: #1A0800 !important; }
+.cta-sec p { color: rgba(60,25,5,0.58) !important; }
+
 /* ══════════════════ VIBRANT PEACH FOOTER ══════════════════ */
 /* ─── FOOTER COMPLETE REDESIGN ─── */
 footer {
@@ -573,58 +633,6 @@ footer::after {
 .footer-social-btn.li { background: #0A66C2; }
 .footer-social-btn.x  { background: #000000; border: 1px solid rgba(255,255,255,0.15); }
 .footer-social-btn.yt { background: #FF0000; }
-
-/* ═══════════════════════ FLOATING CALL + WHATSAPP ═══════════════════════ */
-.float-actions {
-  position: fixed; bottom: 28px; right: 28px; z-index: 300;
-  display: flex; flex-direction: column; gap: 14px;
-  align-items: center;
-}
-.float-btn {
-  width: 58px; height: 58px; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer; text-decoration: none;
-  box-shadow: 0 8px 28px rgba(0,0,0,0.35);
-  transition: transform 0.2s, box-shadow 0.2s;
-  position: relative;
-}
-.float-btn:hover { transform: scale(1.08); }
-.float-btn svg { width: 28px; height: 28px; }
-
-.float-btn.call {
-  background: linear-gradient(135deg, var(--sf-500), var(--sf-700));
-  box-shadow: 0 8px 28px var(--sf-glow);
-  animation: floatPulseCall 2.6s ease-in-out infinite;
-}
-.float-btn.whatsapp {
-  background: linear-gradient(135deg, #3DDC58, #1DA851);
-  box-shadow: 0 8px 28px rgba(29,168,81,0.45);
-  animation: floatPulseWA 2.6s ease-in-out infinite 0.4s;
-}
-@keyframes floatPulseCall {
-  0%,100% { box-shadow: 0 8px 28px var(--sf-glow), 0 0 0 0 rgba(244,123,0,0.45); }
-  50%     { box-shadow: 0 8px 28px var(--sf-glow), 0 0 0 10px rgba(244,123,0,0); }
-}
-@keyframes floatPulseWA {
-  0%,100% { box-shadow: 0 8px 28px rgba(29,168,81,0.45), 0 0 0 0 rgba(29,168,81,0.45); }
-  50%     { box-shadow: 0 8px 28px rgba(29,168,81,0.45), 0 0 0 10px rgba(29,168,81,0); }
-}
-.float-label {
-  position: absolute; right: 70px; top: 50%; transform: translateY(-50%);
-  background: var(--nv-900); color: var(--wh);
-  font-size: 12.5px; font-weight: 600; white-space: nowrap;
-  padding: 7px 14px; border-radius: 8px;
-  opacity: 0; pointer-events: none;
-  transition: opacity 0.2s, transform 0.2s;
-  box-shadow: 0 4px 14px rgba(0,0,0,0.25);
-}
-.float-btn:hover .float-label { opacity: 1; transform: translateY(-50%) translateX(-4px); }
-@media (max-width: 768px) {
-  .float-actions { bottom: 18px; right: 16px; gap: 12px; }
-  .float-btn { width: 52px; height: 52px; }
-  .float-btn svg { width: 25px; height: 25px; }
-  .float-label { display: none; }
-}
 
 /* ── Nav Columns ── */
 .footer-col h4 {
@@ -727,6 +735,60 @@ footer, footer p, footer span, footer a, footer li,
 body { text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
 p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
 
+/* ═══════════════════════ FLOATING CALL + WHATSAPP ═══════════════════════ */
+.float-actions {
+  position: fixed; top: 50%; right: 28px; transform: translateY(-50%); z-index: 300;
+  display: flex; flex-direction: column; gap: 14px;
+  align-items: center;
+}
+.float-btn {
+  width: 58px; height: 58px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; text-decoration: none;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.35);
+  transition: transform 0.2s, box-shadow 0.2s;
+  position: relative;
+}
+.float-btn:hover { transform: scale(1.08); }
+.float-btn svg { width: 28px; height: 28px; }
+
+.float-btn.call {
+  background: linear-gradient(135deg, #F47B00, #A85200);
+  box-shadow: 0 8px 28px rgba(244,123,0,0.35);
+  animation: floatPulseCall 2.6s ease-in-out infinite;
+}
+.float-btn.whatsapp {
+  background: linear-gradient(135deg, #3DDC58, #1DA851);
+  box-shadow: 0 8px 28px rgba(29,168,81,0.45);
+  animation: floatPulseWA 2.6s ease-in-out infinite 0.4s;
+}
+@keyframes floatPulseCall {
+  0%,100% { box-shadow: 0 8px 28px var(--sf-glow), 0 0 0 0 rgba(244,123,0,0.45); }
+  50%     { box-shadow: 0 8px 28px var(--sf-glow), 0 0 0 10px rgba(244,123,0,0); }
+}
+@keyframes floatPulseWA {
+  0%,100% { box-shadow: 0 8px 28px rgba(29,168,81,0.45), 0 0 0 0 rgba(29,168,81,0.45); }
+  50%     { box-shadow: 0 8px 28px rgba(29,168,81,0.45), 0 0 0 10px rgba(29,168,81,0); }
+}
+.float-label {
+  position: absolute; right: 70px; top: 50%; transform: translateY(-50%);
+  background: var(--nv-900); color: var(--wh);
+  font-size: 12.5px; font-weight: 600; white-space: nowrap;
+  padding: 7px 14px; border-radius: 8px;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.2s, transform 0.2s;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+}
+.float-btn:hover .float-label { opacity: 1; transform: translateY(-50%) translateX(-4px); }
+@media (max-width: 768px) {
+  .float-actions { top: 50%; right: 16px; transform: translateY(-50%); gap: 12px; }
+  .float-btn { width: 52px; height: 52px; }
+  .float-btn svg { width: 25px; height: 25px; }
+  .float-label { display: none; }
+}
+
+
+
 </style>
 </head>
 <body>
@@ -740,7 +802,7 @@ p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
     <div>
       <div class="ptag">🇮🇳 Our Story</div>
       <h1 class="hero-h">Born from the <span class="accent">Roads of Bhaarat</span></h1>
-      <p class="hero-p">One-Way Bhaarat was founded with a simple belief — every Indian deserves affordable, safe and transparent intercity travel. We started in Ghaziabad, UP, and today serve 20,000+ locations across India.</p>
+      <p class="hero-p">We got tired of watching drivers charge for a return trip nobody asked for — so we built something better. Today, One-Way Bhaarat puts fair, flat-fare one-way cabs within reach of 20,000+ towns and cities, no haggling required.</p>
       <div class="hero-btns"><a href="booking.html" class="btn-p">🚕 Book a Cab</a><a href="contact.html" class="btn-s">📞 Contact Us</a></div>
     </div>
     <div class="stats-card">
@@ -826,8 +888,8 @@ p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
 </section>
 
 <div class="cta-sec">
-  <h2>Ready to Travel Across <span class="accent">Bhaarat?</span></h2>
-  <p>Join 50,000+ happy riders. Book your premium one-way cab today.</p>
+  <h2>Your Next Trip Across <span class="accent">Bhaarat</span> Starts Here</h2>
+  <p>50,000+ riders already trust us to get them there — flat fare, zero drama. Your turn.</p>
   <a href="booking.html" class="btn-p">🚕 Book Your Cab Now →</a>
 </div>
 
@@ -836,13 +898,13 @@ p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
     <!-- Brand -->
     <div class="footer-brand">
       <span class="fb-name">🚕 One-Way Bhaarat</span>
-      <p>India's most trusted premium one-way taxi service. Connecting cities, towns and villages across Bhaarat with affordable, safe and transparent cab travel since 2022.</p>
+      <p>One Destination, One Fare. One Way Bharat.</p>
       <div class="footer-contact-row"><span class="ic">📍</span><span>Shop No. 7, Radha Kunj 2, Ghaziabad, Uttar Pradesh – 203207</span></div>
       <div class="footer-contact-row"><span class="ic">📞</span><a href="tel:+919355757579">+91-93557 57579</a></div>
       <div class="footer-contact-row"><span class="ic">✉️</span><a href="mailto:onewaybharatcab@gmail.com">onewaybharatcab@gmail.com</a></div>
       <div class="footer-contact-row"><span class="ic">🌐</span><a href="https://one-waybharat.com">one-waybharat.com</a></div>
       <div class="footer-socials">
-        <a href="#" class="footer-social-btn fb" title="Facebook" aria-label="Facebook" target="_blank" rel="noopener">
+        <a href="https://www.facebook.com/profile.php?id=61590974556339" class="footer-social-btn fb" title="Facebook" aria-label="Facebook" target="_blank" rel="noopener">
           <svg viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M22 12.06C22 6.5 17.52 2 12 2S2 6.5 2 12.06c0 5 3.66 9.15 8.44 9.94v-7.03H7.9v-2.91h2.54V9.41c0-2.51 1.49-3.89 3.77-3.89 1.09 0 2.23.2 2.23.2v2.45h-1.26c-1.24 0-1.63.78-1.63 1.57v1.87h2.78l-.45 2.91h-2.33V22c4.78-.79 8.44-4.94 8.44-9.94z"/></svg>
         </a>
         <a href="#" class="footer-social-btn ig" title="Instagram" aria-label="Instagram" target="_blank" rel="noopener">

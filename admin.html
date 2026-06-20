@@ -502,6 +502,71 @@ h3 { color: #1A0800 !important; }
 p  { color: rgba(60,25,5,0.58) !important; }
 ul li { color: rgba(60,25,5,0.58) !important; }
 
+/* ══════════════════ ADMIN DASHBOARD — Component Overrides ══════════════════ */
+/* Sidebar-dashboard layout, separate from the shared site classes above —
+   sidebar, stat cards, charts, tables, pricing panel, etc. */
+
+/* ── SIDEBAR ── */
+.sidebar { background: #FFE8DC !important; border-right-color: rgba(60,25,5,0.08) !important; }
+.sb-logo { border-bottom-color: rgba(60,25,5,0.08) !important; }
+.sb-ls { color: rgba(60,25,5,0.40) !important; }
+.nav-sec { color: rgba(60,25,5,0.40) !important; }
+.ni { color: rgba(60,25,5,0.55) !important; }
+.ni:hover { background: rgba(60,25,5,0.05) !important; color: #1A0800 !important; }
+.ni.act { background: rgba(244,123,0,0.10) !important; color: #1A0800 !important; border-left-color: #F47B00 !important; }
+.sb-user { border-top-color: rgba(60,25,5,0.08) !important; }
+.sb-un { color: #1A0800 !important; }
+.sb-ur { color: rgba(60,25,5,0.45) !important; }
+
+/* ── TOPBAR ── */
+.topbar { background: rgba(255,255,255,0.70) !important; border-bottom-color: rgba(60,25,5,0.08) !important; }
+.tb-title { color: #1A0800 !important; }
+.tb-date { color: rgba(60,25,5,0.50) !important; }
+.nb { background: rgba(60,25,5,0.06) !important; }
+.nb-dot { border-color: #FFF0E8 !important; }
+
+/* ── STAT CARDS ── */
+.sc { background: rgba(255,255,255,0.80) !important; border-color: rgba(60,25,5,0.09) !important; }
+.sc:hover { border-color: rgba(244,123,0,0.25) !important; }
+.sc-lbl { color: rgba(60,25,5,0.45) !important; }
+.sc-val { color: #1A0800 !important; }
+
+/* ── CHARTS ── */
+.chart-card { background: rgba(255,255,255,0.80) !important; border-color: rgba(60,25,5,0.09) !important; }
+.cc-title { color: #1A0800 !important; }
+.cc-sub { color: rgba(60,25,5,0.50) !important; }
+.bar-fill { background: rgba(60,25,5,0.10) !important; }
+.bar-lbl { color: rgba(60,25,5,0.50) !important; }
+.leg-lbl { color: rgba(60,25,5,0.55) !important; }
+.leg-val { color: #1A0800 !important; }
+
+/* ── SECTION HEADERS / BUTTONS ── */
+.sec-title { color: #1A0800 !important; }
+.btn-ol { background: rgba(60,25,5,0.06) !important; color: rgba(60,25,5,0.60) !important; border-color: rgba(60,25,5,0.14) !important; }
+.btn-ol:hover { color: #1A0800 !important; }
+
+/* ── TABLE ── */
+.tbl-wrap { background: rgba(255,255,255,0.80) !important; border-color: rgba(60,25,5,0.09) !important; }
+.tbl-filter { border-bottom-color: rgba(60,25,5,0.08) !important; }
+.tbl-input { background: rgba(255,255,255,0.85) !important; border-color: rgba(60,25,5,0.14) !important; color: #1A0800 !important; }
+.tbl-input:focus { border-color: rgba(244,123,0,0.50) !important; }
+.tbl-input option { background: #FFF0E8; color: #1A0800; }
+th { background: rgba(60,25,5,0.05) !important; color: rgba(60,25,5,0.50) !important; }
+td { border-bottom-color: rgba(60,25,5,0.06) !important; color: rgba(60,25,5,0.62) !important; }
+tr:hover td { background: rgba(244,123,0,0.05) !important; }
+.sb-inact { background: rgba(60,25,5,0.07) !important; color: rgba(60,25,5,0.45) !important; }
+.ab-v { background: rgba(28,62,106,0.12) !important; color: #2E5C96 !important; }
+.ab-e { background: rgba(232,189,58,0.15) !important; color: #A8861E !important; }
+.ab-d { background: rgba(220,38,38,0.10) !important; color: #C2410C !important; }
+
+/* ── PRICING PANEL ── */
+.price-section { background: rgba(255,255,255,0.80) !important; border-color: rgba(60,25,5,0.09) !important; }
+.ps-title { color: #1A0800 !important; }
+.rate-row { background: rgba(60,25,5,0.04) !important; }
+.rate-lbl { color: rgba(60,25,5,0.62) !important; }
+.rate-inp { background: rgba(255,255,255,0.90) !important; border-color: rgba(60,25,5,0.16) !important; color: #D46800 !important; }
+.rate-inp:focus { border-color: rgba(244,123,0,0.50) !important; }
+
 /* ══════════════════ VIBRANT PEACH FOOTER ══════════════════ */
 footer {
   background: linear-gradient(160deg, #2C0A00 0%, #1A0800 50%, #0F0400 100%) !important;
@@ -730,7 +795,7 @@ p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
               <div class="leg-item"><div class="leg-dot" style="background:#F47B00"></div><span class="leg-lbl">Sedan</span><span class="leg-val">45%</span></div>
               <div class="leg-item"><div class="leg-dot" style="background:#1C3E6A"></div><span class="leg-lbl">Innova</span><span class="leg-val">25%</span></div>
               <div class="leg-item"><div class="leg-dot" style="background:#E8BD3A"></div><span class="leg-lbl">Ertiga</span><span class="leg-val">20%</span></div>
-              <div class="leg-item"><div class="leg-dot" style="background:rgba(255,255,255,.15)"></div><span class="leg-lbl">Hatchback</span><span class="leg-val">10%</span></div>
+              <div class="leg-item"><div class="leg-dot" style="background:rgba(255,255,255,.15)"></div><span class="leg-lbl">Tempo Traveller</span><span class="leg-val">10%</span></div>
             </div>
           </div>
         </div>
@@ -746,7 +811,7 @@ p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
         <div class="tbl-filter">
           <input class="tbl-input" placeholder="🔍 Search booking ID, name..." style="width:220px">
           <select class="tbl-input"><option>All Status</option><option>Confirmed</option><option>Pending</option><option>Completed</option><option>Cancelled</option></select>
-          <select class="tbl-input"><option>All Vehicles</option><option>Sedan</option><option>Ertiga</option><option>Innova Crysta</option><option>Hatchback</option></select>
+          <select class="tbl-input"><option>All Vehicles</option><option>Sedan</option><option>Ertiga</option><option>Innova Crysta</option><option>Tempo Traveller</option></select>
           <button class="btn-sm btn-ol">⬇ Export CSV</button>
         </div>
         <div id="allTbl"></div>
@@ -791,17 +856,17 @@ p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
       <div class="price-grid">
         <div class="price-section">
           <div class="ps-title">🔷 One Way Rates (₹/km)</div>
-          <div class="rate-row"><span class="rate-lbl">🚙 Hatchback</span><input class="rate-inp" type="number" value="13"></div>
           <div class="rate-row"><span class="rate-lbl">🚗 Sedan</span><input class="rate-inp" type="number" value="16"></div>
           <div class="rate-row"><span class="rate-lbl">🚐 Ertiga</span><input class="rate-inp" type="number" value="21"></div>
-          <div class="rate-row"><span class="rate-lbl">🚌 Innova Crysta</span><input class="rate-inp" type="number" value="30"></div>
+          <div class="rate-row"><span class="rate-lbl">🚙 Innova Crysta</span><input class="rate-inp" type="number" value="30"></div>
+          <div class="rate-row"><span class="rate-lbl">🚌 Tempo Traveller</span><input class="rate-inp" type="number" value="42"></div>
         </div>
         <div class="price-section">
           <div class="ps-title">🔄 Round Trip Rates (₹/km)</div>
-          <div class="rate-row"><span class="rate-lbl">🚙 Hatchback</span><input class="rate-inp" type="number" value="10"></div>
           <div class="rate-row"><span class="rate-lbl">🚗 Sedan</span><input class="rate-inp" type="number" value="11"></div>
           <div class="rate-row"><span class="rate-lbl">🚐 Ertiga</span><input class="rate-inp" type="number" value="15"></div>
-          <div class="rate-row"><span class="rate-lbl">🚌 Innova Crysta</span><input class="rate-inp" type="number" value="20"></div>
+          <div class="rate-row"><span class="rate-lbl">🚙 Innova Crysta</span><input class="rate-inp" type="number" value="20"></div>
+          <div class="rate-row"><span class="rate-lbl">🚌 Tempo Traveller</span><input class="rate-inp" type="number" value="35"></div>
         </div>
       </div>
     </div>
@@ -823,7 +888,7 @@ const bookings=[
   {id:'OWB-2024-D3E4F',cust:'Priya Sharma',mob:'9988776655',route:'Mumbai → Pune',veh:'Ertiga',date:'2024-01-14',fare:'₹3,200',adv:'₹320',status:'Completed',driver:'Suresh Yadav'},
   {id:'OWB-2024-G5H6I',cust:'Anand Venkat',mob:'8877665544',route:'Bangalore → Mysore',veh:'Innova',date:'2024-01-14',fare:'₹5,100',adv:'₹510',status:'Confirmed',driver:'Mohan Reddy'},
   {id:'OWB-2024-J7K8L',cust:'Sunita Devi',mob:'7766554433',route:'Delhi → Agra',veh:'Sedan',date:'2024-01-13',fare:'₹3,900',adv:'₹390',status:'Pending',driver:'Assigned'},
-  {id:'OWB-2024-M9N0O',cust:'Arun Mishra',mob:'6655443322',route:'Chennai → Pondicherry',veh:'Hatchback',date:'2024-01-12',fare:'₹2,600',adv:'₹260',status:'Cancelled',driver:'N/A'},
+  {id:'OWB-2024-M9N0O',cust:'Arun Mishra',mob:'6655443322',route:'Chennai → Pondicherry',veh:'Sedan',date:'2024-01-12',fare:'₹2,600',adv:'₹260',status:'Cancelled',driver:'N/A'},
 ];
 const drivers=[
   {id:'DRV-001',name:'Ravi Kumar',mob:'9876512345',veh:'Sedan (DL-01-AB-1234)',trips:148,rating:'4.9',kyc:'Verified',status:'Active'},
