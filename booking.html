@@ -930,8 +930,8 @@ p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
           <button class="ttab" onclick="setTrip(this,'airport')">✈️ Airport</button>
         </div>
         <div class="row2">
-          <div class="field"><label>Pickup Location *</label><div class="field-wrap"><div class="fi">📍</div><input class="finput" type="text" id="pickup" placeholder="City or station" value="Delhi"></div></div>
-          <div class="field"><label>Drop Location *</label><div class="field-wrap"><div class="fi">🏁</div><input class="finput" type="text" id="drop" placeholder="Destination" value="Jaipur"></div></div>
+          <div class="field"><label>Pickup Location *</label><div class="field-wrap"><div class="fi">📍</div><input class="finput" type="text" id="pickup" placeholder="City or station"></div></div>
+          <div class="field"><label>Drop Location *</label><div class="field-wrap"><div class="fi">🏁</div><input class="finput" type="text" id="drop" placeholder="Destination"></div></div>
         </div>
         <div class="row2">
           <div class="field"><label>Pickup Date *</label><div class="field-wrap"><div class="fi">📅</div><input class="finput" type="date" id="pdate"></div></div>
@@ -1013,9 +1013,9 @@ p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
       </div>
       <div class="sum-route">
         <div class="route-row">
-          <div class="rc" id="s_from">Delhi</div>
+          <div class="rc" id="s_from"></div>
           <div class="ra">→</div>
-          <div class="rc" id="s_to">Jaipur</div>
+          <div class="rc" id="s_to"></div>
         </div>
         <div class="meta-grid">
           <div class="meta-box"><div class="meta-lbl">Distance</div><div class="meta-val" id="s_dist">281 km</div></div>
@@ -1089,7 +1089,45 @@ const vehicles = [
   {id:'tempo',    icon:'🚌',name:'Tempo Traveller', sub:'12-Seater, AC',  tags:['12 Seats','Group','AC'],ow:42,rt:35},
 ];
 let selV = vehicles[0], tripMode = 'oneway', otpVerified = false;
-const DIST = 281;
+
+// ── Read URL params passed from index.html ───────────────
+const _params = new URLSearchParams(window.location.search);
+const _fromName = _params.get('from') || '';
+const _toName   = _params.get('to')   || '';
+const _fromLat  = parseFloat(_params.get('fromLat') || 0);
+const _fromLng  = parseFloat(_params.get('fromLng') || 0);
+const _toLat    = parseFloat(_params.get('toLat')   || 0);
+const _toLng    = parseFloat(_params.get('toLng')   || 0);
+
+// Extract just the city name (first part before the comma) for inputs
+const _fromCity = _fromName ? _fromName.split(',')[0].trim() : '';
+const _toCity   = _toName   ? _toName.split(',')[0].trim()   : '';
+
+// Pre-fill the trip detail input fields
+if (_fromCity) { const el = document.getElementById('pickup'); if (el) el.value = _fromCity; }
+if (_toCity)   { const el = document.getElementById('drop');   if (el) el.value = _toCity;   }
+
+// Pre-fill booking summary panel
+if (_fromCity) { const el = document.getElementById('s_from'); if (el) el.textContent = _fromCity; }
+if (_toCity)   { const el = document.getElementById('s_to');   if (el) el.textContent = _toCity;   }
+
+// Haversine formula — straight-line distance in km
+function haversineKm(lat1, lng1, lat2, lng2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat/2)**2 +
+            Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) * Math.sin(dLng/2)**2;
+  return Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
+}
+
+// Add 20% road-factor on top of straight-line (Indian highways average ~1.2x crow-flies)
+function roadKm(lat1, lng1, lat2, lng2) {
+  return Math.round(haversineKm(lat1, lng1, lat2, lng2) * 1.2);
+}
+
+// Compute DIST: use coordinates if available, else fall back to 281
+const DIST = (_fromLat && _toLat) ? roadKm(_fromLat, _fromLng, _toLat, _toLng) : 281;
 
 function renderVehicles() {
   const r = tripMode==='oneway'?'ow':'rt';
