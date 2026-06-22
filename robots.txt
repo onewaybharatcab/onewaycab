@@ -1,0 +1,32 @@
+User-agent: *
+Allow: /
+
+# Allow all major search engines
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Slurp
+Allow: /
+
+# Disallow admin and private areas
+Disallow: /admin/
+Disallow: /admin.html
+Disallow: /driver.html
+Disallow: /customer.html
+Disallow: /api/
+Disallow: /database/
+Disallow: /assets/temp/
+
+# Allow important resources
+Allow: /assets/css/
+Allow: /assets/js/
+Allow: /assets/images/
+
+# Sitemap location
+Sitemap: https://one-waybharat.com/sitemap.xml
+
+# Crawl delay (optional - reduce server load)
+Crawl-delay: 1
