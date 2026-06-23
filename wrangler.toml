@@ -34,3 +34,7 @@ zone_name = "one-waybharat.com"
 #   npx wrangler secret put WHATSAPP_OTP_TEMPLATE_NAME
 # (WHATSAPP_OTP_TEMPLATE_NAME = the exact name of your approved
 #  Authentication-category template in WhatsApp Manager)
+#
+# Admin booking alert — WhatsApp number to receive new booking notifications:
+#   npx wrangler secret put ADMIN_WHATSAPP_NUMBER
+# (value format: 919355757579  — country code + number, no + sign, no spaces)

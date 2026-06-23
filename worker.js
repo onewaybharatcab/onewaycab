@@ -34,12 +34,22 @@ var worker_default = {
       return withRateLimit(request, env, ctx, "otp-verify", () => handleVerifyOtp(request, env, allowOrigin), allowOrigin, OTP_VERIFY_RATE_LIMIT_MAX);
     }
 
-    // 2. Details endpoint logic (Matches detail, details, or place_id queries)
+    // 2. Booking notification (admin WhatsApp alert when booking confirmed)
+    if (url.pathname.includes("booking/notify")) {
+      return withRateLimit(request, env, ctx, "notify", () => handleBookingNotify(request, env, allowOrigin), allowOrigin);
+    }
+
+    // 2. Distance Matrix endpoint — used by booking modal to get road distance + ETA
+    if (url.pathname.includes("distance")) {
+      return withRateLimit(request, env, ctx, "distance", () => handleDistance(request, url, env, allowOrigin), allowOrigin);
+    }
+
+    // 3. Details endpoint logic (Matches detail, details, or place_id queries)
     if (url.pathname.includes("detail") || url.searchParams.has("place_id")) {
       return withRateLimit(request, env, ctx, "details", () => handlePlaceDetails(request, url, env, allowOrigin), allowOrigin);
     }
 
-    // 3. Broad Autocomplete logic (Matches /api/places, /api/place, /api/autocomplete)
+    // 4. Broad Autocomplete logic (Matches /api/places, /api/place, /api/autocomplete)
     if (url.pathname.includes("place") || url.pathname.includes("autocomplete")) {
       return withRateLimit(request, env, ctx, "places", () => handlePlacesProxy(request, url, env, allowOrigin), allowOrigin);
     }
@@ -266,7 +276,7 @@ __name(ctx_safe_delete, "ctx_safe_delete");
 function generateOtp() {
   const arr = new Uint32Array(1);
   crypto.getRandomValues(arr);
-  return String(100000 + (arr[0] % 900000)); // 6-digit, 100000–999999
+  return String(1000 + (arr[0] % 9000)); // 4-digit, 1000–9999
 }
 __name(generateOtp, "generateOtp");
 
@@ -278,6 +288,159 @@ function generateToken() {
   return btoa(str).replace(/[^a-zA-Z0-9]/g, "").slice(0, 32);
 }
 __name(generateToken, "generateToken");
+
+// ── Distance Matrix proxy ───────────────────────────────────────────────────
+// Returns road distance (km) + duration (minutes + human text) between two
+// Indian locations using Google Distance Matrix API.
+// Query params: ?origin=<text>&destination=<text>
+async function handleDistance(request, url, env, allowOrigin) {
+  const origin      = (url.searchParams.get("origin")      || "").trim();
+  const destination = (url.searchParams.get("destination") || "").trim();
+
+  if (!origin || !destination) {
+    return jsonResponse({ error: "origin and destination are required" }, 400, allowOrigin);
+  }
+  if (origin.length > 300 || destination.length > 300) {
+    return jsonResponse({ error: "location string too long" }, 400, allowOrigin);
+  }
+
+  const apiKey = env.GOOGLE_PLACES_API_KEY; // reuse same key — Distance Matrix uses it
+  if (!apiKey) {
+    console.error("GOOGLE_PLACES_API_KEY not set — Distance Matrix unavailable");
+    return jsonResponse({ error: "Distance service temporarily unavailable" }, 500, allowOrigin);
+  }
+
+  const dmUrl = new URL("https://maps.googleapis.com/maps/api/distancematrix/json");
+  dmUrl.searchParams.set("origins",      origin);
+  dmUrl.searchParams.set("destinations", destination);
+  dmUrl.searchParams.set("key",          apiKey);
+  dmUrl.searchParams.set("region",       "IN");
+  dmUrl.searchParams.set("language",     "en");
+  dmUrl.searchParams.set("units",        "metric");
+
+  try {
+    const res  = await fetch(dmUrl.toString());
+    const data = await res.json();
+
+    const element = data?.rows?.[0]?.elements?.[0];
+    if (!element || element.status !== "OK") {
+      return jsonResponse(
+        { error: "Could not calculate distance", status: element?.status || "UNKNOWN" },
+        200, allowOrigin
+      );
+    }
+
+    const distanceMeters  = element.distance?.value  || 0;
+    const durationSeconds = element.duration?.value  || 0;
+    const distanceKm      = Math.round(distanceMeters / 1000);
+    const durationMins    = Math.round(durationSeconds / 60);
+    const hrs  = Math.floor(durationMins / 60);
+    const mins = durationMins % 60;
+    const durationText = hrs > 0 ? `${hrs}h ${mins}m` : `${mins}m`;
+
+    return jsonResponse({
+      distanceKm,
+      durationMins,
+      distanceText: element.distance?.text || `${distanceKm} km`,
+      durationText,
+      origin:      data.origin_addresses?.[0]  || origin,
+      destination: data.destination_addresses?.[0] || destination,
+    }, 200, allowOrigin);
+
+  } catch (err) {
+    console.error("Distance Matrix upstream error:", err.message);
+    return jsonResponse({ error: "Upstream request failed" }, 502, allowOrigin);
+  }
+}
+__name(handleDistance, "handleDistance");
+
+// ── Booking notification — WhatsApp admin alert ─────────────────────────────
+// Called by the modal after OTP is verified (booking confirmed) and after
+// successful Razorpay payment. Sends a formatted WhatsApp message to the
+// admin number so no booking slips through unnoticed.
+async function handleBookingNotify(request, env, allowOrigin) {
+  if (request.method !== "POST") return jsonResponse({ error: "Method not allowed" }, 405, allowOrigin);
+
+  let body;
+  try { body = await request.json(); } catch {
+    return jsonResponse({ error: "Invalid JSON" }, 400, allowOrigin);
+  }
+
+  const b = body.booking || {};
+  if (!b.id || !b.name || !b.phone) {
+    return jsonResponse({ error: "Missing required booking fields" }, 400, allowOrigin);
+  }
+
+  const adminNumber  = env.ADMIN_WHATSAPP_NUMBER || "919355757579"; // e.g. 919355757579
+  const accessToken  = env.WHATSAPP_ACCESS_TOKEN;
+  const phoneNumberId = env.WHATSAPP_PHONE_NUMBER_ID;
+
+  if (!accessToken || !phoneNumberId) {
+    // Non-fatal — admin notification is best-effort, don't fail the booking
+    console.warn("WhatsApp admin notification not configured — skipping");
+    return jsonResponse({ sent: false, reason: "not_configured" }, 200, allowOrigin);
+  }
+
+  // Build the message text
+  const isPayment = b.type === "payment";
+  const stops = Array.isArray(b.extraCities) ? b.extraCities.filter(c => c.trim()) : [];
+  const stopLine = stops.length ? `\n🛑 Stops: ${stops.join(" → ")}` : "";
+
+  let msg;
+  if (isPayment) {
+    msg =
+      `💳 *PAYMENT RECEIVED — One-Way Bhaarat*\n\n` +
+      `🔖 Booking ID: ${b.id}\n` +
+      `👤 ${b.name} · +91 ${b.phone}\n` +
+      `🚗 ${b.vehicle || "—"}\n` +
+      `💰 Paid: ₹${Number(b.payAmt || 0).toLocaleString("en-IN")} of ₹${Number(b.fare || 0).toLocaleString("en-IN")}\n` +
+      `📲 Razorpay ID: ${b.paymentId || "—"}`;
+  } else {
+    msg =
+      `🚕 *NEW BOOKING — One-Way Bhaarat*\n\n` +
+      `🔖 ${b.id}\n` +
+      `👤 ${b.name} · +91 ${b.phone}\n` +
+      `📧 ${b.email || "—"}\n` +
+      `🚗 ${b.vehicle || "—"} · ${b.tripType === "roundtrip" ? "Round Trip" : "One Way"}\n` +
+      `📍 ${b.from || "—"}${stopLine}\n` +
+      `🏁 ${b.to || "—"}\n` +
+      `📅 ${b.date || "—"}${b.time ? " at " + b.time : ""}` +
+      `${b.retdate ? "\n🔄 Return: " + b.retdate : ""}\n` +
+      `📏 ~${b.distKm || "?"} km · ${b.pax || "—"}\n` +
+      `💰 Est. Fare: ₹${Number(b.fare || 0).toLocaleString("en-IN")} · Advance: ₹${Number(b.advance || 0).toLocaleString("en-IN")}\n` +
+      `${b.notes ? "📝 " + b.notes + "\n" : ""}` +
+      `\nPlease assign driver and confirm. 🙏`;
+  }
+
+  try {
+    const waRes = await fetch(
+      `https://graph.facebook.com/${WHATSAPP_API_VERSION}/${phoneNumberId}/messages`,
+      {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${accessToken}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          messaging_product: "whatsapp",
+          to: adminNumber,
+          type: "text",
+          text: { body: msg }
+        })
+      }
+    );
+    const waData = await waRes.json();
+    if (!waRes.ok) {
+      console.error("Admin WA notify failed:", JSON.stringify(waData));
+      return jsonResponse({ sent: false, reason: "upstream_error" }, 200, allowOrigin);
+    }
+    return jsonResponse({ sent: true }, 200, allowOrigin);
+  } catch (err) {
+    console.error("Admin WA notify exception:", err.message);
+    return jsonResponse({ sent: false, reason: err.message }, 200, allowOrigin);
+  }
+}
+__name(handleBookingNotify, "handleBookingNotify");
 
 // ── Places Autocomplete proxy ───────────────────────────────────────────────
 async function handlePlacesProxy(request, url, env, allowOrigin) {

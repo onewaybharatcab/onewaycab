@@ -1673,6 +1673,202 @@ p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
     font-size:13px; color:#0d1a5c; opacity:0.7;
   }
 
+/* ══════════════════════════════════════════════
+   BOOKING MODAL — 5-Step BRG-style flow
+   Light peach theme (matches OWB brand)
+══════════════════════════════════════════════ */
+
+/* Modal CSS variables — light/peach palette */
+#bkModal {
+  --bk-bg:        #fff8f0;
+  --bk-card:      #ffffff;
+  --bk-border:    rgba(180,90,0,.15);
+  --bk-accent:    #c85a00;
+  --bk-accent2:   #e07020;
+  --bk-text:      #2d1a00;
+  --bk-muted:     #7a5030;
+  --bk-muted2:    #b07840;
+  --bk-input-bg:  #fff3e6;
+  --bk-input-bdr: rgba(180,90,0,.25);
+  --bk-green:     #1a7a1a;
+  --bk-red:       #c0392b;
+  --bk-shadow:    rgba(120,50,0,.18);
+}
+
+/* Toast */
+#owb-toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:#2d1a00;color:#fff;padding:12px 22px;border-radius:50px;font-size:.88rem;font-weight:700;box-shadow:0 8px 32px rgba(120,50,0,.4);z-index:9999;opacity:0;transition:.3s;pointer-events:none;white-space:nowrap;max-width:90vw;text-align:center}
+#owb-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* Overlay */
+#bkModal{position:fixed;inset:0;background:rgba(30,10,0,.65);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:900;display:none;align-items:center;justify-content:center;padding:12px;overflow-y:auto}
+#bkModal.open{display:flex}
+
+/* Modal box */
+.bkm-box{background:var(--bk-bg);border:1.5px solid rgba(180,90,0,.2);border-radius:20px;width:100%;max-width:560px;max-height:92vh;overflow-y:auto;animation:bkmIn .35s ease;position:relative;box-shadow:0 24px 64px var(--bk-shadow)}
+@keyframes bkmIn{from{transform:scale(.94) translateY(14px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}
+.bkm-box::-webkit-scrollbar{width:0}
+
+/* Modal head */
+.bkm-head{background:linear-gradient(135deg,rgba(200,90,0,.12),rgba(224,112,32,.07));padding:18px 24px;border-radius:20px 20px 0 0;position:sticky;top:0;z-index:10;display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1.5px solid rgba(180,90,0,.15)}
+.bkm-head-title{font-family:'Cinzel',serif;font-size:1.25rem;letter-spacing:2px;color:var(--bk-text)}
+.bkm-head-sub{font-size:.7rem;color:var(--bk-muted);margin-top:3px;font-weight:600}
+.bkm-close{width:36px;height:36px;background:rgba(180,90,0,.1);border-radius:50%;color:var(--bk-text);display:flex;align-items:center;justify-content:center;font-size:.9rem;cursor:pointer;transition:.2s;border:1.5px solid rgba(180,90,0,.2);flex-shrink:0}
+.bkm-close:hover{background:var(--bk-accent);color:#fff}
+
+/* Progress bar */
+.bkm-prog{display:flex;align-items:center;padding:14px 24px 0;background:rgba(180,90,0,.04)}
+.bkm-step{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;position:relative}
+.bkm-step:not(:last-child)::after{content:'';position:absolute;top:12px;left:calc(50% + 14px);right:calc(-50% + 14px);height:2px;background:rgba(180,90,0,.12);z-index:0}
+.bkm-step:not(:last-child).done::after{background:var(--bk-accent)}
+.bkm-circ{width:24px;height:24px;border-radius:50%;border:2px solid rgba(180,90,0,.2);background:#fff;display:flex;align-items:center;justify-content:center;font-size:.67rem;font-weight:800;color:var(--bk-muted2);transition:.3s;z-index:1;position:relative}
+.bkm-step.active .bkm-circ{background:var(--bk-accent);border-color:var(--bk-accent);color:#fff;box-shadow:0 0 0 4px rgba(200,90,0,.15)}
+.bkm-step.done .bkm-circ{background:var(--bk-green);border-color:var(--bk-green);color:#fff}
+.bkm-lbl{font-size:.55rem;font-weight:700;color:var(--bk-muted2);text-transform:uppercase;letter-spacing:.7px;white-space:nowrap}
+.bkm-step.active .bkm-lbl,.bkm-step.done .bkm-lbl{color:var(--bk-muted)}
+
+/* Body */
+.bkm-body{padding:20px 24px}
+
+/* Trip type selector */
+.bkm-trip-wrap{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.bkm-trip-btn{border:2px solid var(--bk-border);border-radius:14px;padding:14px 10px;cursor:pointer;transition:.2s;text-align:center;background:var(--bk-card)}
+.bkm-trip-btn:hover{border-color:rgba(200,90,0,.4);background:rgba(200,90,0,.05)}
+.bkm-trip-btn.on{border-color:var(--bk-accent);background:rgba(200,90,0,.07);box-shadow:0 0 0 1px rgba(200,90,0,.15)}
+.bkm-trip-icon{font-size:1.5rem;margin-bottom:5px}
+.bkm-trip-label{font-family:'Cinzel',serif;font-size:.9rem;letter-spacing:1.5px;color:var(--bk-text);display:block}
+.bkm-trip-desc{font-size:.66rem;color:var(--bk-muted2);margin-top:2px}
+
+/* Form fields */
+.bkm-fg{margin-bottom:12px;position:relative}
+.bkm-fg label{display:block;font-size:.65rem;font-weight:800;text-transform:uppercase;letter-spacing:.9px;color:var(--bk-muted);margin-bottom:5px}
+.bkm-fg input,.bkm-fg select{width:100%;border:1.5px solid var(--bk-input-bdr);border-radius:10px;padding:11px 14px;font-size:.9rem;font-family:'Nunito',sans-serif;color:var(--bk-text);background:var(--bk-input-bg);transition:.2s;outline:none;-webkit-appearance:none;box-sizing:border-box}
+.bkm-fg input::placeholder{color:var(--bk-muted2);font-weight:400}
+.bkm-fg input:focus,.bkm-fg select:focus{border-color:var(--bk-accent);background:#fff;box-shadow:0 0 0 3px rgba(200,90,0,.1)}
+.bkm-fg select option{background:#fff;color:var(--bk-text)}
+.bkm-fg.err input,.bkm-fg.err select{border-color:var(--bk-red)}
+.bkm-errmsg{font-size:.67rem;color:var(--bk-red);margin-top:3px;display:none;font-weight:600}
+.bkm-fg.err .bkm-errmsg{display:block}
+.bkm-fgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:480px){.bkm-fgrid{grid-template-columns:1fr}}
+
+/* Distance badge */
+.bkm-dist{display:none;align-items:center;gap:8px;background:rgba(200,90,0,.08);border:1.5px solid rgba(200,90,0,.25);border-radius:8px;padding:9px 13px;margin-top:8px;font-size:.8rem;font-weight:700;color:var(--bk-accent)}
+.bkm-dist.show{display:flex}
+
+/* Live fare preview (Step 1 inline, like BRG image 2) */
+.bkm-live-fares{background:var(--bk-card);border:1.5px solid rgba(200,90,0,.2);border-radius:12px;overflow:hidden;margin-top:10px;display:none}
+.bkm-live-fares.show{display:block}
+.bkm-lf-title{background:rgba(200,90,0,.1);padding:9px 14px;font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:var(--bk-accent);border-bottom:1px solid rgba(200,90,0,.15)}
+.bkm-lf-row{display:flex;justify-content:space-between;align-items:center;padding:9px 14px;border-bottom:1px solid rgba(180,90,0,.08);transition:.15s;cursor:pointer}
+.bkm-lf-row:last-child{border:none}
+.bkm-lf-row:hover{background:rgba(200,90,0,.05)}
+.bkm-lf-left{display:flex;align-items:center;gap:8px}
+.bkm-lf-icon{font-size:1.2rem;min-width:26px}
+.bkm-lf-name{font-weight:700;font-size:.85rem;color:var(--bk-text)}
+.bkm-lf-sub{font-size:.65rem;color:var(--bk-muted2)}
+.bkm-lf-price{font-family:'Cinzel',serif;font-size:1.05rem;font-weight:800;color:var(--bk-accent)}
+
+/* Autocomplete portal */
+#owb-ac-portal{position:fixed;z-index:9999;background:#fff;border:1.5px solid rgba(200,90,0,.25);border-radius:10px;box-shadow:0 12px 40px var(--bk-shadow);max-height:250px;overflow-y:auto;display:none;font-family:'Nunito',sans-serif}
+.bkm-ac-item{padding:10px 14px;font-size:.86rem;cursor:pointer;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(180,90,0,.07);transition:.15s;color:var(--bk-text)}
+.bkm-ac-item:last-child{border:none}
+.bkm-ac-item:hover{background:rgba(200,90,0,.07)}
+.bkm-ac-main{font-weight:700;color:var(--bk-text)}
+.bkm-ac-sub{font-size:.7rem;color:var(--bk-muted2);margin-top:1px}
+
+/* Results header (step 2) */
+.bkm-res-hdr{background:var(--bk-card);border:1.5px solid var(--bk-border);border-radius:12px;padding:13px 16px;margin-bottom:14px}
+.bkm-res-route{font-size:.83rem;color:var(--bk-muted);display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.bkm-res-route strong{color:var(--bk-text)}
+.bkm-res-meta{display:flex;gap:14px;margin-top:6px;flex-wrap:wrap}
+.bkm-res-meta span{font-size:.72rem;color:var(--bk-muted2);display:flex;align-items:center;gap:4px}
+.bkm-res-meta .km{color:var(--bk-accent);font-weight:800;font-size:.82rem}
+
+/* Cab cards */
+.bkm-cab-list{display:flex;flex-direction:column;gap:9px}
+.bkm-cab{border:1.5px solid var(--bk-border);border-radius:12px;padding:13px 14px;display:flex;align-items:center;gap:11px;cursor:pointer;transition:.2s;background:var(--bk-card)}
+.bkm-cab:hover{border-color:rgba(200,90,0,.4);background:rgba(200,90,0,.04);transform:translateX(3px)}
+.bkm-cab.sel{border-color:var(--bk-accent);background:rgba(200,90,0,.07);box-shadow:0 0 0 1px rgba(200,90,0,.2)}
+.bkm-cab-icon{font-size:1.9rem;min-width:44px;text-align:center}
+.bkm-cab-info{flex:1;min-width:0}
+.bkm-cab-name{font-weight:800;font-size:.92rem;color:var(--bk-text);display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.bkm-cab-badge{background:var(--bk-accent);color:#fff;padding:2px 8px;border-radius:50px;font-size:.56rem;font-weight:800;text-transform:uppercase;letter-spacing:.5px}
+.bkm-cab-sub{font-size:.7rem;color:var(--bk-muted2);margin-top:2px}
+.bkm-cab-specs{display:flex;gap:6px;margin-top:5px;flex-wrap:wrap}
+.bkm-cab-spec{font-size:.67rem;color:var(--bk-muted);font-weight:700;background:rgba(180,90,0,.07);padding:2px 7px;border-radius:50px;border:1px solid rgba(180,90,0,.12)}
+.bkm-cab-fare{text-align:right;min-width:86px;flex-shrink:0}
+.bkm-cab-total{font-family:'Cinzel',serif;font-size:1.35rem;color:var(--bk-accent);line-height:1}
+.bkm-cab-rate{font-size:.66rem;color:var(--bk-muted2);margin-top:2px}
+.bkm-cab-adv{font-size:.64rem;color:var(--bk-green);font-weight:700;margin-top:3px}
+.bkm-cab-selbtn{background:rgba(200,90,0,.08);color:var(--bk-accent);border:1.5px solid rgba(200,90,0,.25);padding:5px 12px;border-radius:50px;font-size:.7rem;font-weight:800;cursor:pointer;transition:.2s;margin-top:6px;font-family:'Nunito',sans-serif}
+.bkm-cab:hover .bkm-cab-selbtn,.bkm-cab.sel .bkm-cab-selbtn{background:var(--bk-accent);color:#fff;border-color:var(--bk-accent)}
+.bkm-note{background:rgba(200,90,0,.06);border:1px dashed rgba(200,90,0,.3);border-radius:8px;padding:9px 12px;font-size:.73rem;color:var(--bk-muted);margin-top:10px;line-height:1.5}
+
+/* OTP inputs */
+.bkm-otp-inputs{display:flex;gap:10px;justify-content:center;margin:16px 0}
+.bkm-otp-inputs input{width:56px;height:62px;border-radius:12px;border:2px solid var(--bk-input-bdr);text-align:center;font-size:1.6rem;font-weight:800;font-family:'Cinzel',serif;transition:.2s;outline:none;background:var(--bk-input-bg);color:var(--bk-text);-moz-appearance:textfield;appearance:textfield}
+.bkm-otp-inputs input::-webkit-outer-spin-button,.bkm-otp-inputs input::-webkit-inner-spin-button{-webkit-appearance:none}
+.bkm-otp-inputs input:focus{border-color:var(--bk-accent);box-shadow:0 0 0 3px rgba(200,90,0,.12);background:#fff}
+.bkm-otp-inputs input.filled{border-color:var(--bk-accent);background:rgba(200,90,0,.06)}
+.bkm-otp-timer{text-align:center;font-size:.75rem;color:var(--bk-muted2);margin-bottom:4px;font-weight:600}
+.bkm-otp-resend{text-align:center;font-size:.78rem;color:var(--bk-muted2);cursor:pointer;margin-bottom:4px;font-weight:700}
+.bkm-otp-resend.active{color:var(--bk-accent);text-decoration:underline}
+
+/* Booking summary */
+.bkm-sum{background:var(--bk-card);border:1.5px solid var(--bk-border);border-radius:12px;padding:14px;margin-bottom:12px}
+.bkm-row{display:flex;gap:10px;padding:7px 0;border-bottom:1px solid rgba(180,90,0,.07);font-size:.82rem}
+.bkm-row:last-child{border:none}
+.bkm-row .bl{color:var(--bk-muted2);min-width:86px;flex-shrink:0;font-size:.66rem;text-transform:uppercase;letter-spacing:.5px;padding-top:2px;font-weight:700}
+.bkm-row .bv{font-weight:700;color:var(--bk-text);flex:1}
+
+/* Payment panel */
+.bkm-pay-panel{background:var(--bk-card);border:1.5px solid rgba(200,90,0,.22);border-radius:14px;padding:16px;margin:12px 0 10px}
+.bkm-pay-title{font-family:'Cinzel',serif;font-size:.95rem;letter-spacing:1.5px;color:var(--bk-text);margin-bottom:3px}
+.bkm-pay-sub{font-size:.7rem;color:var(--bk-muted2);margin-bottom:12px;font-weight:600}
+.bkm-pay-opts{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.bkm-pay-opt{flex:1;min-width:105px;padding:10px 8px;border-radius:10px;border:2px solid var(--bk-border);background:var(--bk-input-bg);font-weight:700;font-size:.76rem;cursor:pointer;transition:.2s;color:var(--bk-text);font-family:'Nunito',sans-serif;text-align:center}
+.bkm-pay-opt:hover{border-color:rgba(200,90,0,.4);background:rgba(200,90,0,.06)}
+.bkm-pay-opt.on{border-color:var(--bk-accent);background:rgba(200,90,0,.08);box-shadow:0 0 0 1px rgba(200,90,0,.15)}
+.bkm-pay-opt span{display:block;font-family:'Cinzel',serif;font-size:.92rem;letter-spacing:.5px;margin-top:3px;color:var(--bk-accent)}
+.bkm-custom-row{display:none;margin-bottom:10px}
+.bkm-custom-row label{font-size:.65rem;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:var(--bk-muted);display:block;margin-bottom:4px}
+.bkm-custom-inp-wrap{display:flex;gap:7px;align-items:center}
+.bkm-rupee{font-size:1.1rem;font-weight:800;color:var(--bk-text)}
+.bkm-custom-inp{flex:1;border:1.5px solid var(--bk-input-bdr);border-radius:10px;padding:9px 12px;font-size:.92rem;font-weight:700;font-family:'Nunito',sans-serif;outline:none;color:var(--bk-text);background:var(--bk-input-bg)}
+.bkm-custom-inp:focus{border-color:var(--bk-accent);background:#fff}
+.bkm-custom-err{display:none;font-size:.67rem;color:var(--bk-red);margin-top:4px;font-weight:600}
+.bkm-pay-summary{font-size:.76rem;color:var(--bk-muted2);margin-bottom:10px;min-height:16px;font-weight:600}
+
+/* Confirm screen */
+.bkm-confirm-wrap{text-align:center;padding:10px 0 4px}
+.bkm-confirm-ic{width:68px;height:68px;background:linear-gradient(135deg,#1a7a1a,#2ea02e);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.9rem;margin:0 auto 12px;box-shadow:0 8px 28px rgba(26,122,26,.25)}
+.bkm-booking-ref{background:rgba(200,90,0,.08);border:1.5px dashed rgba(200,90,0,.4);border-radius:10px;padding:11px 20px;display:inline-block;font-family:'Cinzel',serif;font-size:1.2rem;letter-spacing:3px;margin:10px auto 14px;color:var(--bk-accent)}
+
+/* Modal footer */
+.bkm-foot{padding:13px 24px 20px;border-top:1.5px solid rgba(180,90,0,.1)}
+.bkm-foot-btns{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.bkm-note-foot{font-size:.67rem;color:var(--bk-muted2);margin-top:8px;text-align:center;font-weight:600}
+
+/* Buttons */
+.bkm-btn-gold{background:linear-gradient(135deg,var(--bk-accent),#a04000);color:#fff;padding:12px 24px;border-radius:50px;font-weight:800;font-size:.88rem;display:inline-flex;align-items:center;gap:7px;transition:.2s;border:none;cursor:pointer;font-family:'Nunito',sans-serif;box-shadow:0 4px 14px rgba(200,90,0,.35)}
+.bkm-btn-gold:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(200,90,0,.4)}
+.bkm-btn-gold:disabled{background:#d4b896;color:#9a7050;cursor:not-allowed;transform:none;box-shadow:none}
+.bkm-btn-outline{background:transparent;border:1.5px solid rgba(180,90,0,.3);color:var(--bk-muted);padding:11px 22px;border-radius:50px;font-weight:700;font-size:.86rem;display:inline-flex;align-items:center;gap:7px;transition:.2s;cursor:pointer;font-family:'Nunito',sans-serif}
+.bkm-btn-outline:hover{border-color:var(--bk-accent);color:var(--bk-accent);background:rgba(200,90,0,.05)}
+.bkm-btn-wa{background:#25D366;color:#fff;padding:12px 22px;border-radius:50px;font-weight:700;font-size:.86rem;display:inline-flex;align-items:center;gap:7px;transition:.2s;border:none;cursor:pointer;width:100%;justify-content:center;font-family:'Nunito',sans-serif;margin-top:8px}
+.bkm-btn-wa:hover{background:#1ebe5d;transform:translateY(-2px);box-shadow:0 8px 22px rgba(37,211,102,.3)}
+.bkm-btn-pay{width:100%;padding:13px;border-radius:10px;border:none;background:linear-gradient(135deg,var(--bk-accent),#a04000);color:#fff;font-family:'Cinzel',serif;font-size:1.02rem;letter-spacing:2px;font-weight:800;cursor:pointer;box-shadow:0 4px 14px rgba(200,90,0,.3);transition:.2s;margin-top:4px}
+.bkm-btn-pay:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(200,90,0,.4)}
+.bkm-spinner{width:15px;height:15px;border:2.5px solid rgba(200,90,0,.2);border-top-color:var(--bk-accent);border-radius:50%;animation:bkmSpin .7s linear infinite;display:inline-block}
+@keyframes bkmSpin{to{transform:rotate(360deg)}}
+
+/* Stops block */
+.bkm-stop-item{display:flex;align-items:center;gap:6px;margin-bottom:5px}
+.bkm-stop-pill{flex:1;background:rgba(200,90,0,.06);border:1.5px solid rgba(200,90,0,.2);border-radius:9px;padding:8px 12px;font-size:.82rem;color:var(--bk-text);font-weight:700}
+.bkm-stop-rm{background:rgba(192,57,43,.07);border:1.5px solid rgba(192,57,43,.2);border-radius:8px;width:30px;height:30px;color:var(--bk-red);cursor:pointer;font-size:.85rem;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:.2s}
+.bkm-stop-rm:hover{background:rgba(192,57,43,.14)}
+.bkm-add-stop{width:100%;padding:9px;border:1.5px dashed rgba(200,90,0,.3);background:rgba(200,90,0,.04);border-radius:10px;color:var(--bk-accent);font-weight:800;font-size:.78rem;cursor:pointer;transition:.2s;font-family:'Nunito',sans-serif}
+.bkm-add-stop:hover{background:rgba(200,90,0,.08);border-color:var(--bk-accent)}
 
 </style>
 
@@ -1835,7 +2031,8 @@ p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
     <a href="faq.html"     class="nav-link">FAQ</a>
     <a href="about.html"   class="nav-link">About</a>
     <a href="contact.html" class="nav-link">Contact</a>
-    <a href="tel:+919355757579" class="nav-link nav-cta">📞 +91-93557 57579</a>
+    <button class="nav-link nav-cta" onclick="bkmOpen()" style="cursor:pointer;font-family:'Nunito',sans-serif">🚕 Book Now</button>
+    <a href="tel:+919355757579" class="nav-link" style="color:rgba(255,255,255,.7)">📞 +91-93557 57579</a>
   </nav>
 </header>
 
@@ -2005,7 +2202,7 @@ p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
             <span class="fp-rate">₹11<span class="fp-unit">/km</span></span>
             <div class="fp-type">Round Trip</div>
           </div>
-          <button class="fleet-book" onclick="window.location='booking.html'">Book</button>
+          <button class="fleet-book" onclick="bkmOpen()">Book</button>
         </div>
       </div>
 
@@ -2024,7 +2221,7 @@ p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
             <span class="fp-rate">₹15<span class="fp-unit">/km</span></span>
             <div class="fp-type">Round Trip</div>
           </div>
-          <button class="fleet-book" onclick="window.location='booking.html'">Book</button>
+          <button class="fleet-book" onclick="bkmOpen()">Book</button>
         </div>
       </div>
 
@@ -2043,7 +2240,7 @@ p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
             <span class="fp-rate">₹20<span class="fp-unit">/km</span></span>
             <div class="fp-type">Round Trip</div>
           </div>
-          <button class="fleet-book" onclick="window.location='booking.html'">Book</button>
+          <button class="fleet-book" onclick="bkmOpen()">Book</button>
         </div>
       </div>
 
@@ -2062,7 +2259,7 @@ p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
             <span class="fp-rate">₹35<span class="fp-unit">/km</span></span>
             <div class="fp-type">Round Trip</div>
           </div>
-          <button class="fleet-book" onclick="window.location='booking.html'">Book</button>
+          <button class="fleet-book" onclick="bkmOpen()">Book</button>
         </div>
       </div>
     </div>
@@ -2128,7 +2325,7 @@ p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
             <div class="crs-amount" id="r_remaining">₹4,766</div>
           </div>
         </div>
-        <button class="search-btn" style="margin-top:20px" onclick="window.location='booking.html'">Book This Cab Now →</button>
+        <button class="search-btn" style="margin-top:20px" onclick="bkmOpen()">Book This Cab Now →</button>
       </div>
     </div>
   </div>
@@ -2217,11 +2414,205 @@ p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
     <h2 class="cta-title">Bhaarat Is Waiting.<br>Your Cab Is Ready.</h2>
     <p class="cta-sub">50,000+ riders already book with us because the fare you see is the fare you pay. No surge, no surprises — just book and go.</p>
     <div class="cta-btns">
-      <a href="booking.html" class="btn-primary">🚕 Book Your Cab Now</a>
+      <button class="btn-primary" onclick="bkmOpen()" style="text-decoration:none;cursor:pointer">🚕 Book Your Cab Now</button>
       <a href="tel:+919355757579" class="btn-secondary">📞 Call +91-93557 57579</a>
     </div>
   </div>
 </section>
+
+<!-- ══════════════════════════════════════════════
+     BOOKING MODAL — 5-Step Flow
+══════════════════════════════════════════════ -->
+<div id="bkModal" role="dialog" aria-modal="true" aria-labelledby="bkmTitle">
+  <div class="bkm-box">
+
+    <!-- HEAD -->
+    <div class="bkm-head">
+      <div>
+        <div class="bkm-head-title" id="bkmTitle">🚕 BOOK YOUR RIDE</div>
+        <div class="bkm-head-sub" id="bkmSub">Choose trip type and search for available cabs</div>
+      </div>
+      <button class="bkm-close" onclick="bkmClose()" aria-label="Close booking">✕</button>
+    </div>
+
+    <!-- PROGRESS -->
+    <div class="bkm-prog" id="bkmProg">
+      <div class="bkm-step active" id="bkmp1"><div class="bkm-circ">1</div><div class="bkm-lbl">Route</div></div>
+      <div class="bkm-step" id="bkmp2"><div class="bkm-circ">2</div><div class="bkm-lbl">Cab</div></div>
+      <div class="bkm-step" id="bkmp3"><div class="bkm-circ">3</div><div class="bkm-lbl">Details</div></div>
+      <div class="bkm-step" id="bkmp4"><div class="bkm-circ">4</div><div class="bkm-lbl">OTP</div></div>
+      <div class="bkm-step" id="bkmp5"><div class="bkm-circ">5</div><div class="bkm-lbl">Done</div></div>
+    </div>
+
+    <div class="bkm-body">
+
+      <!-- ── STEP 1: ROUTE ── -->
+      <div id="bkmS1">
+        <div class="bkm-trip-wrap">
+          <div class="bkm-trip-btn on" id="bktt-oneway" onclick="bkmSetTrip('oneway')">
+            <div class="bkm-trip-icon">🎯</div>
+            <span class="bkm-trip-label">ONE WAY</span>
+            <div class="bkm-trip-desc">Travel one direction</div>
+          </div>
+          <div class="bkm-trip-btn" id="bktt-roundtrip" onclick="bkmSetTrip('roundtrip')">
+            <div class="bkm-trip-icon">🔄</div>
+            <span class="bkm-trip-label">ROUND TRIP</span>
+            <div class="bkm-trip-desc">Go &amp; return same cab</div>
+          </div>
+        </div>
+
+        <div class="bkm-fg" id="bkfg-pu">
+          <label>📍 From Location *</label>
+          <input type="text" id="bk-pu" placeholder="Search city, area, airport…" autocomplete="off"/>
+          <div class="bkm-errmsg">Please enter pickup location</div>
+        </div>
+
+        <!-- Multi-stop block (round trip only) -->
+        <div id="bkm-stops-block" style="margin:6px 0;display:none">
+          <div id="bkm-stop-list"></div>
+          <button type="button" class="bkm-add-stop" onclick="bkmAddStop()">➕ Add Stop</button>
+        </div>
+
+        <div class="bkm-fg" id="bkfg-dr">
+          <label id="bk-dr-label">🏁 To Location *</label>
+          <input type="text" id="bk-dr" placeholder="Search any destination across India…" autocomplete="off"/>
+          <div class="bkm-errmsg">Please enter drop location</div>
+        </div>
+
+        <div id="bkm-dist" class="bkm-dist"><span>📏</span><span id="bkm-dist-txt">Calculating…</span></div>
+
+        <div class="bkm-fgrid">
+          <div class="bkm-fg" id="bkfg-dt"><label>📅 Pickup Date *</label><input type="date" id="bk-dt"/><div class="bkm-errmsg">Select date</div></div>
+          <div class="bkm-fg" id="bkfg-tm"><label>⏰ Pickup Time *</label><input type="time" id="bk-tm"/><div class="bkm-errmsg">Select time</div></div>
+        </div>
+
+        <div id="bkm-ret-wrap" style="display:none">
+          <div class="bkm-fgrid">
+            <div class="bkm-fg"><label>📅 Return Date *</label><input type="date" id="bk-ret"/></div>
+            <div class="bkm-fg"><label>⏰ Return Time</label><input type="time" id="bk-ret-tm"/></div>
+          </div>
+        </div>
+
+        <div class="bkm-fg">
+          <label>👥 Passengers</label>
+          <select id="bk-pax">
+            <option>1 Passenger</option><option>2 Passengers</option>
+            <option selected>3–4 Passengers</option><option>5–6 Passengers</option>
+            <option>7+ Passengers</option><option>12+ Passengers</option>
+          </select>
+        </div>
+
+        <!-- Live fare preview — shown after distance is known -->
+        <div id="bkmLiveFares" class="bkm-live-fares">
+          <div class="bkm-lf-title">🚕 ONE WAY RATES</div>
+          <div id="bkmLiveFareRows"></div>
+        </div>
+
+      </div><!-- /bkmS1 -->
+
+      <!-- ── STEP 2: CAB RESULTS ── -->
+      <div id="bkmS2" style="display:none">
+        <div class="bkm-res-hdr">
+          <div class="bkm-res-route"><strong id="bkrs-pu">—</strong><span>→</span><strong id="bkrs-dr">—</strong></div>
+          <div class="bkm-res-meta">
+            <span>📅 <span id="bkrs-date">—</span></span>
+            <span>🎯 <span id="bkrs-type">One Way</span></span>
+            <span class="km">📏 <span id="bkrs-km">—</span></span>
+          </div>
+        </div>
+        <p style="font-size:.75rem;color:rgba(255,255,255,.4);margin-bottom:12px;font-weight:600">Select your preferred cab:</p>
+        <div class="bkm-cab-list" id="bkmCabList"></div>
+        <div class="bkm-note">💡 Fare includes driver charges. Toll, parking &amp; state permit extra. Balance paid to driver after trip.</div>
+      </div>
+
+      <!-- ── STEP 3: PASSENGER DETAILS ── -->
+      <div id="bkmS3" style="display:none">
+        <div class="bkm-fgrid">
+          <div class="bkm-fg" id="bkfg-pn"><label>Full Name *</label><input type="text" id="bk-pn" placeholder="Your full name"/><div class="bkm-errmsg">Enter your name</div></div>
+          <div class="bkm-fg" id="bkfg-ph"><label>Mobile Number *</label><input type="tel" id="bk-ph" placeholder="10-digit number" maxlength="10"/><div class="bkm-errmsg">Enter valid 10-digit number</div></div>
+        </div>
+        <div class="bkm-fg" id="bkfg-em"><label>Email Address *</label><input type="email" id="bk-em" placeholder="your@email.com"/><div class="bkm-errmsg">Enter valid email</div></div>
+        <div class="bkm-fg"><label>Special Notes (optional)</label><input type="text" id="bk-notes" placeholder="Flight no., hotel, special request…"/></div>
+      </div>
+
+      <!-- ── STEP 4: OTP ── -->
+      <div id="bkmS4" style="display:none;text-align:center">
+        <div style="font-size:2.8rem;margin-bottom:8px">📱</div>
+        <h3 style="font-family:'Cinzel',serif;font-size:1.3rem;letter-spacing:1.5px;color:#2d1a00;margin-bottom:6px">VERIFY YOUR MOBILE</h3>
+        <p style="color:#7a5030;font-size:.84rem;margin-bottom:16px">4-digit OTP sent via WhatsApp to <strong id="bk-otp-num" style="color:#c85a00"></strong></p>
+        <div class="bkm-otp-inputs" role="group" aria-label="One-time password">
+          <input type="tel" inputmode="numeric" pattern="[0-9]" id="bo1" maxlength="1" aria-label="OTP digit 1" oninput="bkmOtpMove(this,'bo2')" onkeydown="bkmOtpBack(event,this,'')"/>
+          <input type="tel" inputmode="numeric" pattern="[0-9]" id="bo2" maxlength="1" aria-label="OTP digit 2" oninput="bkmOtpMove(this,'bo3')" onkeydown="bkmOtpBack(event,this,'bo1')"/>
+          <input type="tel" inputmode="numeric" pattern="[0-9]" id="bo3" maxlength="1" aria-label="OTP digit 3" oninput="bkmOtpMove(this,'bo4')" onkeydown="bkmOtpBack(event,this,'bo2')"/>
+          <input type="tel" inputmode="numeric" pattern="[0-9]" id="bo4" maxlength="1" aria-label="OTP digit 4" oninput="bkmOtpMove(this,'')"   onkeydown="bkmOtpBack(event,this,'bo3')"/>
+        </div>
+        <div class="bkm-otp-timer">Resend in <span id="bkmCD">30</span>s</div>
+        <div class="bkm-otp-resend" id="bkmResend" style="pointer-events:none;opacity:.4" onclick="bkmResendOTP()">Resend OTP</div>
+      </div>
+
+      <!-- ── STEP 5: CONFIRMED ── -->
+      <div id="bkmS5" style="display:none">
+        <div class="bkm-confirm-wrap">
+          <div class="bkm-confirm-ic">✓</div>
+          <h3 style="font-family:'Cinzel',serif;font-size:1.65rem;letter-spacing:2px;color:#2d1a00;margin-bottom:6px">BOOKING RECEIVED!</h3>
+          <p style="color:#7a5030;font-size:.85rem;margin-bottom:6px;line-height:1.7">Your request is confirmed. Complete payment below to secure your cab.</p>
+          <div class="bkm-booking-ref" id="bkRef">OWB-000000</div>
+          <div class="bkm-sum" id="bkmSumFinal" style="text-align:left"></div>
+
+          <!-- Payment options -->
+          <div class="bkm-pay-panel">
+            <div class="bkm-pay-title">💳 ONLINE PAYMENT</div>
+            <div class="bkm-pay-sub">Choose how much to pay now. Balance collected by driver.</div>
+            <div class="bkm-pay-opts">
+              <button class="bkm-pay-opt on" id="ppOpt10" onclick="bkmSelectPayOpt('partial')">
+                10% Advance<span id="ppAdv10">₹0</span>
+              </button>
+              <button class="bkm-pay-opt" id="ppOptCustom" onclick="bkmSelectPayOpt('custom')">
+                Custom Amount<span style="font-size:.7rem;font-weight:500;color:rgba(255,255,255,.4)">Enter amount</span>
+              </button>
+              <button class="bkm-pay-opt" id="ppOptFull" onclick="bkmSelectPayOpt('full')">
+                Full Fare<span id="ppFull">₹0</span>
+              </button>
+            </div>
+            <div id="bkmCustomRow" class="bkm-custom-row">
+              <label>Enter Amount (Min ₹<span id="bkmMinLabel">0</span>)</label>
+              <div class="bkm-custom-inp-wrap">
+                <span class="bkm-rupee">₹</span>
+                <input type="number" id="bkmCustomAmt" class="bkm-custom-inp" min="0" placeholder="e.g. 2000" oninput="bkmValidateCustom()"/>
+              </div>
+              <div id="bkmCustomErr" class="bkm-custom-err"></div>
+            </div>
+            <div id="bkmPaySummary" class="bkm-pay-summary"></div>
+            <button class="bkm-btn-pay" onclick="bkmTriggerRazorpay()">🔒 PAY NOW</button>
+          </div>
+
+          <div id="bkmPayStatus" style="display:none;text-align:center;padding:8px 0;font-size:.86rem;font-weight:700"></div>
+
+          <button class="bkm-btn-wa" onclick="bkmSendWA()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+            Confirm on WhatsApp
+          </button>
+        </div>
+      </div>
+
+    </div><!-- /bkm-body -->
+
+    <!-- MODAL FOOTER -->
+    <div class="bkm-foot" id="bkmFoot">
+      <div class="bkm-foot-btns">
+        <button class="bkm-btn-outline" id="bkmBtnBack" style="display:none" onclick="bkmBack()">← Back</button>
+        <button class="bkm-btn-gold" id="bkmBtnNext" onclick="bkmNext()">Search Cabs →</button>
+      </div>
+      <div class="bkm-note-foot">🔒 Secure booking · 24×7 Support: <a href="tel:+919355757579" style="color:#c85a00;font-weight:700">+91-93557 57579</a></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="owb-toast"></div>
+<!-- AC Portal (global) -->
+<div id="owb-ac-portal"></div>
 
 <!-- ─────────────────── FOOTER ─────────────────── -->
 <footer>
@@ -2256,10 +2647,10 @@ p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
     <div class="footer-col">
       <h4>Services</h4>
       <ul>
-        <li><a href="booking.html">One Way Cabs</a></li>
-        <li><a href="booking.html">Round Trip</a></li>
-        <li><a href="booking.html">Airport Transfer</a></li>
-        <li><a href="booking.html">Corporate Cabs</a></li>
+        <li><a href="#" onclick="bkmOpen();return false;">One Way Cabs</a></li>
+        <li><a href="#" onclick="bkmSetTrip('roundtrip');bkmOpen();return false;">Round Trip</a></li>
+        <li><a href="#" onclick="bkmOpen();return false;">Airport Transfer</a></li>
+        <li><a href="#" onclick="bkmOpen();return false;">Corporate Cabs</a></li>
         <li><a href="routes.html">All Routes</a></li>
         <li><a href="fleet.html">Our Fleet</a></li>
       </ul>
@@ -2362,7 +2753,7 @@ function swapLocs() {
   [a.value, b.value] = [b.value, a.value];
 }
 
-// ── Search ─────────────────────────────────────────────
+// ── Search — opens modal, pre-fills from hero widget ──
 function searchCabs() {
   const p = document.getElementById('pickup').value.trim();
   const d = document.getElementById('drop').value.trim();
@@ -2371,27 +2762,33 @@ function searchCabs() {
   pickupInput.style.borderColor = '';
   dropInput.style.borderColor   = '';
   let hasError = false;
-  if (!p) { pickupInput.style.borderColor = '#e53e3e'; pickupInput.focus(); hasError = true; }
-  if (!d) { dropInput.style.borderColor = '#e53e3e'; if (!hasError) dropInput.focus(); hasError = true; }
+  if (!p) { pickupInput.style.borderColor = 'rgba(244,123,0,.7)'; pickupInput.focus(); hasError = true; }
+  if (!d) { dropInput.style.borderColor   = 'rgba(244,123,0,.7)'; if (!hasError) dropInput.focus(); hasError = true; }
   if (hasError) {
     let msg = document.getElementById('search-error-msg');
-    if (!msg) { msg = document.createElement('p'); msg.id = 'search-error-msg'; msg.style.cssText = 'color:#fc8181;font-size:12px;text-align:center;margin-top:8px;font-weight:600;'; document.querySelector('.search-btn').insertAdjacentElement('afterend', msg); }
-    msg.textContent = !p && !d ? 'Please enter both pickup and drop locations.' : !p ? 'Please enter a pickup location.' : 'Please enter a drop location.';
+    if (!msg) {
+      msg = document.createElement('p');
+      msg.id = 'search-error-msg';
+      msg.style.cssText = 'color:#fc8181;font-size:12px;text-align:center;margin-top:8px;font-weight:600;';
+      document.querySelector('.search-btn').insertAdjacentElement('afterend', msg);
+    }
+    msg.textContent = (!p && !d) ? 'Please enter both pickup and drop locations.'
+                    : !p ? 'Please enter a pickup location.'
+                    : 'Please enter a drop location.';
     return;
   }
   const msg = document.getElementById('search-error-msg');
   if (msg) msg.remove();
-  // Build URL with coordinates if available from Places API
-  let url = 'booking.html?from=' + encodeURIComponent(p) + '&to=' + encodeURIComponent(d);
-  if (pickupPlaceData && pickupPlaceData.lat) {
-    url += '&fromLat=' + pickupPlaceData.lat + '&fromLng=' + pickupPlaceData.lng;
-    url += '&fromId=' + encodeURIComponent(pickupPlaceData.place_id || '');
-  }
-  if (dropPlaceData && dropPlaceData.lat) {
-    url += '&toLat=' + dropPlaceData.lat + '&toLng=' + dropPlaceData.lng;
-    url += '&toId=' + encodeURIComponent(dropPlaceData.place_id || '');
-  }
-  window.location = url;
+
+  // Pre-fill modal with hero widget values then open it
+  BKM.S.pu   = p;
+  BKM.S.dr   = d;
+  BKM.S.date = document.getElementById('pdate').value;
+  BKM.S.time = document.getElementById('ptime').value;
+  // Pre-seed coordinates from hero autocomplete if available
+  if (pickupPlaceData && pickupPlaceData.lat) BKM._puData = pickupPlaceData;
+  if (dropPlaceData   && dropPlaceData.lat)   BKM._drData = dropPlaceData;
+  bkmOpen({ prefill: true });
 }
 
 // ── Fare Calc ──────────────────────────────────────────
@@ -2440,9 +2837,14 @@ const ROUTES = [
 
 const grid = document.getElementById('routesGrid');
 ROUTES.forEach(r => {
-  const el = document.createElement('a');
+  const el = document.createElement('div');
   el.className = 'route-card';
-  el.href = `booking.html?from=${encodeURIComponent(r.from)}&to=${encodeURIComponent(r.to)}`;
+  el.style.cursor = 'pointer';
+  el.onclick = () => {
+    BKM.S.pu = r.from; BKM.S.dr = r.to;
+    BKM._preDistKm = r.d;
+    bkmOpen({ prefill: true });
+  };
   el.innerHTML = `
     <div class="route-emoji">${r.icon}</div>
     <div class="route-info">
@@ -2627,6 +3029,843 @@ document.addEventListener('DOMContentLoaded', () => {
   // Always attach even without SDK so proxy works on production
   else if (!IS_LOCAL) initAutocomplete();
 });
+
+// ══════════════════════════════════════════════════════════════
+//  BOOKING MODAL — 5-Step Flow (BRG-style, OWB themed)
+//  Vehicles, fares, OTP, payment options, WhatsApp confirm
+// ══════════════════════════════════════════════════════════════
+
+const ADMIN_WA = '919355757579';
+
+const BKM_VEHICLES = [
+  {key:'sedan',  name:'Sedan',           sub:'Swift Dzire / Honda Amaze / Aspire', icon:'🚗', seats:4,  badge:'Popular',  ow:16, rt:11, minFare:1500},
+  {key:'ertiga', name:'Ertiga',          sub:'Maruti Ertiga / XL6 (6-Seater)',     icon:'🚐', seats:6,  badge:'Family',   ow:21, rt:15, minFare:1700},
+  {key:'innova', name:'Innova Crysta',   sub:'Toyota Innova Crysta',               icon:'🚙', seats:7,  badge:'Premium',  ow:30, rt:20, minFare:2000},
+  {key:'tempo',  name:'Tempo Traveller', sub:'12-Seater Force / Mahindra',         icon:'🚌', seats:12, badge:'Group',    ow:42, rt:35, minFare:4000},
+];
+
+// Booking state object — everything lives here
+const BKM = {
+  S: {
+    trip:'oneway', pu:'', dr:'', date:'', time:'', retdate:'',
+    rettime:'', pax:'3–4 Passengers',
+    vehicle:null, vehicleName:'', rate:0, distKm:0,
+    totalFare:0, advAmt:0, payMode:'partial', payAmt:0,
+    name:'', phone:'', email:'', notes:'',
+    bookingId:'', extraCities:[], step:1,
+  },
+  _step:1,
+  _puData:{}, _drData:{},
+  _preDistKm:0,  // set from route cards
+  _sessionToken: null,
+};
+
+// ── Toast ────────────────────────────────────────────────────
+let _toastTimer;
+function bkmToast(msg, dur=3200){
+  const el = document.getElementById('owb-toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => el.classList.remove('show'), dur);
+}
+
+// ── Open/Close ──────────────────────────────────────────────
+function bkmOpen(opts={}){
+  const modal = document.getElementById('bkModal');
+  if(!opts.prefill){ _bkmReset(); }
+  modal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  _bkmGoStep(1);
+
+  // Pre-fill fields if called from hero widget or route card
+  if(opts.prefill || BKM.S.pu){
+    const puEl = document.getElementById('bk-pu');
+    const drEl = document.getElementById('bk-dr');
+    const dtEl = document.getElementById('bk-dt');
+    const tmEl = document.getElementById('bk-tm');
+    if(puEl && BKM.S.pu) puEl.value = BKM.S.pu;
+    if(drEl && BKM.S.dr) drEl.value = BKM.S.dr;
+    if(dtEl && BKM.S.date) dtEl.value = BKM.S.date;
+    if(tmEl && BKM.S.time) tmEl.value = BKM.S.time;
+    // If a pre-calculated distance is available (from route card), use it
+    if(BKM._preDistKm > 0){
+      BKM.S.distKm = BKM._preDistKm;
+      _bkmShowDist(`~${BKM._preDistKm} km`);
+    }
+  }
+  _bkmUpdateBtn();
+}
+
+function bkmClose(){
+  document.getElementById('bkModal').classList.remove('open');
+  document.body.style.overflow = '';
+  _bkmHidePortal();
+}
+
+// Close on overlay click
+document.getElementById('bkModal').addEventListener('click', e => {
+  if(e.target === document.getElementById('bkModal')) bkmClose();
+});
+
+// ── Reset ────────────────────────────────────────────────────
+function _bkmReset(){
+  const S = BKM.S;
+  S.trip='oneway'; S.pu=''; S.dr=''; S.date=''; S.time='';
+  S.retdate=''; S.rettime=''; S.pax='3–4 Passengers';
+  S.vehicle=null; S.vehicleName=''; S.rate=0; S.distKm=0;
+  S.totalFare=0; S.advAmt=0; S.payMode='partial'; S.payAmt=0;
+  S.name=''; S.phone=''; S.email=''; S.notes='';
+  S.bookingId=''; S.extraCities=[];
+  BKM._preDistKm=0; BKM._puData={}; BKM._drData={};
+
+  // Reset UI inputs
+  ['bk-pu','bk-dr','bk-dt','bk-tm','bk-ret','bk-ret-tm','bk-pn','bk-ph','bk-em','bk-notes']
+    .forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  document.getElementById('bkm-dist').classList.remove('show');
+  document.getElementById('bkm-stop-list').innerHTML='';
+  bkmSetTrip('oneway');
+}
+
+// ── Step navigation ─────────────────────────────────────────
+function _bkmGoStep(n){
+  BKM._step = n;
+  [1,2,3,4,5].forEach(i => {
+    const s = document.getElementById('bkmS'+i);
+    if(s) s.style.display = (i===n ? '' : 'none');
+    const p = document.getElementById('bkmp'+i);
+    if(p){
+      p.classList.remove('active','done');
+      if(i < n) p.classList.add('done');
+      else if(i === n) p.classList.add('active');
+    }
+  });
+  // Foot visibility
+  const foot = document.getElementById('bkmFoot');
+  if(foot) foot.style.display = n===5 ? 'none' : '';
+  _bkmUpdateBtn();
+}
+
+function _bkmUpdateBtn(){
+  const next = document.getElementById('bkmBtnNext');
+  const back = document.getElementById('bkmBtnBack');
+  const n = BKM._step;
+  if(next){
+    next.textContent = n===1 ? 'Search Cabs →' : n===3 ? 'Send OTP →' : 'Verify OTP →';
+    // Step 2: hide next button — cab tap auto-advances
+    next.style.display = n===2 ? 'none' : '';
+  }
+  if(back) back.style.display = n>1 ? '' : 'none';
+}
+
+function bkmNext(){
+  const n = BKM._step;
+  if(n===1) _bkmStep1Next();
+  else if(n===2) _bkmStep2Next();
+  else if(n===3) _bkmStep3Next();
+  else if(n===4) _bkmVerifyOTP();
+}
+
+function bkmBack(){
+  if(BKM._step > 1) _bkmGoStep(BKM._step-1);
+}
+
+// ── Trip type ────────────────────────────────────────────────
+function bkmSetTrip(t){
+  BKM.S.trip = t;
+  ['oneway','roundtrip'].forEach(k => {
+    const el = document.getElementById('bktt-'+k);
+    if(el) el.classList.toggle('on', k===t);
+  });
+  const retWrap = document.getElementById('bkm-ret-wrap');
+  if(retWrap) retWrap.style.display = t==='roundtrip' ? '' : 'none';
+  const stopsBlock = document.getElementById('bkm-stops-block');
+  if(stopsBlock) stopsBlock.style.display = t==='roundtrip' ? '' : 'none';
+  if(t==='oneway'){
+    BKM.S.extraCities=[];
+    document.getElementById('bkm-stop-list').innerHTML='';
+  }
+  // Rerender live fares for new trip type
+  if(BKM.S.distKm > 0) _bkmRenderLiveFares();
+  // Round trip — lock drop = pickup
+  _bkmSyncRTDrop(t);
+}
+
+function _bkmSyncRTDrop(t){
+  const drEl    = document.getElementById('bk-dr');
+  const drLabel = document.getElementById('bk-dr-label');
+  if(!drEl) return;
+  if(t==='roundtrip'){
+    drEl.value    = document.getElementById('bk-pu').value;
+    drEl.readOnly = true;
+    drEl.style.cssText += ';background:rgba(244,123,0,.07);color:rgba(255,255,255,.4);cursor:not-allowed;border-color:rgba(244,123,0,.25)';
+    if(drLabel) drLabel.innerHTML = '🔄 Return To <span style="font-size:.62rem;color:var(--sf-400);font-weight:700">(same as pickup)</span>';
+  } else {
+    drEl.readOnly = false;
+    drEl.style.background=''; drEl.style.color=''; drEl.style.cursor=''; drEl.style.borderColor='';
+    if(drLabel) drLabel.textContent = '🏁 To Location *';
+  }
+}
+
+// Mirror pickup into locked drop on input
+document.getElementById('bk-pu').addEventListener('input', function(){
+  if(BKM.S.trip==='roundtrip'){
+    const drEl = document.getElementById('bk-dr');
+    if(drEl){ drEl.value = this.value; BKM.S.dr = this.value; }
+  }
+});
+
+// ── Date defaults ────────────────────────────────────────────
+(function(){
+  const today = new Date().toISOString().split('T')[0];
+  ['bk-dt','bk-ret'].forEach(id => {
+    const el = document.getElementById(id); if(el) el.min = today;
+  });
+  const bkDt = document.getElementById('bk-dt');
+  if(bkDt && !bkDt.value) bkDt.value = today;
+  // Default time: now + 2h
+  const t = new Date(Date.now() + 2*60*60*1000);
+  const hh = String(t.getHours()).padStart(2,'0');
+  const mm = String(t.getMinutes()).padStart(2,'0');
+  const bkTm = document.getElementById('bk-tm');
+  if(bkTm && !bkTm.value) bkTm.value = `${hh}:${mm}`;
+})();
+
+// ── Distance display helper ──────────────────────────────────
+function _bkmShowDist(txt){
+  const el = document.getElementById('bkm-dist');
+  const tx = document.getElementById('bkm-dist-txt');
+  if(el && tx){ tx.textContent=txt; el.classList.add('show'); }
+  // Render live fares once distance is known
+  if(BKM.S.distKm > 0) _bkmRenderLiveFares();
+}
+
+// ── Live fare panel (Step 1) — shows inline fare list ────────
+function _bkmRenderLiveFares(){
+  const km = BKM.S.distKm || 0;
+  const isRound = BKM.S.trip === 'roundtrip';
+  const panel = document.getElementById('bkmLiveFares');
+  const rows  = document.getElementById('bkmLiveFareRows');
+  const title = panel ? panel.querySelector('.bkm-lf-title') : null;
+  if(!panel || !rows || km < 1) return;
+
+  if(title) title.textContent = isRound ? '🔄 ROUND TRIP RATES' : '🚕 ONE WAY RATES';
+
+  rows.innerHTML = BKM_VEHICLES.map(v => {
+    let fare;
+    if(isRound){
+      const days = _bkmCalcDays();
+      const billedKm = Math.max(km, 250 * days);
+      fare = Math.ceil(billedKm * v.rt) + (days * 300);
+    } else {
+      const perKm = Math.ceil(km * v.ow);
+      fare = km < 100 ? Math.max(perKm, v.minFare) : perKm;
+    }
+    return `<div class="bkm-lf-row" onclick="_bkmPreSelectVehicle('${v.key}')">
+      <div class="bkm-lf-left">
+        <span class="bkm-lf-icon">${v.icon}</span>
+        <div>
+          <div class="bkm-lf-name">${v.name}</div>
+          <div class="bkm-lf-sub">${v.sub}</div>
+        </div>
+      </div>
+      <div class="bkm-lf-price">₹${fare.toLocaleString('en-IN')}</div>
+    </div>`;
+  }).join('');
+  panel.classList.add('show');
+}
+
+// Pre-select vehicle from live fare click (stores for step 2)
+function _bkmPreSelectVehicle(key){
+  BKM._preSelectedVehicle = key;
+}
+
+
+// ── Fetch distance ────────────────────────────────────────────
+async function _bkmFetchDist(origin, destination){
+  try {
+    const res = await fetch(`/api/distance?origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}`);
+    const d   = await res.json();
+    if(d && d.distanceKm){
+      BKM.S.distKm = d.distanceKm;
+      const label = d.durationText ? `${d.distanceKm} km · ~${d.durationText}` : `${d.distanceKm} km`;
+      _bkmShowDist(label);
+    } else {
+      _bkmDistFallback();
+    }
+  } catch(e){
+    _bkmDistFallback();
+  }
+}
+
+function _bkmDistFallback(){
+  if(!BKM.S.distKm) BKM.S.distKm = 50;
+  _bkmShowDist(`~${BKM.S.distKm} km (estimated)`);
+}
+
+// ── Multi-stop distance (chains legs) ────────────────────────
+async function _bkmFetchDistMultiStop(waypoints){
+  _bkmShowDist('Calculating…');
+  try {
+    let total = 0;
+    for(let i=0; i<waypoints.length-1; i++){
+      const res = await fetch(`/api/distance?origin=${encodeURIComponent(waypoints[i])}&destination=${encodeURIComponent(waypoints[i+1])}`);
+      const d   = await res.json();
+      if(d && d.distanceKm) total += d.distanceKm;
+      else throw new Error('leg '+i+' failed');
+    }
+    BKM.S.distKm = total;
+    _bkmShowDist(`~${total} km via ${waypoints.length-2} stop(s)`);
+  } catch(e){
+    _bkmDistFallback();
+  }
+}
+
+// ── Step 1 validation + proceed ─────────────────────────────
+async function _bkmStep1Next(){
+  const pu = document.getElementById('bk-pu').value.trim();
+  const dr = document.getElementById('bk-dr').value.trim();
+  const dt = document.getElementById('bk-dt').value;
+  const tm = document.getElementById('bk-tm').value;
+  const ret= document.getElementById('bk-ret')?.value || '';
+
+  let ok = true;
+  ['bkfg-pu','bkfg-dr','bkfg-dt'].forEach(id => document.getElementById(id)?.classList.remove('err'));
+
+  if(!pu){ document.getElementById('bkfg-pu').classList.add('err'); ok=false; }
+  if(!dr){ document.getElementById('bkfg-dr').classList.add('err'); ok=false; }
+  if(!dt){ document.getElementById('bkfg-dt').classList.add('err'); ok=false; }
+  if(!ok){ bkmToast('⚠️ Please fill all required fields'); return; }
+
+  if(BKM.S.trip==='roundtrip' && !ret){
+    bkmToast('⚠️ Please select a return date');
+    return;
+  }
+
+  // Pickup time must be ≥ now + 60 min
+  if(tm){
+    const pickupDT = new Date(`${dt}T${tm}`);
+    if(pickupDT < new Date(Date.now() + 60*60*1000)){
+      bkmToast('⚠️ Pickup time must be at least 1 hour from now');
+      return;
+    }
+  }
+
+  BKM.S.pu = pu; BKM.S.dr = dr; BKM.S.date = dt; BKM.S.time = tm;
+  BKM.S.retdate = ret;
+  BKM.S.rettime = document.getElementById('bk-ret-tm')?.value || '';
+  BKM.S.pax = document.getElementById('bk-pax').value;
+
+  // Fetch distance if not already known
+  if(!BKM.S.distKm || BKM.S.distKm === 0){
+    const stops = (BKM.S.extraCities||[]).filter(c=>c.trim());
+    const waypoints = [pu, ...stops, dr];
+    if(waypoints.length > 2){
+      await _bkmFetchDistMultiStop(waypoints);
+    } else {
+      await _bkmFetchDist(pu, dr);
+    }
+  }
+
+  _bkmGoStep(2);
+  _bkmBuildCabs();
+}
+
+// ── Build cab results (step 2) ───────────────────────────────
+function _bkmBuildCabs(){
+  const S = BKM.S;
+  const isRound = S.trip==='roundtrip';
+  const km = S.distKm || 50;
+
+  // Summary header
+  document.getElementById('bkrs-pu').textContent = S.pu;
+  document.getElementById('bkrs-dr').textContent = S.dr;
+  document.getElementById('bkrs-date').textContent = S.date + (S.time ? ' at '+_bkmFmtTime(S.time) : '');
+  document.getElementById('bkrs-type').textContent = isRound ? 'Round Trip' : 'One Way';
+
+  let kmLabel = `~${km} km`;
+  if(isRound){
+    const days = _bkmCalcDays();
+    kmLabel = `~${km} km · ${days} day${days>1?'s':''} · +₹${days*300} driver allowance`;
+  }
+  document.getElementById('bkrs-km').textContent = kmLabel;
+
+  // Cab cards
+  document.getElementById('bkmCabList').innerHTML = BKM_VEHICLES.map((v,i) => {
+    let fare;
+    if(isRound){
+      const days = _bkmCalcDays();
+      const minKm = 250 * days;
+      const billedKm = Math.max(km, minKm);
+      fare = Math.ceil(billedKm * v.rt) + (days * 300);
+    } else {
+      const perKm = Math.ceil(km * v.ow);
+      const base  = km < 100 ? Math.max(perKm, v.minFare) : perKm;
+      const stops = (S.extraCities||[]).filter(c=>c.trim()).length;
+      fare = stops ? Math.ceil(base * (1 + 0.15*stops)) : base;
+    }
+    const adv = Math.ceil(fare * 0.10 / 10) * 10;
+    const rate = isRound ? v.rt : v.ow;
+    const isMin = !isRound && km<100 && fare===v.minFare;
+    return `
+    <div class="bkm-cab" id="bkc-${v.key}" onclick="_bkmSelectCab('${v.key}','${v.name.replace(/'/g,"\\'")}',${rate},${fare},${adv})" style="animation:bkmIn .3s ${i*.07}s ease both">
+      <div class="bkm-cab-icon">${v.icon}</div>
+      <div class="bkm-cab-info">
+        <div class="bkm-cab-name">${v.name}<span class="bkm-cab-badge">${v.badge}</span></div>
+        <div class="bkm-cab-sub">${v.sub}</div>
+        <div class="bkm-cab-specs">
+          <span class="bkm-cab-spec">👥 ${v.seats} Seats</span>
+          <span class="bkm-cab-spec">❄️ AC</span>
+          <span class="bkm-cab-spec">${isMin?'Min fare':'₹'+rate+'/km'}</span>
+          ${isRound?`<span class="bkm-cab-spec">🔄 ${_bkmCalcDays()} day(s)</span>`:''}
+        </div>
+      </div>
+      <div class="bkm-cab-fare">
+        <div class="bkm-cab-total">₹${fare.toLocaleString('en-IN')}</div>
+        <div class="bkm-cab-rate">${isMin?'Minimum fare':'Est. total'}</div>
+        <div class="bkm-cab-adv">10% advance: ₹${adv}</div>
+        <button class="bkm-cab-selbtn">SELECT</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Auto-select if user tapped a fare row in step 1
+  if(BKM._preSelectedVehicle){
+    const el = document.getElementById('bkc-'+BKM._preSelectedVehicle);
+    if(el) el.click();
+    BKM._preSelectedVehicle = null;
+  }
+}
+
+function _bkmCalcDays(){
+  const S = BKM.S;
+  if(!S.date || !S.retdate) return 1;
+  const d1 = new Date(S.date), d2 = new Date(S.retdate);
+  const diff = Math.ceil((d2-d1)/(1000*60*60*24));
+  return Math.max(1, diff);
+}
+
+function _bkmSelectCab(key, name, rate, fare, adv){
+  document.querySelectorAll('.bkm-cab').forEach(c=>c.classList.remove('sel'));
+  const el = document.getElementById('bkc-'+key);
+  if(el) el.classList.add('sel');
+  BKM.S.vehicle=key; BKM.S.vehicleName=name; BKM.S.rate=rate;
+  BKM.S.totalFare=fare; BKM.S.advAmt=adv;
+  bkmToast(`✓ ${name} selected — proceeding…`);
+  // Auto-advance after 600ms so user sees the selection highlight
+  setTimeout(() => _bkmGoStep(3), 600);
+}
+
+// ── Step 2 → 3 ───────────────────────────────────────────────
+function _bkmStep2Next(){
+  if(!BKM.S.vehicle){ bkmToast('⚠️ Please select a cab first'); return; }
+  _bkmGoStep(3);
+}
+
+// ── Step 3 → 4 (send OTP) ────────────────────────────────────
+async function _bkmStep3Next(){
+  const name  = document.getElementById('bk-pn').value.trim();
+  const phone = document.getElementById('bk-ph').value.replace(/\D/g,'');
+  const email = document.getElementById('bk-em').value.trim();
+  let ok = true;
+  ['bkfg-pn','bkfg-ph','bkfg-em'].forEach(id => document.getElementById(id)?.classList.remove('err'));
+  if(!name)  { document.getElementById('bkfg-pn').classList.add('err'); ok=false; }
+  if(phone.length!==10){ document.getElementById('bkfg-ph').classList.add('err'); ok=false; }
+  if(!email||!email.includes('@')){ document.getElementById('bkfg-em').classList.add('err'); ok=false; }
+  if(!ok){ bkmToast('⚠️ Please fill all required fields correctly'); return; }
+
+  BKM.S.name  = name;
+  BKM.S.phone = phone;
+  BKM.S.email = email;
+  BKM.S.notes = document.getElementById('bk-notes').value.trim();
+  BKM.S.bookingId = 'OWB-'+Date.now().toString().slice(-6)+Math.random().toString(36).slice(2,4).toUpperCase();
+
+  const btn = document.getElementById('bkmBtnNext');
+  btn.textContent = 'Sending…'; btn.disabled=true;
+
+  try {
+    const res  = await fetch('/api/otp/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone,name})});
+    const data = await res.json();
+    if(data.success){
+      bkmToast('📱 OTP sent via WhatsApp to +91 '+phone);
+      document.getElementById('bk-otp-num').textContent = '+91 '+phone;
+      ['bo1','bo2','bo3','bo4'].forEach(id=>{ const el=document.getElementById(id); if(el){el.value='';el.classList.remove('filled');} });
+      _bkmGoStep(4);
+      _bkmStartOTPTimer();
+    } else {
+      bkmToast('⚠️ Could not send OTP — '+(data.error||'please try again'));
+    }
+  } catch(e){
+    bkmToast('⚠️ Network error sending OTP');
+  }
+  btn.disabled=false; _bkmUpdateBtn();
+}
+
+// ── OTP Timer ────────────────────────────────────────────────
+function _bkmStartOTPTimer(){
+  let secs=30;
+  const cd=document.getElementById('bkmCD');
+  const btn=document.getElementById('bkmResend');
+  btn.style.pointerEvents='none'; btn.style.opacity='.4'; btn.classList.remove('active');
+  const iv=setInterval(()=>{secs--;if(cd)cd.textContent=secs;if(secs<=0){clearInterval(iv);if(btn){btn.style.pointerEvents='auto';btn.style.opacity='1';btn.classList.add('active');}}},1000);
+}
+
+function bkmResendOTP(){ _bkmStep3Resend(); _bkmStartOTPTimer(); }
+async function _bkmStep3Resend(){
+  try{
+    await fetch('/api/otp/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:BKM.S.phone,name:BKM.S.name})});
+    bkmToast('📱 OTP resent to +91 '+BKM.S.phone);
+  }catch(e){ bkmToast('⚠️ Could not resend OTP'); }
+}
+
+// OTP input helpers
+function bkmOtpMove(inp, nextId){
+  if(inp.value.length>1) inp.value=inp.value.slice(-1);
+  inp.classList.toggle('filled',inp.value.length>0);
+  if(inp.value.length>=1 && nextId){ const n=document.getElementById(nextId); if(n)n.focus(); }
+}
+function bkmOtpBack(e,inp,prevId){
+  if(e.key==='Backspace'&&!inp.value&&prevId) document.getElementById(prevId).focus();
+}
+
+// ── Verify OTP ───────────────────────────────────────────────
+async function _bkmVerifyOTP(){
+  const entered=['bo1','bo2','bo3','bo4'].map(id=>document.getElementById(id).value).join('');
+  if(entered.length<4){ bkmToast('⚠️ Please enter the complete 4-digit OTP'); return; }
+
+  const btn=document.getElementById('bkmBtnNext');
+  btn.textContent='Verifying…'; btn.disabled=true;
+
+  try{
+    const res  = await fetch('/api/otp/verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:BKM.S.phone,otp:entered})});
+    const data = await res.json();
+
+    if(data.success && data.verified){
+      bkmToast('✅ Verified! Please complete payment to confirm.');
+      _bkmGoStep(5);
+      _bkmBuildSummary();
+      _bkmInitPayPanel();
+      _bkmNotifyAdmin();
+    } else {
+      bkmToast('❌ '+(data.error||'Invalid OTP — please try again'));
+      ['bo1','bo2','bo3','bo4'].forEach(id=>{ const el=document.getElementById(id); if(el){el.value='';el.classList.remove('filled');} });
+      document.getElementById('bo1').focus();
+    }
+  } catch(e){
+    bkmToast('⚠️ Network error verifying OTP');
+  }
+  btn.disabled=false; _bkmUpdateBtn();
+}
+
+// ── Booking Summary ──────────────────────────────────────────
+function _bkmBuildSummary(){
+  const S=BKM.S;
+  document.getElementById('bkRef').textContent = S.bookingId;
+  const stops=(S.extraCities||[]).filter(c=>c.trim());
+  document.getElementById('bkmSumFinal').innerHTML=`
+    <div class="bkm-row"><span class="bl">Passenger</span><span class="bv">${S.name} · +91 ${S.phone}</span></div>
+    <div class="bkm-row"><span class="bl">Vehicle</span><span class="bv">${S.vehicleName}</span></div>
+    <div class="bkm-row"><span class="bl">Trip</span><span class="bv">${S.trip==='roundtrip'?'Round Trip':'One Way'}${stops.length?' · '+stops.length+' stop(s)':''}</span></div>
+    <div class="bkm-row"><span class="bl">Pickup</span><span class="bv">${S.pu}</span></div>
+    ${stops.map((c,i)=>`<div class="bkm-row"><span class="bl">Stop ${i+1}</span><span class="bv">${c}</span></div>`).join('')}
+    <div class="bkm-row"><span class="bl">Drop</span><span class="bv">${S.dr}</span></div>
+    <div class="bkm-row"><span class="bl">Date & Time</span><span class="bv">${_bkmFmtDate(S.date)} at ${_bkmFmtTime(S.time)}</span></div>
+    ${S.retdate?`<div class="bkm-row"><span class="bl">Return</span><span class="bv">${_bkmFmtDate(S.retdate)}</span></div>`:''}
+    <div class="bkm-row"><span class="bl">Distance</span><span class="bv">~${S.distKm} km</span></div>
+    <div class="bkm-row"><span class="bl">Est. Fare</span><span class="bv" style="color:var(--sf-400);font-size:1.02rem">₹${S.totalFare.toLocaleString('en-IN')}</span></div>
+  `;
+}
+
+// ── Payment panel ────────────────────────────────────────────
+function _bkmInitPayPanel(){
+  const S=BKM.S;
+  const adv=S.advAmt;
+  document.getElementById('ppAdv10').textContent='₹'+adv.toLocaleString('en-IN');
+  document.getElementById('ppFull').textContent='₹'+S.totalFare.toLocaleString('en-IN');
+  document.getElementById('bkmMinLabel').textContent=adv.toLocaleString('en-IN');
+  bkmSelectPayOpt('partial');
+}
+
+function bkmSelectPayOpt(mode){
+  BKM.S.payMode=mode;
+  ['ppOpt10','ppOptCustom','ppOptFull'].forEach(id=>document.getElementById(id)?.classList.remove('on'));
+  const customRow=document.getElementById('bkmCustomRow');
+  const summary=document.getElementById('bkmPaySummary');
+
+  if(mode==='partial'){
+    document.getElementById('ppOpt10').classList.add('on');
+    if(customRow) customRow.style.display='none';
+    BKM.S.payAmt=BKM.S.advAmt;
+    if(summary) summary.textContent=`Pay ₹${BKM.S.advAmt.toLocaleString('en-IN')} now. Remaining ₹${(BKM.S.totalFare-BKM.S.advAmt).toLocaleString('en-IN')} to driver.`;
+  } else if(mode==='custom'){
+    document.getElementById('ppOptCustom').classList.add('on');
+    if(customRow) customRow.style.display='';
+    if(summary) summary.textContent='Enter any amount ≥ 10% advance.';
+  } else {
+    document.getElementById('ppOptFull').classList.add('on');
+    if(customRow) customRow.style.display='none';
+    BKM.S.payAmt=BKM.S.totalFare;
+    if(summary) summary.textContent=`Full fare paid upfront. No balance due to driver.`;
+  }
+}
+
+function bkmValidateCustom(){
+  const inp=document.getElementById('bkmCustomAmt');
+  const err=document.getElementById('bkmCustomErr');
+  const v=parseFloat(inp.value)||0;
+  const min=BKM.S.advAmt;
+  if(v<min){
+    err.style.display='block';
+    err.textContent=`Minimum ₹${min.toLocaleString('en-IN')} (10% advance)`;
+    BKM.S.payAmt=0;
+  } else {
+    err.style.display='none';
+    BKM.S.payAmt=v;
+    const summary=document.getElementById('bkmPaySummary');
+    if(summary) summary.textContent=`Pay ₹${v.toLocaleString('en-IN')} now. Balance ₹${(BKM.S.totalFare-v).toLocaleString('en-IN')} to driver.`;
+  }
+}
+
+// ── Razorpay trigger ─────────────────────────────────────────
+function bkmTriggerRazorpay(){
+  if(BKM.S.payMode==='custom'){
+    const v=parseFloat(document.getElementById('bkmCustomAmt').value)||0;
+    if(v < BKM.S.advAmt){ bkmToast('⚠️ Amount must be at least ₹'+BKM.S.advAmt.toLocaleString('en-IN')); return; }
+    BKM.S.payAmt=v;
+  }
+  const amt=BKM.S.payAmt;
+  if(!amt){ bkmToast('⚠️ Please select a payment amount'); return; }
+
+  const statusEl=document.getElementById('bkmPayStatus');
+  if(typeof Razorpay==='undefined'){
+    // Razorpay not loaded — show WhatsApp fallback message
+    bkmToast('💳 Payment gateway loading... Redirecting to WhatsApp confirmation.');
+    if(statusEl){ statusEl.style.display='block'; statusEl.style.color='var(--sf-400)'; statusEl.textContent='Payment gateway not loaded. Please confirm via WhatsApp below.'; }
+    return;
+  }
+
+  const options={
+    key: window.RAZORPAY_KEY || '',
+    amount: amt*100,
+    currency:'INR',
+    name:'One-Way Bhaarat',
+    description:`Cab Booking — ${BKM.S.vehicleName}`,
+    prefill:{ name:BKM.S.name, email:BKM.S.email, contact:'91'+BKM.S.phone },
+    notes:{ booking_id:BKM.S.bookingId },
+    theme:{ color:'#F47B00' },
+    handler(response){
+      bkmToast('✅ Payment successful! Booking confirmed.');
+      if(statusEl){ statusEl.style.display='block'; statusEl.style.color='var(--gr-300)'; statusEl.textContent='✅ Payment successful! Booking ID: '+BKM.S.bookingId; }
+      _bkmNotifyPayment(response.razorpay_payment_id);
+    }
+  };
+  new Razorpay(options).open();
+}
+
+// ── WhatsApp confirm ─────────────────────────────────────────
+function bkmSendWA(){
+  const S=BKM.S;
+  const stops=(S.extraCities||[]).filter(c=>c.trim());
+  const msg=encodeURIComponent(
+    `✅ *One-Way Bhaarat – Booking Confirmed!*\n\n`+
+    `🔖 Booking ID: ${S.bookingId}\n`+
+    `👤 ${S.name} · +91 ${S.phone}\n`+
+    `📧 ${S.email}\n`+
+    `🚗 ${S.vehicleName}\n`+
+    `🎯 ${S.trip==='roundtrip'?'Round Trip':'One Way'}\n`+
+    `📍 ${S.pu}${stops.length?' → '+stops.join(' → '):''} → ${S.dr}\n`+
+    `📅 ${S.date} at ${S.time}${S.retdate?' · Return: '+S.retdate:''}\n`+
+    `📏 ~${S.distKm} km\n`+
+    `💰 Est. Fare: ₹${S.totalFare.toLocaleString('en-IN')}\n`+
+    `${S.notes?'📝 Notes: '+S.notes+'\n':''}`+
+    `\nPlease confirm driver assignment. Thank you! 🙏`
+  );
+  window.open(`https://wa.me/${ADMIN_WA}?text=${msg}`,'_blank');
+}
+
+// ── Admin notify ─────────────────────────────────────────────
+async function _bkmNotifyAdmin(){
+  const S=BKM.S;
+  try{
+    await fetch('/api/booking/notify',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({booking:{
+        id:S.bookingId, name:S.name, phone:S.phone, email:S.email,
+        from:S.pu, to:S.dr, vehicle:S.vehicleName, tripType:S.trip,
+        date:S.date, time:S.time, retdate:S.retdate,
+        fare:S.totalFare, advance:S.advAmt, pax:S.pax,
+        distKm:S.distKm, notes:S.notes, extraCities:S.extraCities||[]
+      }})
+    });
+  }catch(e){ /* non-critical */ }
+}
+
+async function _bkmNotifyPayment(paymentId){
+  try{
+    await fetch('/api/booking/notify',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({booking:{
+        id:BKM.S.bookingId, paymentId, payAmt:BKM.S.payAmt,
+        name:BKM.S.name, phone:BKM.S.phone,
+        vehicle:BKM.S.vehicleName, fare:BKM.S.totalFare,
+        type:'payment'
+      }})
+    });
+  }catch(e){ /* non-critical */ }
+}
+
+// ── Multi-stop (modal) ───────────────────────────────────────
+function bkmAddStop(){
+  const idx=(BKM.S.extraCities||[]).length;
+  if(!BKM.S.extraCities) BKM.S.extraCities=[];
+  const list=document.getElementById('bkm-stop-list');
+  const row=document.createElement('div');
+  row.id='bkm-srow-'+idx; row.className='bkm-stop-item';
+  row.innerHTML=`
+    <input type="text" id="bkm-sinp-${idx}" placeholder="Enter stop location…" autocomplete="off"
+      style="flex:1;border:1.5px solid rgba(244,123,0,.3);border-radius:9px;padding:9px 12px;font-size:.82rem;background:rgba(255,255,255,.05);color:#fff;font-family:'Nunito',sans-serif;outline:none;box-sizing:border-box"/>
+    <button onclick="bkmConfirmStop(${idx})" style="background:linear-gradient(135deg,var(--sf-500),var(--sf-700));border:none;border-radius:8px;padding:7px 12px;color:#fff;cursor:pointer;font-size:.78rem;font-weight:700;flex-shrink:0;white-space:nowrap;font-family:'Nunito',sans-serif">Add ✓</button>`;
+  list.appendChild(row);
+  const inp=document.getElementById('bkm-sinp-'+idx);
+  inp.focus();
+  _bkmAttachAC(inp, name=>{ inp.value=name; });
+}
+
+function bkmConfirmStop(idx){
+  const inp=document.getElementById('bkm-sinp-'+idx);
+  const val=inp?inp.value.trim():'';
+  if(!val){ bkmToast('⚠️ Please enter a stop location'); return; }
+  if(!BKM.S.extraCities) BKM.S.extraCities=[];
+  BKM.S.extraCities[idx]=val;
+  _bkmRenderStops();
+  // Reset distance since route has changed
+  BKM.S.distKm=0;
+  document.getElementById('bkm-dist').classList.remove('show');
+}
+
+function _bkmRenderStops(){
+  const list=document.getElementById('bkm-stop-list');
+  list.innerHTML=(BKM.S.extraCities||[]).filter(c=>c.trim()).map((c,i)=>`
+    <div class="bkm-stop-item">
+      <div class="bkm-stop-pill">📍 Stop ${i+1}: ${c}</div>
+      <button class="bkm-stop-rm" onclick="bkmRemoveStop(${i})">✕</button>
+    </div>`).join('');
+}
+
+function bkmRemoveStop(i){
+  BKM.S.extraCities.splice(i,1);
+  _bkmRenderStops();
+  BKM.S.distKm=0;
+  document.getElementById('bkm-dist').classList.remove('show');
+}
+
+// ── Autocomplete for modal ────────────────────────────────────
+// Uses the same portal approach as BRG — appended to body
+const _bkmAcReqIds={};
+let _bkmPortalActive=null;
+
+function _bkmAttachAC(inp, cb){
+  const id=inp.id||('ac-'+Math.random().toString(36).slice(2));
+  inp.id=id;
+  let timer;
+  inp.addEventListener('input',()=>{
+    clearTimeout(timer);
+    timer=setTimeout(()=>_bkmFetchAC(inp.value.trim(),id,cb,inp),280);
+  });
+  inp.addEventListener('blur',()=>{
+    const portal=document.getElementById('owb-ac-portal');
+    if(portal && !portal._touching) setTimeout(()=>_bkmHidePortal(),120);
+  });
+  inp.addEventListener('focus',()=>{ if(inp.value.trim().length>=2) _bkmFetchAC(inp.value.trim(),id,cb,inp); });
+}
+
+async function _bkmFetchAC(q,id,cb,inp){
+  if(q.length<2){ _bkmHidePortal(); return; }
+  const myReq=(_bkmAcReqIds[id]=(_bkmAcReqIds[id]||0)+1);
+  try{
+    const res=await fetch(`/api/places?input=${encodeURIComponent(q)}`);
+    const data=await res.json();
+    if(_bkmAcReqIds[id]!==myReq) return;
+    const preds=(data.predictions||[]).map(p=>({n:p.description,s:p.structured_formatting?.secondary_text||''}));
+    _bkmShowPortal(preds,cb,inp);
+  }catch(e){ _bkmHidePortal(); }
+}
+
+function _bkmShowPortal(preds,cb,inp){
+  const portal=document.getElementById('owb-ac-portal');
+  if(!preds.length){ _bkmHidePortal(); return; }
+  portal._touching=false;
+  portal.innerHTML=preds.map(p=>`
+    <div class="bkm-ac-item">
+      <div>
+        <div class="bkm-ac-main">📍 ${p.n}</div>
+        ${p.s?`<div class="bkm-ac-sub">${p.s}</div>`:''}
+      </div>
+    </div>`).join('');
+  portal.querySelectorAll('.bkm-ac-item').forEach((el,i)=>{
+    el.addEventListener('mousedown', e=>{ e.preventDefault(); cb(preds[i].n); _bkmHidePortal(); });
+    el.addEventListener('touchstart',()=>{ portal._touching=true; },{ passive:true });
+    el.addEventListener('touchend',()=>{
+      cb(preds[i].n); _bkmHidePortal();
+      setTimeout(()=>{ portal._touching=false; },50);
+    });
+  });
+  // Position portal under input
+  const rect=inp.getBoundingClientRect();
+  portal.style.cssText=`position:fixed;z-index:9999;top:${rect.bottom+4}px;left:${rect.left}px;width:${rect.width}px;display:block;background:var(--nv-700);border:1px solid rgba(244,123,0,.25);border-radius:var(--r-md);box-shadow:0 16px 48px rgba(4,12,30,.7);max-height:260px;overflow-y:auto;font-family:'Nunito',sans-serif`;
+  _bkmPortalActive=inp;
+}
+
+function _bkmHidePortal(){
+  const portal=document.getElementById('owb-ac-portal');
+  if(portal){ portal.style.display='none'; portal.innerHTML=''; }
+  _bkmPortalActive=null;
+}
+
+// Attach AC to modal pickup, drop inputs
+document.addEventListener('DOMContentLoaded',()=>{
+  _bkmAttachAC(document.getElementById('bk-pu'), name=>{
+    document.getElementById('bk-pu').value=name; BKM.S.pu=name;
+    if(BKM.S.trip==='roundtrip'){
+      document.getElementById('bk-dr').value=name; BKM.S.dr=name;
+    }
+    // Reset distance + live fares on new location pick
+    BKM.S.distKm=0; BKM._preDistKm=0;
+    document.getElementById('bkm-dist').classList.remove('show');
+    const lf=document.getElementById('bkmLiveFares'); if(lf) lf.classList.remove('show');
+  });
+  _bkmAttachAC(document.getElementById('bk-dr'), name=>{
+    document.getElementById('bk-dr').value=name; BKM.S.dr=name;
+    BKM.S.distKm=0; BKM._preDistKm=0;
+    document.getElementById('bkm-dist').classList.remove('show');
+    const lf=document.getElementById('bkmLiveFares'); if(lf) lf.classList.remove('show');
+  });
+});
+
+// ── Date/Time formatters ─────────────────────────────────────
+function _bkmFmtDate(s){
+  if(!s) return '—';
+  const d=new Date(s+'T00:00:00');
+  return d.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});
+}
+function _bkmFmtTime(s){
+  if(!s) return '—';
+  const [h,m]=s.split(':');
+  const hr=parseInt(h); const ampm=hr>=12?'PM':'AM';
+  return `${((hr%12)||12)}:${m} ${ampm}`;
+}
+
+// Close portal on outside click
+document.addEventListener('click',e=>{
+  const portal=document.getElementById('owb-ac-portal');
+  if(portal && _bkmPortalActive && !_bkmPortalActive.contains(e.target) && !portal.contains(e.target)){
+    _bkmHidePortal();
+  }
+});
+
+// Escape key closes modal
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') bkmClose(); });
 
 </script>
 </body>
