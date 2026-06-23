@@ -2724,6 +2724,9 @@ p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
   </a>
 </div>
 
+<!-- Razorpay Checkout widget -->
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
 <script>
 // ── Loader ──────────────────────────────────────────
 window.addEventListener('load', () => {
@@ -3647,7 +3650,7 @@ function bkmValidateCustom(){
 }
 
 // ── Razorpay trigger ─────────────────────────────────────────
-function bkmTriggerRazorpay(){
+async function bkmTriggerRazorpay(){
   if(BKM.S.payMode==='custom'){
     const v=parseFloat(document.getElementById('bkmCustomAmt').value)||0;
     if(v < BKM.S.advAmt){ bkmToast('⚠️ Amount must be at least ₹'+BKM.S.advAmt.toLocaleString('en-IN')); return; }
@@ -3664,22 +3667,65 @@ function bkmTriggerRazorpay(){
     return;
   }
 
+  // Ask our own server to create the Razorpay order first. This pins the
+  // amount server-side (so it can't be tampered with in devtools) and gives
+  // us an order_id we can verify the signature against after payment.
+  let order;
+  try{
+    const res=await fetch('/api/payment/create-order',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ amount:amt, bookingId:BKM.S.bookingId })
+    });
+    order=await res.json();
+    if(!res.ok || !order.order_id) throw new Error(order.error||'order_failed');
+  }catch(e){
+    bkmToast('⚠️ Could not start payment. Please try again or confirm via WhatsApp.');
+    if(statusEl){ statusEl.style.display='block'; statusEl.style.color='var(--sf-400)'; statusEl.textContent='Payment could not be started. Please confirm via WhatsApp below.'; }
+    return;
+  }
+
   const options={
-    key: window.RAZORPAY_KEY || '',
-    amount: amt*100,
-    currency:'INR',
+    key: order.key_id,
+    order_id: order.order_id,
+    amount: order.amount,
+    currency: order.currency||'INR',
     name:'One-Way Bhaarat',
     description:`Cab Booking — ${BKM.S.vehicleName}`,
     prefill:{ name:BKM.S.name, email:BKM.S.email, contact:'91'+BKM.S.phone },
     notes:{ booking_id:BKM.S.bookingId },
     theme:{ color:'#F47B00' },
-    handler(response){
-      bkmToast('✅ Payment successful! Booking confirmed.');
-      if(statusEl){ statusEl.style.display='block'; statusEl.style.color='var(--gr-300)'; statusEl.textContent='✅ Payment successful! Booking ID: '+BKM.S.bookingId; }
-      _bkmNotifyPayment(response.razorpay_payment_id);
-    }
+    handler(response){ _bkmVerifyAndConfirm(response, statusEl); }
   };
   new Razorpay(options).open();
+}
+
+// Verifies the payment signature server-side before treating it as
+// successful — the client-side handler() callback alone can be spoofed.
+async function _bkmVerifyAndConfirm(response, statusEl){
+  try{
+    const res=await fetch('/api/payment/verify',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        razorpay_order_id: response.razorpay_order_id,
+        razorpay_payment_id: response.razorpay_payment_id,
+        razorpay_signature: response.razorpay_signature
+      })
+    });
+    const data=await res.json();
+    if(!data.verified){
+      bkmToast('⚠️ Payment could not be verified. Please contact us if money was deducted.');
+      if(statusEl){ statusEl.style.display='block'; statusEl.style.color='var(--sf-400)'; statusEl.textContent='⚠️ Payment verification failed. Please confirm via WhatsApp below.'; }
+      return;
+    }
+    bkmToast('✅ Payment successful! Booking confirmed.');
+    if(statusEl){ statusEl.style.display='block'; statusEl.style.color='var(--gr-300)'; statusEl.textContent='✅ Payment successful! Booking ID: '+BKM.S.bookingId; }
+    _bkmNotifyPayment(response.razorpay_payment_id);
+  }catch(e){
+    bkmToast('⚠️ Could not confirm payment status. Please contact us if money was deducted.');
+    if(statusEl){ statusEl.style.display='block'; statusEl.style.color='var(--sf-400)'; statusEl.textContent='⚠️ Could not confirm payment. Please confirm via WhatsApp below.'; }
+  }
 }
 
 // ── WhatsApp confirm ─────────────────────────────────────────

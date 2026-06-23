@@ -26,6 +26,14 @@ var worker_default = {
     const origin = request.headers.get("Origin") || "";
     const allowOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : null;
 
+    // 0. Razorpay endpoints (order creation + payment signature verification)
+    if (url.pathname.includes("payment/create-order")) {
+      return withRateLimit(request, env, ctx, "payment-create", () => handleCreateOrder(request, env, allowOrigin), allowOrigin, 10);
+    }
+    if (url.pathname.includes("payment/verify")) {
+      return withRateLimit(request, env, ctx, "payment-verify", () => handleVerifyPayment(request, env, allowOrigin), allowOrigin, 10);
+    }
+
     // 1. OTP endpoints (booking-flow phone verification via WhatsApp)
     if (url.pathname.includes("otp/send")) {
       return withRateLimit(request, env, ctx, "otp-send", () => handleSendOtp(request, env, allowOrigin), allowOrigin, OTP_SEND_RATE_LIMIT_MAX);
@@ -172,7 +180,7 @@ async function handleSendOtp(request, env, allowOrigin) {
           language: { code: "en" },
           components: [
             { type: "body", parameters: [{ type: "text", text: otp }] },
-            { type: "button", sub_type: "url", index: "0", parameters: [{ type: "text", text: otp }] }
+            { type: "button", sub_type: "copy_code", index: "0", parameters: [{ type: "coupon_code", coupon_code: otp }] }
           ]
         }
       })
@@ -441,6 +449,139 @@ async function handleBookingNotify(request, env, allowOrigin) {
   }
 }
 __name(handleBookingNotify, "handleBookingNotify");
+
+// ── Razorpay: create order ───────────────────────────────────────────────────
+// Frontend calls this BEFORE opening the Razorpay checkout widget. Creating
+// the order server-side (rather than trusting a client-supplied amount)
+// means the amount that gets charged is always the amount we set, and gives
+// us an order_id we can later use to verify the payment signature.
+async function handleCreateOrder(request, env, allowOrigin) {
+  if (request.method !== "POST") return jsonResponse({ error: "Method not allowed" }, 405, allowOrigin);
+
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return jsonResponse({ error: "Invalid request body" }, 400, allowOrigin);
+  }
+
+  const amountRupees = Number(body.amount) || 0;
+  if (amountRupees < 1 || amountRupees > 500000) {
+    return jsonResponse({ error: "Invalid payment amount" }, 400, allowOrigin);
+  }
+
+  const keyId = env.RAZORPAY_KEY_ID;
+  const keySecret = env.RAZORPAY_KEY_SECRET;
+  if (!keyId || !keySecret) {
+    console.error("Razorpay secrets not configured (RAZORPAY_KEY_ID / RAZORPAY_KEY_SECRET)");
+    return jsonResponse({ error: "Payment service is not yet configured" }, 500, allowOrigin);
+  }
+
+  const bookingId = String(body.bookingId || "").slice(0, 40);
+  // Razorpay receipts have a 40-char limit.
+  const receipt = (bookingId ? `oneway_${bookingId}` : `oneway_${Date.now()}`).slice(0, 40);
+
+  try {
+    const basicAuth = btoa(`${keyId}:${keySecret}`);
+    const rpRes = await fetch("https://api.razorpay.com/v1/orders", {
+      method: "POST",
+      headers: {
+        "Authorization": `Basic ${basicAuth}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        amount: Math.round(amountRupees * 100), // Razorpay wants paise, not rupees
+        currency: "INR",
+        receipt,
+        notes: { booking_id: bookingId || "" }
+      })
+    });
+
+    const rpData = await rpRes.json();
+    if (!rpRes.ok) {
+      console.error("Razorpay order creation failed:", JSON.stringify(rpData));
+      return jsonResponse({ error: "Could not initiate payment. Please try again." }, 502, allowOrigin);
+    }
+
+    // key_id (the Razorpay "Key ID") is the public half of the pair — safe to
+    // hand back to the browser, that's exactly what Checkout.js needs.
+    return jsonResponse({
+      order_id: rpData.id,
+      amount: rpData.amount,
+      currency: rpData.currency,
+      key_id: keyId
+    }, 200, allowOrigin);
+
+  } catch (err) {
+    console.error("Razorpay order request failed:", err.message);
+    return jsonResponse({ error: "Could not initiate payment. Please try again." }, 502, allowOrigin);
+  }
+}
+__name(handleCreateOrder, "handleCreateOrder");
+
+// ── Razorpay: verify payment signature ──────────────────────────────────────
+// Called after Checkout.js's handler() fires client-side. NEVER trust the
+// client's "payment succeeded" callback alone — it can be forged via
+// devtools. The signature can only have been produced by someone holding
+// RAZORPAY_KEY_SECRET, which lives only on this server.
+async function handleVerifyPayment(request, env, allowOrigin) {
+  if (request.method !== "POST") return jsonResponse({ error: "Method not allowed" }, 405, allowOrigin);
+
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return jsonResponse({ error: "Invalid request body" }, 400, allowOrigin);
+  }
+
+  const orderId   = String(body.razorpay_order_id   || "");
+  const paymentId = String(body.razorpay_payment_id || "");
+  const signature  = String(body.razorpay_signature  || "");
+
+  if (!orderId || !paymentId || !signature) {
+    return jsonResponse({ verified: false, error: "Missing payment fields" }, 400, allowOrigin);
+  }
+
+  const keySecret = env.RAZORPAY_KEY_SECRET;
+  if (!keySecret) {
+    console.error("RAZORPAY_KEY_SECRET not configured — cannot verify payment");
+    return jsonResponse({ verified: false, error: "Payment service is not yet configured" }, 500, allowOrigin);
+  }
+
+  try {
+    // Razorpay's documented verification formula:
+    // expected_signature = HMAC_SHA256(order_id + "|" + payment_id, key_secret)
+    const expectedSig = await hmacSha256Hex(keySecret, `${orderId}|${paymentId}`);
+
+    if (expectedSig !== signature) {
+      console.warn("Razorpay signature mismatch for order", orderId);
+      return jsonResponse({ verified: false }, 200, allowOrigin);
+    }
+
+    return jsonResponse({ verified: true, order_id: orderId, payment_id: paymentId }, 200, allowOrigin);
+  } catch (err) {
+    console.error("Payment verification failed:", err.message);
+    return jsonResponse({ verified: false, error: "Verification failed" }, 500, allowOrigin);
+  }
+}
+__name(handleVerifyPayment, "handleVerifyPayment");
+
+// HMAC-SHA256 over `message` using `secret`, returned as lowercase hex.
+// Uses the Web Crypto API (crypto.subtle), which is available natively in
+// the Workers runtime — no extra crypto library needed.
+async function hmacSha256Hex(secret, message) {
+  const enc = new TextEncoder();
+  const cryptoKey = await crypto.subtle.importKey(
+    "raw",
+    enc.encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+  const sigBuffer = await crypto.subtle.sign("HMAC", cryptoKey, enc.encode(message));
+  return [...new Uint8Array(sigBuffer)].map(b => b.toString(16).padStart(2, "0")).join("");
+}
+__name(hmacSha256Hex, "hmacSha256Hex");
 
 // ── Places Autocomplete proxy ───────────────────────────────────────────────
 async function handlePlacesProxy(request, url, env, allowOrigin) {
