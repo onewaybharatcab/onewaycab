@@ -2734,8 +2734,8 @@ const today = new Date().toISOString().split('T')[0];
 document.getElementById('pdate').min = today;
 document.getElementById('pdate').value = today;
 
-// ── Time default: now + 1 hour ──────────────────────────
-const defaultTime = new Date(Date.now() + 60 * 60 * 1000);
+// ── Time default: now + 75 minutes ──────────────────────
+const defaultTime = new Date(Date.now() + 75 * 60 * 1000);
 const defHH = String(defaultTime.getHours()).padStart(2, '0');
 const defMM = String(defaultTime.getMinutes()).padStart(2, '0');
 document.getElementById('ptime').value = `${defHH}:${defMM}`;
@@ -3281,7 +3281,11 @@ function _bkmPreSelectVehicle(key){
 
 
 // ── Fetch distance ────────────────────────────────────────────
-async function _bkmFetchDist(origin, destination){
+// Retries once on failure (network hiccups / transient upstream errors are
+// common) before giving up. Never fabricates a flat-number fallback like the
+// old "~50 km" — showing a specific wrong distance is worse than showing
+// nothing, since the user has no way to tell it's not real.
+async function _bkmFetchDist(origin, destination, _isRetry){
   try {
     const res = await fetch(`/api/distance?origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}`);
     const d   = await res.json();
@@ -3289,17 +3293,23 @@ async function _bkmFetchDist(origin, destination){
       BKM.S.distKm = d.distanceKm;
       const label = d.durationText ? `${d.distanceKm} km · ~${d.durationText}` : `${d.distanceKm} km`;
       _bkmShowDist(label);
+      return true;
+    } else if(!_isRetry){
+      return _bkmFetchDist(origin, destination, true);
     } else {
       _bkmDistFallback();
+      return false;
     }
   } catch(e){
+    if(!_isRetry) return _bkmFetchDist(origin, destination, true);
     _bkmDistFallback();
+    return false;
   }
 }
 
 function _bkmDistFallback(){
-  if(!BKM.S.distKm) BKM.S.distKm = 50;
-  _bkmShowDist(`~${BKM.S.distKm} km (estimated)`);
+  BKM.S.distKm = 0;
+  _bkmShowDist(`Distance unavailable — we'll confirm by phone`);
 }
 
 // ── Multi-stop distance (chains legs) ────────────────────────
@@ -3739,9 +3749,10 @@ function bkmConfirmStop(idx){
   if(!BKM.S.extraCities) BKM.S.extraCities=[];
   BKM.S.extraCities[idx]=val;
   _bkmRenderStops();
-  // Reset distance since route has changed
+  // Reset distance since route has changed, then recalculate
   BKM.S.distKm=0;
   document.getElementById('bkm-dist').classList.remove('show');
+  _bkmMaybeLiveDist();
 }
 
 function _bkmRenderStops(){
@@ -3758,6 +3769,7 @@ function bkmRemoveStop(i){
   _bkmRenderStops();
   BKM.S.distKm=0;
   document.getElementById('bkm-dist').classList.remove('show');
+  _bkmMaybeLiveDist();
 }
 
 // ── Autocomplete for modal ────────────────────────────────────
@@ -3834,14 +3846,33 @@ document.addEventListener('DOMContentLoaded',()=>{
     BKM.S.distKm=0; BKM._preDistKm=0;
     document.getElementById('bkm-dist').classList.remove('show');
     const lf=document.getElementById('bkmLiveFares'); if(lf) lf.classList.remove('show');
+    _bkmMaybeLiveDist();
   });
   _bkmAttachAC(document.getElementById('bk-dr'), name=>{
     document.getElementById('bk-dr').value=name; BKM.S.dr=name;
     BKM.S.distKm=0; BKM._preDistKm=0;
     document.getElementById('bkm-dist').classList.remove('show');
     const lf=document.getElementById('bkmLiveFares'); if(lf) lf.classList.remove('show');
+    _bkmMaybeLiveDist();
   });
 });
+
+// ── Live distance: fire as soon as both pickup & drop are set ──────────────
+// Mirrors brgcabs.in — distance shows under the "To Location" field right
+// after both ends are picked, not only after clicking "Search Cabs".
+function _bkmMaybeLiveDist(){
+  const pu = (BKM.S.pu || document.getElementById('bk-pu').value || '').trim();
+  const dr = (BKM.S.dr || document.getElementById('bk-dr').value || '').trim();
+  if(!pu || !dr || pu===dr) return;
+  const stops = (BKM.S.extraCities||[]).filter(c=>c.trim());
+  const waypoints = [pu, ...stops, dr];
+  _bkmShowDist('Calculating…');
+  if(waypoints.length > 2){
+    _bkmFetchDistMultiStop(waypoints);
+  } else {
+    _bkmFetchDist(pu, dr);
+  }
+}
 
 // ── Date/Time formatters ─────────────────────────────────────
 function _bkmFmtDate(s){
