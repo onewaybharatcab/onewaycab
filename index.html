@@ -3560,10 +3560,11 @@ async function _bkmVerifyOTP(){
   btn.textContent='Verifying…'; btn.disabled=true;
 
   try{
-    const res  = await fetch('/api/otp/verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:BKM.S.phone,otp:entered})});
+    const res  = await fetch('/api/otp/verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:BKM.S.phone,code:entered})});
     const data = await res.json();
 
-    if(data.success && data.verified){
+    if(data.verified){
+      BKM.S.verifyToken = data.token || '';
       bkmToast('✅ Verified! Please complete payment to confirm.');
       _bkmGoStep(5);
       _bkmBuildSummary();
