@@ -2543,7 +2543,7 @@ p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
       <div id="bkmS4" style="display:none;text-align:center">
         <div style="font-size:2.8rem;margin-bottom:8px">📱</div>
         <h3 style="font-family:'Cinzel',serif;font-size:1.3rem;letter-spacing:1.5px;color:#2d1a00;margin-bottom:6px">VERIFY YOUR MOBILE</h3>
-        <p style="color:#7a5030;font-size:.84rem;margin-bottom:16px">4-digit OTP sent via WhatsApp to <strong id="bk-otp-num" style="color:#c85a00"></strong></p>
+        <p style="color:#7a5030;font-size:.84rem;margin-bottom:16px">6-digit OTP sent via WhatsApp to <strong id="bk-otp-num" style="color:#c85a00"></strong></p>
         <div class="bkm-otp-inputs" role="group" aria-label="One-time password">
           <input type="tel" inputmode="numeric" pattern="[0-9]" id="bo1" maxlength="1" aria-label="OTP digit 1" oninput="bkmOtpMove(this,'bo2')" onkeydown="bkmOtpBack(event,this,'')"/>
           <input type="tel" inputmode="numeric" pattern="[0-9]" id="bo2" maxlength="1" aria-label="OTP digit 2" oninput="bkmOtpMove(this,'bo3')" onkeydown="bkmOtpBack(event,this,'bo1')"/>
@@ -3509,7 +3509,7 @@ async function _bkmStep3Next(){
     if(data.success){
       bkmToast('📱 OTP sent via WhatsApp to +91 '+phone);
       document.getElementById('bk-otp-num').textContent = '+91 '+phone;
-      ['bo1','bo2','bo3','bo4'].forEach(id=>{ const el=document.getElementById(id); if(el){el.value='';el.classList.remove('filled');} });
+      ['bo1','bo2','bo3','bo4','bo5','bo6'].forEach(id=>{ const el=document.getElementById(id); if(el){el.value='';el.classList.remove('filled');} });
       _bkmGoStep(4);
       _bkmStartOTPTimer();
     } else {
@@ -3550,8 +3550,8 @@ function bkmOtpBack(e,inp,prevId){
 
 // ── Verify OTP ───────────────────────────────────────────────
 async function _bkmVerifyOTP(){
-  const entered=['bo1','bo2','bo3','bo4'].map(id=>document.getElementById(id).value).join('');
-  if(entered.length<4){ bkmToast('⚠️ Please enter the complete 4-digit OTP'); return; }
+  const entered=['bo1','bo2','bo3','bo4','bo5','bo6'].map(id=>document.getElementById(id).value).join('');
+  if(entered.length<6){ bkmToast('⚠️ Please enter the complete 6-digit OTP'); return; }
 
   const btn=document.getElementById('bkmBtnNext');
   btn.textContent='Verifying…'; btn.disabled=true;
@@ -3568,7 +3568,7 @@ async function _bkmVerifyOTP(){
       _bkmNotifyAdmin();
     } else {
       bkmToast('❌ '+(data.error||'Invalid OTP — please try again'));
-      ['bo1','bo2','bo3','bo4'].forEach(id=>{ const el=document.getElementById(id); if(el){el.value='';el.classList.remove('filled');} });
+      ['bo1','bo2','bo3','bo4','bo5','bo6'].forEach(id=>{ const el=document.getElementById(id); if(el){el.value='';el.classList.remove('filled');} });
       document.getElementById('bo1').focus();
     }
   } catch(e){
