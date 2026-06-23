@@ -1709,14 +1709,15 @@ p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
 .bkm-box::-webkit-scrollbar{width:0}
 
 /* Modal head */
-.bkm-head{background:#fff8f0;background:linear-gradient(135deg,#fdf0e0,#fef5ea);padding:18px 24px;border-radius:20px 20px 0 0;position:sticky;top:0;z-index:10;display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1.5px solid rgba(180,90,0,.15)}
+.bkm-sticky{position:sticky;top:0;z-index:10;border-radius:20px 20px 0 0}
+.bkm-head{background:#fff8f0;background:linear-gradient(135deg,#fdf0e0,#fef5ea);padding:18px 24px;border-radius:20px 20px 0 0;display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1.5px solid rgba(180,90,0,.15)}
 .bkm-head-title{font-family:'Cinzel',serif;font-size:1.25rem;letter-spacing:2px;color:var(--bk-text)}
 .bkm-head-sub{font-size:.7rem;color:var(--bk-muted);margin-top:3px;font-weight:600}
 .bkm-close{width:36px;height:36px;background:rgba(180,90,0,.1);border-radius:50%;color:var(--bk-text);display:flex;align-items:center;justify-content:center;font-size:.9rem;cursor:pointer;transition:.2s;border:1.5px solid rgba(180,90,0,.2);flex-shrink:0}
 .bkm-close:hover{background:var(--bk-accent);color:#fff}
 
 /* Progress bar */
-.bkm-prog{display:flex;align-items:center;padding:14px 24px 0;background:rgba(180,90,0,.04)}
+.bkm-prog{display:flex;align-items:center;padding:14px 24px 12px;background:rgba(180,90,0,.04);border-bottom:1px solid rgba(180,90,0,.1)}
 .bkm-step{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;position:relative}
 .bkm-step:not(:last-child)::after{content:'';position:absolute;top:12px;left:calc(50% + 14px);right:calc(-50% + 14px);height:2px;background:rgba(180,90,0,.12);z-index:0}
 .bkm-step:not(:last-child).done::after{background:var(--bk-accent)}
@@ -2426,22 +2427,25 @@ p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
 <div id="bkModal" role="dialog" aria-modal="true" aria-labelledby="bkmTitle">
   <div class="bkm-box">
 
-    <!-- HEAD -->
-    <div class="bkm-head">
-      <div>
-        <div class="bkm-head-title" id="bkmTitle">🚕 BOOK YOUR RIDE</div>
-        <div class="bkm-head-sub" id="bkmSub">Choose trip type and search for available cabs</div>
+    <!-- STICKY HEADER WRAPPER (head + progress bar scroll together) -->
+    <div class="bkm-sticky">
+      <!-- HEAD -->
+      <div class="bkm-head">
+        <div>
+          <div class="bkm-head-title" id="bkmTitle">🚕 BOOK YOUR RIDE</div>
+          <div class="bkm-head-sub" id="bkmSub">Choose trip type and search for available cabs</div>
+        </div>
+        <button class="bkm-close" onclick="bkmClose()" aria-label="Close booking">✕</button>
       </div>
-      <button class="bkm-close" onclick="bkmClose()" aria-label="Close booking">✕</button>
-    </div>
 
-    <!-- PROGRESS -->
-    <div class="bkm-prog" id="bkmProg">
-      <div class="bkm-step active" id="bkmp1"><div class="bkm-circ">1</div><div class="bkm-lbl">Route</div></div>
-      <div class="bkm-step" id="bkmp2"><div class="bkm-circ">2</div><div class="bkm-lbl">Cab</div></div>
-      <div class="bkm-step" id="bkmp3"><div class="bkm-circ">3</div><div class="bkm-lbl">Details</div></div>
-      <div class="bkm-step" id="bkmp4"><div class="bkm-circ">4</div><div class="bkm-lbl">OTP</div></div>
-      <div class="bkm-step" id="bkmp5"><div class="bkm-circ">5</div><div class="bkm-lbl">Done</div></div>
+      <!-- PROGRESS -->
+      <div class="bkm-prog" id="bkmProg">
+        <div class="bkm-step active" id="bkmp1"><div class="bkm-circ">1</div><div class="bkm-lbl">Route</div></div>
+        <div class="bkm-step" id="bkmp2"><div class="bkm-circ">2</div><div class="bkm-lbl">Cab</div></div>
+        <div class="bkm-step" id="bkmp3"><div class="bkm-circ">3</div><div class="bkm-lbl">Details</div></div>
+        <div class="bkm-step" id="bkmp4"><div class="bkm-circ">4</div><div class="bkm-lbl">OTP</div></div>
+        <div class="bkm-step" id="bkmp5"><div class="bkm-circ">5</div><div class="bkm-lbl">Done</div></div>
+      </div>
     </div>
 
     <div class="bkm-body">
@@ -2544,7 +2548,9 @@ p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
           <input type="tel" inputmode="numeric" pattern="[0-9]" id="bo1" maxlength="1" aria-label="OTP digit 1" oninput="bkmOtpMove(this,'bo2')" onkeydown="bkmOtpBack(event,this,'')"/>
           <input type="tel" inputmode="numeric" pattern="[0-9]" id="bo2" maxlength="1" aria-label="OTP digit 2" oninput="bkmOtpMove(this,'bo3')" onkeydown="bkmOtpBack(event,this,'bo1')"/>
           <input type="tel" inputmode="numeric" pattern="[0-9]" id="bo3" maxlength="1" aria-label="OTP digit 3" oninput="bkmOtpMove(this,'bo4')" onkeydown="bkmOtpBack(event,this,'bo2')"/>
-          <input type="tel" inputmode="numeric" pattern="[0-9]" id="bo4" maxlength="1" aria-label="OTP digit 4" oninput="bkmOtpMove(this,'')"   onkeydown="bkmOtpBack(event,this,'bo3')"/>
+		  <input type="tel" inputmode="numeric" pattern="[0-9]" id="bo4" maxlength="1" aria-label="OTP digit 4" oninput="bkmOtpMove(this,'bo5')" onkeydown="bkmOtpBack(event,this,'bo3')"/>
+          <input type="tel" inputmode="numeric" pattern="[0-9]" id="bo5" maxlength="1" aria-label="OTP digit 5" oninput="bkmOtpMove(this,'bo6')" onkeydown="bkmOtpBack(event,this,'bo4')"/>		   
+          <input type="tel" inputmode="numeric" pattern="[0-9]" id="bo6" maxlength="1" aria-label="OTP digit 6" oninput="bkmOtpMove(this,'')"   onkeydown="bkmOtpBack(event,this,'bo5')"/>
         </div>
         <div class="bkm-otp-timer">Resend in <span id="bkmCD">30</span>s</div>
         <div class="bkm-otp-resend" id="bkmResend" style="pointer-events:none;opacity:.4" onclick="bkmResendOTP()">Resend OTP</div>
@@ -2629,7 +2635,7 @@ p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
         <a href="https://www.facebook.com/profile.php?id=61590974556339" class="footer-social-btn fb" title="Facebook" aria-label="Facebook" target="_blank" rel="noopener">
           <svg viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M22 12.06C22 6.5 17.52 2 12 2S2 6.5 2 12.06c0 5 3.66 9.15 8.44 9.94v-7.03H7.9v-2.91h2.54V9.41c0-2.51 1.49-3.89 3.77-3.89 1.09 0 2.23.2 2.23.2v2.45h-1.26c-1.24 0-1.63.78-1.63 1.57v1.87h2.78l-.45 2.91h-2.33V22c4.78-.79 8.44-4.94 8.44-9.94z"/></svg>
         </a>
-        <a href="#" class="footer-social-btn ig" title="Instagram" aria-label="Instagram" target="_blank" rel="noopener">
+        <a href="https://www.instagram.com/onewaybharat?igsh=b3F4cGJsY3JwMW9i" class="footer-social-btn ig" title="Instagram" aria-label="Instagram" target="_blank" rel="noopener">
           <svg viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M12 2.16c3.2 0 3.58.01 4.85.07 3.25.15 4.77 1.69 4.92 4.92.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.15 3.23-1.66 4.77-4.92 4.92-1.27.06-1.64.07-4.85.07s-3.58-.01-4.85-.07c-3.26-.15-4.77-1.7-4.92-4.92-.06-1.27-.07-1.65-.07-4.85s.01-3.58.07-4.85C2.38 3.92 3.9 2.38 7.15 2.23 8.42 2.17 8.8 2.16 12 2.16zM12 0C8.74 0 8.33.01 7.05.07 2.7.27.27 2.7.07 7.05.01 8.33 0 8.74 0 12s.01 3.67.07 4.95c.2 4.35 2.62 6.78 6.98 6.98C8.33 23.99 8.74 24 12 24s3.67-.01 4.95-.07c4.35-.2 6.78-2.62 6.98-6.98.06-1.28.07-1.69.07-4.95s-.01-3.67-.07-4.95c-.2-4.35-2.62-6.78-6.98-6.98C15.67.01 15.26 0 12 0zm0 5.84a6.16 6.16 0 1 0 0 12.32 6.16 6.16 0 0 0 0-12.32zm0 10.16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.41-10.4a1.44 1.44 0 1 1-2.88 0 1.44 1.44 0 0 1 2.88 0z"/></svg>
         </a>
         <a href="#" class="footer-social-btn li" title="LinkedIn" aria-label="LinkedIn" target="_blank" rel="noopener">

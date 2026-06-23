@@ -276,7 +276,7 @@ __name(ctx_safe_delete, "ctx_safe_delete");
 function generateOtp() {
   const arr = new Uint32Array(1);
   crypto.getRandomValues(arr);
-  return String(1000 + (arr[0] % 9000)); // 4-digit, 1000–9999
+  return String(100000 + (arr[0] % 900000)); // 6-digit, 100000–999999
 }
 __name(generateOtp, "generateOtp");
 
