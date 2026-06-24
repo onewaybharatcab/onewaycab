@@ -36,8 +36,8 @@ function addSecurityHeaders(response) {
     "style-src 'self' https://fonts.googleapis.com; " +
     "font-src https://fonts.gstatic.com; " +
     "img-src 'self' data: https:; " +
-    "connect-src 'self' https://maps.googleapis.com https://graph.facebook.com https://api.razorpay.com; " +
-    "frame-src https://api.razorpay.com; " +
+    "connect-src 'self' https://maps.googleapis.com https://graph.facebook.com https://api.razorpay.com https://checkout.razorpay.com https://lumberjack.razorpay.com; " +
+    "frame-src https://api.razorpay.com https://checkout.razorpay.com; " +
     "object-src 'none'; " +
     "base-uri 'self';"
   );
@@ -61,6 +61,12 @@ var worker_default = {
     const url = new URL(request.url);
     const origin = request.headers.get("Origin") || "";
     const allowOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : null;
+
+    // 0a. Razorpay connectivity test — GET /api/payment/ping
+    // Returns key presence + a live Razorpay API check. Remove after debugging.
+    if (url.pathname.includes("payment/ping")) {
+      return addSecurityHeaders(await handlePaymentPing(request, env, allowOrigin));
+    }
 
     // 0. Razorpay endpoints (order creation + payment signature verification)
     if (url.pathname.includes("payment/create-order")) {
@@ -591,6 +597,48 @@ async function handleCustomerConfirm(request, env, allowOrigin) {
 }
 __name(handleCustomerConfirm, "handleCustomerConfirm");
 
+// ── Razorpay: ping / connectivity test ──────────────────────────────────────
+// Visit /api/payment/ping in a browser to diagnose payment issues.
+// Shows whether secrets are set and whether Razorpay API is reachable.
+// DELETE this endpoint once payments are confirmed working.
+async function handlePaymentPing(request, env, allowOrigin) {
+  const keyId     = env.RAZORPAY_KEY_ID;
+  const keySecret = env.RAZORPAY_KEY_SECRET;
+  const hasKeyId  = !!keyId;
+  const hasSecret = !!keySecret;
+  const keyPrefix = hasKeyId ? keyId.slice(0, 12) + "…" : "NOT SET";
+  const isLive    = hasKeyId && keyId.startsWith("rzp_live_");
+  const isTest    = hasKeyId && keyId.startsWith("rzp_test_");
+
+  let razorpayReachable = false;
+  let razorpayError     = null;
+
+  if (hasKeyId && hasSecret) {
+    try {
+      const basicAuth = btoa(`${keyId}:${keySecret}`);
+      const r = await fetch("https://api.razorpay.com/v1/orders?count=1", {
+        headers: { "Authorization": `Basic ${basicAuth}` }
+      });
+      razorpayReachable = r.ok;
+      if (!r.ok) {
+        const d = await r.json().catch(() => ({}));
+        razorpayError = d?.error?.description || `HTTP ${r.status}`;
+      }
+    } catch (e) {
+      razorpayError = e.message;
+    }
+  }
+
+  return jsonResponse({
+    secrets: { RAZORPAY_KEY_ID: hasKeyId, RAZORPAY_KEY_SECRET: hasSecret },
+    key_prefix: keyPrefix,
+    key_mode: isLive ? "LIVE" : isTest ? "TEST" : "UNKNOWN",
+    razorpay_api_reachable: razorpayReachable,
+    razorpay_error: razorpayError,
+    note: "Delete /api/payment/ping route after debugging."
+  }, 200, allowOrigin);
+}
+
 // ── Razorpay: create order ───────────────────────────────────────────────────
 // Frontend calls this BEFORE opening the Razorpay checkout widget. Creating
 // the order server-side (rather than trusting a client-supplied amount)
@@ -643,11 +691,12 @@ async function handleCreateOrder(request, env, allowOrigin) {
       const errCode = rpData?.error?.code || 'unknown';
       const errDesc = rpData?.error?.description || JSON.stringify(rpData);
       console.error(`Razorpay order creation failed [${rpRes.status}] code=${errCode}: ${errDesc}`);
-      // Surface the actual Razorpay error to the client for easier debugging
-      const clientMsg = errCode === 'BAD_REQUEST_ERROR'
-        ? `Payment error: ${errDesc}`
-        : "Could not initiate payment. Please try again.";
-      return jsonResponse({ error: clientMsg, debug_code: errCode }, 502, allowOrigin);
+      // Always surface the full Razorpay error so it shows in the browser UI
+      return jsonResponse({
+        error: `Razorpay error (${errCode}): ${errDesc}`,
+        debug_code: errCode,
+        debug_status: rpRes.status
+      }, 502, allowOrigin);
     }
 
     // key_id (the Razorpay "Key ID") is the public half of the pair — safe to
