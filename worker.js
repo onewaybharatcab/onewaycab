@@ -62,10 +62,23 @@ var worker_default = {
     const origin = request.headers.get("Origin") || "";
     const allowOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : null;
 
-    // 0a. Razorpay connectivity test — GET /api/payment/ping
-    // Returns key presence + a live Razorpay API check. Remove after debugging.
+    // health — always works, no secrets needed. GET /api/health
+    if (url.pathname === "/api/health" || url.pathname === "/api/health/") {
+      return new Response(JSON.stringify({ ok: true, ts: Date.now() }), {
+        status: 200,
+        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
+      });
+    }
+
+    // payment/ping — tests Razorpay key validity. GET /api/payment/ping
     if (url.pathname.includes("payment/ping")) {
       return addSecurityHeaders(await handlePaymentPing(request, env, allowOrigin));
+    }
+
+    // payment/test-order — actually attempts to create a ₹1 order, shows full Razorpay response
+    // Use this to diagnose why create-order is failing. DELETE after debugging.
+    if (url.pathname.includes("payment/test-order")) {
+      return addSecurityHeaders(await handleTestOrder(request, env, allowOrigin));
     }
 
     // 0. Razorpay endpoints (order creation + payment signature verification)
@@ -598,20 +611,19 @@ async function handleCustomerConfirm(request, env, allowOrigin) {
 __name(handleCustomerConfirm, "handleCustomerConfirm");
 
 // ── Razorpay: ping / connectivity test ──────────────────────────────────────
-// Visit /api/payment/ping in a browser to diagnose payment issues.
-// Shows whether secrets are set and whether Razorpay API is reachable.
-// DELETE this endpoint once payments are confirmed working.
+// Visit https://one-waybharat.com/api/payment/ping in a browser to diagnose issues.
 async function handlePaymentPing(request, env, allowOrigin) {
   const keyId     = env.RAZORPAY_KEY_ID;
   const keySecret = env.RAZORPAY_KEY_SECRET;
   const hasKeyId  = !!keyId;
   const hasSecret = !!keySecret;
-  const keyPrefix = hasKeyId ? keyId.slice(0, 12) + "…" : "NOT SET";
+  const keyPrefix = hasKeyId ? keyId.slice(0, 14) + "…" : "NOT SET";
   const isLive    = hasKeyId && keyId.startsWith("rzp_live_");
   const isTest    = hasKeyId && keyId.startsWith("rzp_test_");
 
   let razorpayReachable = false;
   let razorpayError     = null;
+  let razorpayStatus    = null;
 
   if (hasKeyId && hasSecret) {
     try {
@@ -619,10 +631,11 @@ async function handlePaymentPing(request, env, allowOrigin) {
       const r = await fetch("https://api.razorpay.com/v1/orders?count=1", {
         headers: { "Authorization": `Basic ${basicAuth}` }
       });
+      razorpayStatus    = r.status;
       razorpayReachable = r.ok;
       if (!r.ok) {
         const d = await r.json().catch(() => ({}));
-        razorpayError = d?.error?.description || `HTTP ${r.status}`;
+        razorpayError = d?.error?.description || `HTTP ${r.status}: ${JSON.stringify(d)}`;
       }
     } catch (e) {
       razorpayError = e.message;
@@ -630,13 +643,44 @@ async function handlePaymentPing(request, env, allowOrigin) {
   }
 
   return jsonResponse({
-    secrets: { RAZORPAY_KEY_ID: hasKeyId, RAZORPAY_KEY_SECRET: hasSecret },
+    worker_ok: true,
+    secrets_present: { RAZORPAY_KEY_ID: hasKeyId, RAZORPAY_KEY_SECRET: hasSecret },
     key_prefix: keyPrefix,
-    key_mode: isLive ? "LIVE" : isTest ? "TEST" : "UNKNOWN",
+    key_mode: isLive ? "LIVE" : isTest ? "TEST" : "UNKNOWN_FORMAT",
+    razorpay_http_status: razorpayStatus,
     razorpay_api_reachable: razorpayReachable,
     razorpay_error: razorpayError,
-    note: "Delete /api/payment/ping route after debugging."
+    tip: isTest ? "TEST keys detected — switch to LIVE keys (rzp_live_...) for production payments" : null
   }, 200, allowOrigin);
+}
+
+// ── Razorpay: test order creation (diagnostic endpoint) ─────────────────────
+// GET https://one-waybharat.com/api/payment/test-order
+// Attempts to create a real ₹1 order and returns the full Razorpay response.
+// DELETE this endpoint once payments are confirmed working.
+async function handleTestOrder(request, env, allowOrigin) {
+  const keyId     = env.RAZORPAY_KEY_ID;
+  const keySecret = env.RAZORPAY_KEY_SECRET;
+  if (!keyId || !keySecret) {
+    return jsonResponse({ error: "Secrets not set" }, 500, allowOrigin);
+  }
+  try {
+    const basicAuth = btoa(`${keyId}:${keySecret}`);
+    const rpRes = await fetch("https://api.razorpay.com/v1/orders", {
+      method: "POST",
+      headers: { "Authorization": `Basic ${basicAuth}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ amount: 100, currency: "INR", receipt: "test_diag_1", notes: { test: "diagnostic" } })
+    });
+    const rpData = await rpRes.json();
+    return jsonResponse({
+      razorpay_http_status: rpRes.status,
+      razorpay_ok: rpRes.ok,
+      razorpay_response: rpData,
+      key_prefix: keyId.slice(0, 14) + "…"
+    }, 200, allowOrigin);
+  } catch (e) {
+    return jsonResponse({ error: e.message }, 500, allowOrigin);
+  }
 }
 
 // ── Razorpay: create order ───────────────────────────────────────────────────
@@ -691,11 +735,11 @@ async function handleCreateOrder(request, env, allowOrigin) {
       const errCode = rpData?.error?.code || 'unknown';
       const errDesc = rpData?.error?.description || JSON.stringify(rpData);
       console.error(`Razorpay order creation failed [${rpRes.status}] code=${errCode}: ${errDesc}`);
-      // Always surface the full Razorpay error so it shows in the browser UI
+      // Always return the full Razorpay error so the browser UI can display it
       return jsonResponse({
-        error: `Razorpay error (${errCode}): ${errDesc}`,
+        error: `Razorpay ${errCode}: ${errDesc}`,
         debug_code: errCode,
-        debug_status: rpRes.status
+        debug_http: rpRes.status
       }, 502, allowOrigin);
     }
 
