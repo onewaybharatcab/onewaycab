@@ -12,6 +12,44 @@ window.addEventListener('scroll', () => {
   if(h) h.classList.toggle('scrolled', window.scrollY > 60);
 });
 
+// ── Mobile hamburger menu ──────────────────────────────
+function openMobMenu() {
+  const btn     = document.getElementById('hamBtn');
+  const drawer  = document.getElementById('mobDrawer');
+  const overlay = document.getElementById('mobOverlay');
+  if (!drawer) return;
+  btn    && btn.classList.add('open');
+  btn    && btn.setAttribute('aria-expanded', 'true');
+  drawer .classList.add('open');
+  overlay && (overlay.style.display = 'block');
+  requestAnimationFrame(() => overlay && overlay.classList.add('open'));
+  document.body.style.overflow = 'hidden'; // prevent background scroll
+}
+
+function closeMobMenu() {
+  const btn     = document.getElementById('hamBtn');
+  const drawer  = document.getElementById('mobDrawer');
+  const overlay = document.getElementById('mobOverlay');
+  if (!drawer) return;
+  btn    && btn.classList.remove('open');
+  btn    && btn.setAttribute('aria-expanded', 'false');
+  drawer .classList.remove('open');
+  overlay && overlay.classList.remove('open');
+  setTimeout(() => { if (overlay) overlay.style.display = 'none'; }, 300);
+  document.body.style.overflow = '';
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const btn = document.getElementById('hamBtn');
+  if (btn) btn.addEventListener('click', () => {
+    btn.classList.contains('open') ? closeMobMenu() : openMobMenu();
+  });
+  // Close on Escape key
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeMobMenu();
+  });
+});
+
 // ── Trip type (hero widget) ─────────────────────────────────────────────────
 function setTrip(el, type) {
   document.querySelectorAll('.trip-tab').forEach(t => {

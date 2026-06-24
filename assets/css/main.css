@@ -1927,28 +1927,40 @@ p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
   }
   .map-area {
     width: 100% !important;
+    position: relative !important; /* ensure % children position against this */
   }
   .map-area img {
     width: 100% !important;
     max-width: 100% !important;
     height: auto !important;
+    display: block !important;
   }
   .chakra-wrap {
-    /* Scale chakra position proportionally: 460px → ~343px on iPhone SE = 0.745x */
-    top: calc(164px * 0.72) !important;
-    left: calc(118px * 0.72) !important;
-    width: calc(146px * 0.72) !important;
-    height: calc(146px * 0.72) !important;
+    /*
+      Percentage-based so the chakra stays locked to the map at any width.
+      Source image: 479×488 px. Displayed at 460px → rendered height ≈ 469px.
+      left = 118/460 = 25.65%   top = 164/469 = 34.97%
+      width = height = 146/460 = 31.74%
+    */
+    top: 34.97% !important;
+    left: 25.65% !important;
+    width: 31.74% !important;
+    height: 31.74% !important;
   }
   .chakra-spin {
-    width: calc(146px * 0.72) !important;
-    height: calc(146px * 0.72) !important;
+    width: 100% !important;
+    height: 100% !important;
   }
-  .dot1 { top: calc(60px * 0.72);  left: calc(200px * 0.72); }
-  .dot2 { top: calc(120px * 0.72); left: calc(320px * 0.72); }
-  .dot3 { top: calc(280px * 0.72); left: calc(155px * 0.72); }
-  .dot4 { top: calc(340px * 0.72); left: calc(260px * 0.72); }
-  .dot5 { top: calc(170px * 0.72); left: calc(350px * 0.72); }
+  .chakra-logo {
+    width: 51% !important;   /* 74/146 ≈ 50.68% */
+    height: 51% !important;
+  }
+  /* Dots: top = px/469, left = px/460 — stay pinned to the map */
+  .dot1 { top: 12.79% !important; left: 43.48% !important; }
+  .dot2 { top: 25.59% !important; left: 69.57% !important; }
+  .dot3 { top: 59.70% !important; left: 33.70% !important; }
+  .dot4 { top: 72.49% !important; left: 56.52% !important; }
+  .dot5 { top: 36.25% !important; left: 76.09% !important; }
   .loading-title {
     font-size: 14px !important;
     letter-spacing: 2px !important;
@@ -1971,26 +1983,37 @@ p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
 /* ═══════════════════════ MOBILE OVERFLOW FIXES (375px) ═══════════════════════ */
 @media (max-width: 480px) {
 
-  /* 1. INSTANT CONFIRM badge — shrink text, never overflow */
+  /* 1. Ensure booking widget never exceeds the viewport */
+  .booking-widget {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* 2. INSTANT CONFIRM badge — allow title to shrink a little, badge truncates cleanly */
   .widget-top-bar {
     flex-wrap: nowrap;
     overflow: hidden;
   }
   .widget-title {
-    flex-shrink: 0;
+    flex-shrink: 1;        /* was 0 — this was preventing badge from having room */
+    min-width: 0;
     font-size: 13px !important;
-    gap: 7px;
+    gap: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .widget-title-icon {
+    flex-shrink: 0;        /* icon never shrinks */
   }
   .widget-instant {
-    flex-shrink: 1;
-    min-width: 0;
-    overflow: hidden;
+    flex-shrink: 0;        /* badge holds its size now that title can shrink */
     white-space: nowrap;
     font-size: 8px !important;
     letter-spacing: 0.8px !important;
   }
 
-  /* 2. Hero eyebrow pill — wrap or shrink on small screens */
+  /* 3. Hero eyebrow pill — wrap on small screens */
   .hero-eyebrow {
     font-size: 8.5px !important;
     letter-spacing: 1.2px !important;
@@ -2000,16 +2023,236 @@ p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
     line-height: 1.5 !important;
   }
 
-  /* 3. Float buttons — move up so they don't cover widget footer */
+  /* 4. Float buttons — smaller size + right-edge flush so they don't
+        cover the search button or input fields */
   .float-actions {
-    bottom: max(80px, env(safe-area-inset-bottom, 80px)) !important;
+    right: 0 !important;
+    bottom: max(24px, env(safe-area-inset-bottom, 24px)) !important;
+    gap: 10px !important;
+  }
+  .float-btn {
+    width: 44px !important;
+    height: 44px !important;
+    border-radius: 12px 0 0 12px !important;  /* flat right edge, flush to screen */
+  }
+  .float-btn svg {
+    width: 22px !important;
+    height: 22px !important;
   }
 
-  /* 4. Widget footer — add right padding so text clears the buttons */
+  /* 5. Widget footer — needs right clearance for the 44px flush buttons */
   .widget-footer {
-    padding-right: 70px !important;
+    padding-right: 52px !important;
     justify-content: flex-start !important;
     flex-wrap: wrap !important;
     gap: 8px !important;
   }
+
+  /* 6. Search button — enough right padding so text never hides behind buttons */
+  .search-btn {
+    padding-right: 20px !important;
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════
+   MOBILE HAMBURGER MENU
+═══════════════════════════════════════════════════ */
+
+/* ── Hamburger button (hidden on desktop) ── */
+.ham-btn {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  width: 42px;
+  height: 42px;
+  border: none;
+  background: rgba(244,123,0,0.15);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+.ham-btn:hover  { background: rgba(244,123,0,0.28); }
+.ham-btn span {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: var(--sf-400);
+  border-radius: 2px;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  transform-origin: center;
+}
+/* Animate to X when open */
+.ham-btn.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.ham-btn.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+.ham-btn.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+/* ── Backdrop overlay ── */
+.mob-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(4,12,30,0.6);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 490;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.mob-overlay.open {
+  display: block;
+  opacity: 1;
+}
+
+/* ── Drawer panel ── */
+.mob-drawer {
+  position: fixed;
+  top: 0; right: 0;
+  width: min(300px, 85vw);
+  height: 100dvh;
+  background: linear-gradient(160deg, #0B1F3A, #061428);
+  border-left: 1px solid rgba(244,123,0,0.2);
+  z-index: 500;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  transition: transform 0.32s cubic-bezier(0.4,0,0.2,1);
+  box-shadow: -8px 0 40px rgba(4,12,30,0.6);
+  overflow-y: auto;
+}
+.mob-drawer.open {
+  transform: translateX(0);
+}
+
+/* ── Drawer header ── */
+.mob-drawer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(244,123,0,0.15);
+  background: linear-gradient(135deg, rgba(244,123,0,0.12), rgba(201,162,39,0.06));
+  flex-shrink: 0;
+}
+.mob-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 20px;
+}
+.mob-logo-name {
+  font-family: 'Cinzel', serif;
+  font-size: 14px;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--sf-400), var(--gd-400));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.mob-close {
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: rgba(255,255,255,0.07);
+  border-radius: var(--r-sm);
+  color: rgba(255,255,255,0.7);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, color 0.2s;
+  flex-shrink: 0;
+}
+.mob-close svg { width: 18px; height: 18px; }
+.mob-close:hover { background: rgba(244,123,0,0.2); color: var(--sf-400); }
+
+/* ── Drawer nav links ── */
+.mob-nav {
+  display: flex;
+  flex-direction: column;
+  padding: 12px 0;
+  flex: 1;
+}
+.mob-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 24px;
+  color: rgba(255,255,255,0.82);
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: 'Nunito', sans-serif;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  transition: background 0.18s, color 0.18s, padding-left 0.18s;
+}
+.mob-link:hover, .mob-link:active {
+  background: rgba(244,123,0,0.10);
+  color: var(--sf-400);
+  padding-left: 30px;
+}
+
+/* ── Bottom action buttons ── */
+.mob-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px;
+  border-top: 1px solid rgba(244,123,0,0.15);
+  flex-shrink: 0;
+}
+.mob-book-btn {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, var(--sf-500), var(--sf-700));
+  border: none;
+  border-radius: var(--r-md);
+  color: var(--wh);
+  font-size: 15px;
+  font-weight: 700;
+  font-family: 'Nunito', sans-serif;
+  cursor: pointer;
+  letter-spacing: 0.3px;
+  box-shadow: 0 6px 24px var(--sf-glow);
+  transition: opacity 0.2s;
+}
+.mob-book-btn:hover { opacity: 0.9; }
+.mob-call-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: var(--r-md);
+  color: rgba(255,255,255,0.82);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: 'Nunito', sans-serif;
+  transition: background 0.2s, border-color 0.2s;
+}
+.mob-call-btn:hover { background: rgba(244,123,0,0.12); border-color: rgba(244,123,0,0.35); }
+
+/* ── Show hamburger on mobile, hide on desktop ── */
+@media (max-width: 960px) {
+  .ham-btn { display: flex; }
+}
+@media (min-width: 961px) {
+  .ham-btn   { display: none !important; }
+  .mob-drawer { display: none !important; }
+  .mob-overlay { display: none !important; }
+}
+
+/* ── Light theme override for hamburger ── */
+.light-theme .ham-btn {
+  background: rgba(244,123,0,0.12);
+}
+.light-theme .ham-btn span {
+  background: var(--sf-600);
 }

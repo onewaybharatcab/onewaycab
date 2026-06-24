@@ -276,7 +276,39 @@
     <button type="button" class="nav-link nav-cta" onclick="bkmOpen()" style="cursor:pointer;font-family:'Nunito',sans-serif">🚕 Book Now</button>
     <a href="tel:+919355757579" class="nav-link" style="color:rgba(255,255,255,.7)">📞 +91-93557 57579</a>
   </nav>
+
+  <!-- Mobile hamburger button (hidden on desktop) -->
+  <button class="ham-btn" id="hamBtn" aria-label="Open menu" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
 </header>
+
+<!-- Mobile slide-in drawer -->
+<div class="mob-overlay" id="mobOverlay" onclick="closeMobMenu()"></div>
+<div class="mob-drawer" id="mobDrawer" role="dialog" aria-label="Navigation menu">
+  <div class="mob-drawer-head">
+    <div class="mob-logo">
+      <span>🚕</span>
+      <span class="mob-logo-name">One-Way Bhaarat</span>
+    </div>
+    <button class="mob-close" onclick="closeMobMenu()" aria-label="Close menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
+  <nav class="mob-nav">
+    <a href="fleet.html"   class="mob-link">🚗 Fleet</a>
+    <a href="routes.html"  class="mob-link">🗺️ Routes</a>
+    <a href="faq.html"     class="mob-link">❓ FAQ</a>
+    <a href="about.html"   class="mob-link">ℹ️ About Us</a>
+    <a href="contact.html" class="mob-link">📬 Contact</a>
+  </nav>
+  <div class="mob-actions">
+    <button type="button" class="mob-book-btn" onclick="bkmOpen();closeMobMenu()">🚕 Book Now</button>
+    <a href="tel:+919355757579" class="mob-call-btn">📞 +91-93557 57579</a>
+  </div>
+</div>
 
 <!-- ─────────────────── HERO ─────────────────── -->
 <main id="main-content">
