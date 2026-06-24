@@ -1,25 +1,9 @@
-// ── Loader ──────────────────────────────────────────
-(function() {
-  const MIN_MS = 1500;
-  const start = Date.now();
-  let _dismissed = false;
-  function dismissLoader() {
-    if (_dismissed) return;
-    _dismissed = true;
-    const elapsed = Date.now() - start;
-    const delay = Math.max(0, MIN_MS - elapsed);
-    setTimeout(() => {
-      const el = document.getElementById('loader');
-      if (el) el.classList.add('out');
-    }, delay);
-  }
-  if (document.readyState === 'complete') {
-    dismissLoader();
-  } else {
-    window.addEventListener('load', dismissLoader);
-    // Hard fallback — loader always dismissed within 6s even if 'load' never fires
-    setTimeout(dismissLoader, 6000);
-  }
+// ── Loader dismiss is handled by inline <script> in <head> of index.html ──
+// (kept here as no-op for safety on other pages)
+(function(){
+  if(window._loaderStart) return; // already handled inline
+  var el=document.getElementById('loader');
+  if(el) setTimeout(function(){ el.classList.add('out'); }, 1500);
 })();
 
 // ── Header scroll effect ──────────────────────────────
@@ -190,28 +174,30 @@ const ROUTES = [
 ];
 
 const grid = document.getElementById('routesGrid');
-ROUTES.forEach(r => {
-  const el = document.createElement('div');
-  el.className = 'route-card';
-  el.style.cursor = 'pointer';
-  el.onclick = () => {
-    BKM.S.pu = r.from; BKM.S.dr = r.to;
-    BKM._preDistKm = r.d;
-    bkmOpen({ prefill: true });
-  };
-  el.innerHTML = `
-    <div class="route-emoji">${r.icon}</div>
-    <div class="route-info">
-      <div class="route-name">${r.from} → ${r.to}</div>
-      <div class="route-meta">${r.d} km · Sedan One Way</div>
-    </div>
-    <div class="route-price-col">
-      <div class="route-price">₹${r.p.toLocaleString('en-IN')}</div>
-      <div class="route-dist">${r.d} km</div>
-    </div>
-  `;
-  grid.appendChild(el);
-});
+if (grid) {
+  ROUTES.forEach(r => {
+    const el = document.createElement('div');
+    el.className = 'route-card';
+    el.style.cursor = 'pointer';
+    el.onclick = () => {
+      BKM.S.pu = r.from; BKM.S.dr = r.to;
+      BKM._preDistKm = r.d;
+      bkmOpen({ prefill: true });
+    };
+    el.innerHTML = `
+      <div class="route-emoji">${r.icon}</div>
+      <div class="route-info">
+        <div class="route-name">${r.from} → ${r.to}</div>
+        <div class="route-meta">${r.d} km · Sedan One Way</div>
+      </div>
+      <div class="route-price-col">
+        <div class="route-price">₹${r.p.toLocaleString('en-IN')}</div>
+        <div class="route-dist">${r.d} km</div>
+      </div>
+    `;
+    grid.appendChild(el);
+  });
+}
 
 // ── Scroll reveal ──────────────────────────────────────
 const ro = new IntersectionObserver(entries => {

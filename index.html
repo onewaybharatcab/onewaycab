@@ -2,6 +2,26 @@
 <html lang="en-IN">
 <head>
 <meta charset="UTF-8">
+<!-- ── Loader dismiss — inline, runs immediately, independent of main.js ── -->
+<script>
+(function(){
+  var _d=false;
+  function dismiss(){
+    if(_d)return; _d=true;
+    var MIN=1500, start=window._loaderStart||Date.now();
+    setTimeout(function(){
+      var el=document.getElementById('loader');
+      if(el) el.classList.add('out');
+    }, Math.max(0, MIN-(Date.now()-start)));
+  }
+  window._loaderStart = Date.now();
+  if(document.readyState==='complete'){ dismiss(); }
+  else {
+    window.addEventListener('load', dismiss);
+    setTimeout(dismiss, 5000); // hard cap: loader gone in 5s no matter what
+  }
+})();
+</script>
 <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="Book one-way cabs across India from ₹13/km. Outstation taxi to 20,000+ locations. Verified drivers, transparent fares, instant WhatsApp confirmation.">
