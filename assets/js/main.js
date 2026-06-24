@@ -930,6 +930,9 @@ function _bkmLockPayPanel(){
 // the modal automatically after a short pause so the person has time to
 // read their booking ID.
 function _bkmShowDoneScreen(){
+  // Mark step 5 pill as "done" (green) — without this it stays orange/"active" forever
+  const p5=document.getElementById('bkmp5');
+  if(p5){ p5.classList.remove('active'); p5.classList.add('done'); }
   const wrap=document.querySelector('.bkm-confirm-wrap');
   if(wrap){
     const ic=wrap.querySelector('.bkm-confirm-ic');

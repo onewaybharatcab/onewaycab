@@ -199,42 +199,55 @@ async function handleSendOtp(request, env, allowOrigin) {
   const otp = generateOtp();
   const e164 = `91${rawPhone}`; // India country code, digits only, no leading '+' — required by WhatsApp Cloud API
 
-  try {
-    const waRes = await fetch(`https://graph.facebook.com/${WHATSAPP_API_VERSION}/${phoneNumberId}/messages`, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${accessToken}`,
-        "Content-Type": "application/json"
-      },
-      // NOTE: the "components" structure below assumes an Authentication-category
-      // template with a one-time-passcode "Copy Code" button, which is what Meta
-      // recommends for OTP. When you create this template in WhatsApp Manager,
-      // Meta shows you the exact sample request for YOUR template — match that
-      // exactly, since the button parameter shape varies by button type
-      // (copy_code vs one-tap autofill vs url).
-      body: JSON.stringify({
-        messaging_product: "whatsapp",
-        to: e164,
-        type: "template",
-        template: {
-          name: templateName,
-          language: { code: "en" },
-          components: [
-            { type: "body", parameters: [{ type: "text", text: otp }] },
-            { type: "button", sub_type: "copy_code", index: "0", parameters: [{ type: "coupon_code", coupon_code: otp }] }
-          ]
-        }
-      })
-    });
+  // Try multiple template payload structures in order until one succeeds.
+  // Meta error 132000 = wrong body params, 132018 = wrong button type.
+  const templatePayloads = [
+    // Attempt 1: body + copy_code button (standard Meta Auth template)
+    { messaging_product: "whatsapp", to: e164, type: "template", template: { name: templateName, language: { code: "en" }, components: [
+      { type: "body", parameters: [{ type: "text", text: otp }] },
+      { type: "button", sub_type: "copy_code", index: "0", parameters: [{ type: "coupon_code", coupon_code: otp }] }
+    ]}},
+    // Attempt 2: copy_code button only (no body params)
+    { messaging_product: "whatsapp", to: e164, type: "template", template: { name: templateName, language: { code: "en" }, components: [
+      { type: "button", sub_type: "copy_code", index: "0", parameters: [{ type: "coupon_code", coupon_code: otp }] }
+    ]}},
+    // Attempt 3: body + url button
+    { messaging_product: "whatsapp", to: e164, type: "template", template: { name: templateName, language: { code: "en" }, components: [
+      { type: "body", parameters: [{ type: "text", text: otp }] },
+      { type: "button", sub_type: "url", index: "0", parameters: [{ type: "text", text: otp }] }
+    ]}},
+    // Attempt 4: body only
+    { messaging_product: "whatsapp", to: e164, type: "template", template: { name: templateName, language: { code: "en" }, components: [
+      { type: "body", parameters: [{ type: "text", text: otp }] }
+    ]}},
+    // Attempt 5: minimal, no components
+    { messaging_product: "whatsapp", to: e164, type: "template", template: { name: templateName, language: { code: "en" } }}
+  ];
 
-    const waData = await waRes.json();
-    if (!waRes.ok) {
-      console.error("WhatsApp send failed:", JSON.stringify(waData));
-      return jsonResponse({ error: "Could not send OTP. Please try again." }, 502, allowOrigin);
+  let sent = false;
+  let lastError = null;
+  for (const payload of templatePayloads) {
+    try {
+      const waRes = await fetch(`https://graph.facebook.com/${WHATSAPP_API_VERSION}/${phoneNumberId}/messages`, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${accessToken}`, "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const waData = await waRes.json();
+      if (waRes.ok && waData?.messages?.[0]?.id) { sent = true; break; }
+      lastError = waData?.error;
+      console.error("OTP attempt failed:", JSON.stringify(waData));
+      // Only retry on parameter/structure errors, not auth errors
+      const code = waData?.error?.code;
+      if (code && ![132000, 132001, 132018].includes(Number(code))) break;
+    } catch (err) {
+      console.error("WhatsApp API request failed:", err.message);
+      lastError = { message: err.message };
+      break;
     }
-  } catch (err) {
-    console.error("WhatsApp API request failed:", err.message);
-    return jsonResponse({ error: "Could not send OTP. Please try again." }, 502, allowOrigin);
+  }
+  if (!sent) {
+    return jsonResponse({ error: `Could not send OTP. Please try again.`, wa_error: lastError }, 502, allowOrigin);
   }
 
   try {
@@ -403,10 +416,7 @@ async function handleDistance(request, url, env, allowOrigin) {
 }
 __name(handleDistance, "handleDistance");
 
-// ── Booking notification — WhatsApp admin alert ─────────────────────────────
-// Called by the modal after OTP is verified (booking confirmed) and after
-// successful Razorpay payment. Sends a formatted WhatsApp message to the
-// admin number so no booking slips through unnoticed.
+// ── Booking notification — WhatsApp admin + customer via oneway_notification template ──
 async function handleBookingNotify(request, env, allowOrigin) {
   if (request.method !== "POST") return jsonResponse({ error: "Method not allowed" }, 405, allowOrigin);
 
@@ -420,74 +430,78 @@ async function handleBookingNotify(request, env, allowOrigin) {
     return jsonResponse({ error: "Missing required booking fields" }, 400, allowOrigin);
   }
 
-  const adminNumber  = env.ADMIN_WHATSAPP_NUMBER || "919355757579"; // e.g. 919355757579
-  const accessToken  = env.WHATSAPP_ACCESS_TOKEN;
+  const adminNumber   = env.ADMIN_WHATSAPP_NUMBER || "919355757579";
+  const accessToken   = env.WHATSAPP_ACCESS_TOKEN;
   const phoneNumberId = env.WHATSAPP_PHONE_NUMBER_ID;
+  const notifTemplate = env.WHATSAPP_NOTIFY_TEMPLATE_NAME || "oneway_notification";
 
   if (!accessToken || !phoneNumberId) {
-    // Non-fatal — admin notification is best-effort, don't fail the booking
     console.warn("WhatsApp admin notification not configured — skipping");
     return jsonResponse({ sent: false, reason: "not_configured" }, 200, allowOrigin);
   }
 
-  // Build the message text
-  const isPayment = b.type === "payment";
   const stops = Array.isArray(b.extraCities) ? b.extraCities.filter(c => c.trim()) : [];
-  const stopLine = stops.length ? `\n🛑 Stops: ${stops.join(" → ")}` : "";
+  const tripDetails = `${b.vehicle || "—"} | ${b.from || "—"}${stops.length ? " → " + stops.join(" → ") : ""} → ${b.to || "—"}`;
+  const passenger   = `${b.name} (+91${b.phone})`;
+  const fareSummary = `Paid: ₹${Number(b.payAmt || b.advance || 0).toLocaleString("en-IN")} | Due: ₹${Number((b.fare || 0) - (b.payAmt || b.advance || 0)).toLocaleString("en-IN")}`;
+  const tripTiming  = `${b.date || "—"} ${b.time || ""}`.trim();
 
-  let msg;
-  if (isPayment) {
-    msg =
-      `💳 *PAYMENT RECEIVED — One-Way Bhaarat*\n\n` +
-      `🔖 Booking ID: ${b.id}\n` +
-      `👤 ${b.name} · +91 ${b.phone}\n` +
-      `🚗 ${b.vehicle || "—"}\n` +
-      `💰 Paid: ₹${Number(b.payAmt || 0).toLocaleString("en-IN")} of ₹${Number(b.fare || 0).toLocaleString("en-IN")}\n` +
-      `📲 Razorpay ID: ${b.paymentId || "—"}`;
-  } else {
-    msg =
-      `🚕 *NEW BOOKING — One-Way Bhaarat*\n\n` +
-      `🔖 ${b.id}\n` +
-      `👤 ${b.name} · +91 ${b.phone}\n` +
-      `📧 ${b.email || "—"}\n` +
-      `🚗 ${b.vehicle || "—"} · ${b.tripType === "roundtrip" ? "Round Trip" : "One Way"}\n` +
-      `📍 ${b.from || "—"}${stopLine}\n` +
-      `🏁 ${b.to || "—"}\n` +
-      `📅 ${b.date || "—"}${b.time ? " at " + b.time : ""}` +
-      `${b.retdate ? "\n🔄 Return: " + b.retdate : ""}\n` +
-      `📏 ~${b.distKm || "?"} km · ${b.pax || "—"}\n` +
-      `💰 Est. Fare: ₹${Number(b.fare || 0).toLocaleString("en-IN")} · Advance: ₹${Number(b.advance || 0).toLocaleString("en-IN")}\n` +
-      `${b.notes ? "📝 " + b.notes + "\n" : ""}` +
-      `\nPlease assign driver and confirm. 🙏`;
-  }
+  // Build fallback structures — Meta error 132000/132001 means wrong body params,
+  // so we try with and without the components array, and both "en" and "en_US".
+  const makePayloads = (to) => [
+    // Attempt 1: 5 body params, language "en"
+    { messaging_product: "whatsapp", to, type: "template", template: { name: notifTemplate, language: { code: "en" }, components: [{ type: "body", parameters: [
+      { type: "text", text: b.id }, { type: "text", text: passenger },
+      { type: "text", text: tripDetails }, { type: "text", text: fareSummary },
+      { type: "text", text: tripTiming }
+    ]}]}},
+    // Attempt 2: same but language "en_US"
+    { messaging_product: "whatsapp", to, type: "template", template: { name: notifTemplate, language: { code: "en_US" }, components: [{ type: "body", parameters: [
+      { type: "text", text: b.id }, { type: "text", text: passenger },
+      { type: "text", text: tripDetails }, { type: "text", text: fareSummary },
+      { type: "text", text: tripTiming }
+    ]}]}},
+    // Attempt 3: no components (template has no variables)
+    { messaging_product: "whatsapp", to, type: "template", template: { name: notifTemplate, language: { code: "en" } }},
+  ];
 
-  try {
-    const waRes = await fetch(
-      `https://graph.facebook.com/${WHATSAPP_API_VERSION}/${phoneNumberId}/messages`,
-      {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${accessToken}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          messaging_product: "whatsapp",
-          to: adminNumber,
-          type: "text",
-          text: { body: msg }
-        })
+  const trySend = async (to, label) => {
+    for (const payload of makePayloads(to)) {
+      try {
+        const waRes = await fetch(`https://graph.facebook.com/${WHATSAPP_API_VERSION}/${phoneNumberId}/messages`, {
+          method: "POST",
+          headers: { "Authorization": `Bearer ${accessToken}`, "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        const waData = await waRes.json();
+        if (waRes.ok && waData?.messages?.[0]?.id) {
+          console.log(`${label} notified via template — id:`, waData.messages[0].id);
+          return true;
+        }
+        const code = waData?.error?.code;
+        console.error(`${label} WA attempt failed — code:`, code, "| message:", waData?.error?.message, "| fbtrace:", waData?.error?.fbtrace_id);
+        // Only retry on structure/parameter errors
+        if (code && ![132000, 132001, 132018].includes(Number(code))) break;
+      } catch (err) {
+        console.error(`${label} WA exception:`, err.message);
+        break;
       }
-    );
-    const waData = await waRes.json();
-    if (!waRes.ok) {
-      console.error("Admin WA notify failed:", JSON.stringify(waData));
+    }
+    return false;
+  };
+
+  // Send to admin
+  try {
+    const ok = await trySend(adminNumber, "Admin");
+    if (!ok) {
       return jsonResponse({ sent: false, reason: "upstream_error" }, 200, allowOrigin);
     }
-    return jsonResponse({ sent: true }, 200, allowOrigin);
   } catch (err) {
     console.error("Admin WA notify exception:", err.message);
     return jsonResponse({ sent: false, reason: err.message }, 200, allowOrigin);
   }
+
+  return jsonResponse({ sent: true }, 200, allowOrigin);
 }
 __name(handleBookingNotify, "handleBookingNotify");
 
@@ -712,51 +726,47 @@ async function handleCustomerConfirm(request, env, allowOrigin) {
   }
 
   const stops = Array.isArray(b.extraCities) ? b.extraCities.filter(c => c.trim()) : [];
-  const stopLine = stops.length ? `\n🛑 Via: ${stops.join(" → ")}` : "";
   const customerNumber = `91${b.phone}`;
+  const notifTemplate  = env.WHATSAPP_NOTIFY_TEMPLATE_NAME || "oneway_notification";
+  const tripDetails    = `${b.vehicle || "—"} | ${b.from || "—"}${stops.length ? " → " + stops.join(" → ") : ""} → ${b.to || "—"}`;
+  const passenger      = `${b.name} (+91${b.phone})`;
+  const fareSummary    = `Paid: ₹${Number(b.payAmt || 0).toLocaleString("en-IN")} | Due: ₹${Number((b.fare || 0) - (b.payAmt || 0)).toLocaleString("en-IN")}`;
+  const tripTiming     = `${b.date || "—"} ${b.time || ""}`.trim();
 
-  const msg =
-    `✅ *Booking Confirmed — One-Way Bhaarat!*\n\n` +
-    `🔖 Booking ID: ${b.id}\n` +
-    `👤 ${b.name}\n` +
-    `🚗 ${b.vehicle || "—"} · ${b.tripType === "roundtrip" ? "Round Trip" : "One Way"}\n` +
-    `📍 ${b.from || "—"}${stopLine}\n` +
-    `🏁 ${b.to || "—"}\n` +
-    `📅 ${b.date || "—"}${b.time ? " at " + b.time : ""}\n` +
-    `📏 ~${b.distKm || "?"} km\n` +
-    `💰 Total Fare: ₹${Number(b.fare || 0).toLocaleString("en-IN")}\n` +
-    `💳 Paid: ₹${Number(b.payAmt || 0).toLocaleString("en-IN")}\n` +
-    `🤝 Balance to driver: ₹${Number((b.fare || 0) - (b.payAmt || 0)).toLocaleString("en-IN")}\n` +
-    `${b.notes ? "📝 " + b.notes + "\n" : ""}` +
-    `\nFor support call: +91-93557 57579\nThank you for choosing One-Way Bhaarat! 🙏`;
+  const params = [
+    { type: "text", text: b.id }, { type: "text", text: passenger },
+    { type: "text", text: tripDetails }, { type: "text", text: fareSummary },
+    { type: "text", text: tripTiming }
+  ];
 
-  try {
-    const waRes = await fetch(
-      `https://graph.facebook.com/${WHATSAPP_API_VERSION}/${phoneNumberId}/messages`,
-      {
+  // Retry with fallback structures — same approach as OTP to handle Meta template mismatches
+  const payloads = [
+    { messaging_product: "whatsapp", to: customerNumber, type: "template", template: { name: notifTemplate, language: { code: "en" },    components: [{ type: "body", parameters: params }] }},
+    { messaging_product: "whatsapp", to: customerNumber, type: "template", template: { name: notifTemplate, language: { code: "en_US" }, components: [{ type: "body", parameters: params }] }},
+    { messaging_product: "whatsapp", to: customerNumber, type: "template", template: { name: notifTemplate, language: { code: "en" } }},
+  ];
+
+  for (const payload of payloads) {
+    try {
+      const waRes = await fetch(`https://graph.facebook.com/${WHATSAPP_API_VERSION}/${phoneNumberId}/messages`, {
         method: "POST",
-        headers: {
-          "Authorization": `Bearer ${accessToken}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          messaging_product: "whatsapp",
-          to: customerNumber,
-          type: "text",
-          text: { body: msg }
-        })
+        headers: { "Authorization": `Bearer ${accessToken}`, "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const waData = await waRes.json();
+      if (waRes.ok && waData?.messages?.[0]?.id) {
+        console.log("Customer notified — id:", waData.messages[0].id);
+        return jsonResponse({ sent: true }, 200, allowOrigin);
       }
-    );
-    const waData = await waRes.json();
-    if (!waRes.ok) {
-      console.error("Customer WA confirm failed:", JSON.stringify(waData));
-      return jsonResponse({ sent: false, reason: "upstream_error" }, 200, allowOrigin);
+      const code = waData?.error?.code;
+      console.error("Customer WA attempt failed — code:", code, "| message:", waData?.error?.message, "| fbtrace:", waData?.error?.fbtrace_id);
+      if (code && ![132000, 132001, 132018].includes(Number(code))) break;
+    } catch (err) {
+      console.error("Customer WA confirm exception:", err.message);
+      break;
     }
-    return jsonResponse({ sent: true }, 200, allowOrigin);
-  } catch (err) {
-    console.error("Customer WA confirm exception:", err.message);
-    return jsonResponse({ sent: false, reason: err.message }, 200, allowOrigin);
   }
+  return jsonResponse({ sent: false, reason: "upstream_error" }, 200, allowOrigin);
 }
 
 function jsonResponse(data, status = 200, allowOrigin = null) {
