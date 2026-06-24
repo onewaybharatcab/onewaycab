@@ -2,15 +2,23 @@
 (function() {
   const MIN_MS = 1500;
   const start = Date.now();
+  let _dismissed = false;
   function dismissLoader() {
+    if (_dismissed) return;
+    _dismissed = true;
     const elapsed = Date.now() - start;
     const delay = Math.max(0, MIN_MS - elapsed);
-    setTimeout(() => document.getElementById('loader').classList.add('out'), delay);
+    setTimeout(() => {
+      const el = document.getElementById('loader');
+      if (el) el.classList.add('out');
+    }, delay);
   }
   if (document.readyState === 'complete') {
     dismissLoader();
   } else {
     window.addEventListener('load', dismissLoader);
+    // Hard fallback — loader always dismissed within 6s even if 'load' never fires
+    setTimeout(dismissLoader, 6000);
   }
 })();
 
