@@ -933,6 +933,16 @@ function _bkmShowDoneScreen(){
   // Mark step 5 pill as "done" (green) — without this it stays orange/"active" forever
   const p5=document.getElementById('bkmp5');
   if(p5){ p5.classList.remove('active'); p5.classList.add('done'); }
+
+  // Hide payment panel + status + WA button — _bkmShowDoneScreen only replaces the
+  // title text, so these siblings stay visible unless we explicitly remove them.
+  const payPanel=document.querySelector('.bkm-pay-panel');
+  if(payPanel) payPanel.style.display='none';
+  const payStatus=document.getElementById('bkmPayStatus');
+  if(payStatus) payStatus.style.display='none';
+  const waBtn=document.querySelector('.bkm-btn-wa');
+  if(waBtn) waBtn.style.display='none';
+
   const wrap=document.querySelector('.bkm-confirm-wrap');
   if(wrap){
     const ic=wrap.querySelector('.bkm-confirm-ic');
