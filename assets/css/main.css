@@ -2376,170 +2376,202 @@ p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
 
 
 /* ══════════════════════════════════════════════════════════════════════
-   FIX: HAMBURGER & WHATSAPP BUTTONS — Mobile Visibility Fixes
+   FIX: HAMBURGER & WHATSAPP BUTTONS — High Specificity Override
+   Uses ID selectors and duplicated classes to ensure these rules win.
    ══════════════════════════════════════════════════════════════════════ */
 
-/* ── FIX 1: HAMBURGER BUTTON — Ensure it ONLY shows on mobile ── */
-/* Remove any conflicting display rules and ensure proper mobile-only visibility */
+/* ── HAMBURGER BUTTON — Force hide on desktop, show on mobile ── */
 
-/* Base: hidden on desktop */
-.ham-btn {
-  display: none !important;
-}
-
-/* Mobile: show hamburger */
-@media (max-width: 960px) {
-  .ham-btn {
-    display: flex !important;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: 5px;
-    width: 44px;
-    height: 44px;
-    min-width: 44px;
-    min-height: 44px;
-    border: none;
-    background: #F47B00 !important;
-    border-radius: 10px;
-    cursor: pointer;
-    padding: 0;
-    flex-shrink: 0 !important;
-    transition: background 0.2s, transform 0.2s;
-    position: relative;
-    z-index: 250;
-    box-shadow: 0 4px 16px rgba(244,123,0,0.4);
-    -webkit-tap-highlight-color: transparent;
-  }
-  .ham-btn:hover,
-  .ham-btn:active {
-    background: #D46800 !important;
-    transform: scale(1.05);
-  }
-  .ham-btn span {
-    display: block !important;
-    width: 20px;
-    height: 2.5px;
-    background: #ffffff !important;
-    border-radius: 2px;
-    transition: transform 0.3s ease, opacity 0.3s ease;
-    transform-origin: center;
-    opacity: 1 !important;
-  }
-  /* X animation when open */
-  .ham-btn.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
-  .ham-btn.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
-  .ham-btn.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
-}
-
-/* Desktop: force hide hamburger and mobile drawer */
+/* Desktop (min-width: 961px): hide hamburger */
 @media (min-width: 961px) {
-  .ham-btn {
+  #hamBtn,
+  button#hamBtn,
+  header #hamBtn,
+  .ham-btn.ham-btn {
     display: none !important;
     visibility: hidden !important;
     pointer-events: none !important;
   }
-  .mob-drawer,
-  .mob-overlay {
-    display: none !important;
-    visibility: hidden !important;
-    pointer-events: none !important;
-    transform: translateX(100%) !important;
-  }
 }
 
-/* ── FIX 2: FLOAT BUTTONS (Call + WhatsApp) — Ensure visibility on all mobile sizes ── */
-
-/* Base styles for float buttons */
-.float-actions {
-  position: fixed;
-  top: 50%;
-  right: max(16px, env(safe-area-inset-right, 16px));
-  transform: translateY(-50%);
-  z-index: 9998 !important; /* Below loader (9999) but above everything else */
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  align-items: center;
-  pointer-events: none; /* Let clicks pass through the container */
-}
-
-.float-btn {
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  text-decoration: none;
-  box-shadow: 0 6px 24px rgba(0,0,0,0.35);
-  transition: transform 0.2s, box-shadow 0.2s;
-  position: relative;
-  pointer-events: auto; /* Re-enable clicks on buttons */
-  -webkit-tap-highlight-color: transparent;
-}
-
-.float-btn:hover { transform: scale(1.1); }
-
-.float-btn svg {
-  width: 26px;
-  height: 26px;
-  display: block;
-  flex-shrink: 0;
-}
-
-.float-btn.call {
-  background: linear-gradient(135deg, #F47B00, #D46800);
-  box-shadow: 0 6px 24px rgba(244,123,0,0.4);
-  animation: floatPulseCall 2.6s ease-in-out infinite;
-}
-
-.float-btn.whatsapp {
-  background: linear-gradient(135deg, #25D366, #128C7E);
-  box-shadow: 0 6px 24px rgba(37,211,102,0.4);
-  animation: floatPulseWA 2.6s ease-in-out infinite 0.4s;
-}
-
-.float-label {
-  position: absolute;
-  right: 68px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: #1A0800;
-  color: #fff;
-  font-size: 12px;
-  font-weight: 600;
-  white-space: nowrap;
-  padding: 7px 14px;
-  border-radius: 8px;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.2s, transform 0.2s;
-  box-shadow: 0 4px 14px rgba(0,0,0,0.25);
-}
-
-.float-btn:hover .float-label {
-  opacity: 1;
-  transform: translateY(-50%) translateX(-4px);
-}
-
-/* Mobile-specific float button fixes */
+/* Mobile (max-width: 960px): show hamburger with visible styling */
 @media (max-width: 960px) {
-  .float-actions {
+  #hamBtn,
+  button#hamBtn,
+  header #hamBtn,
+  .ham-btn.ham-btn {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 5px !important;
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
+    border: none !important;
+    background: #F47B00 !important;
+    border-radius: 10px !important;
+    cursor: pointer !important;
+    padding: 0 !important;
+    flex-shrink: 0 !important;
+    position: relative !important;
+    z-index: 250 !important;
+    box-shadow: 0 4px 16px rgba(244,123,0,0.4) !important;
+    -webkit-tap-highlight-color: transparent !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+
+  #hamBtn:hover,
+  #hamBtn:active,
+  .ham-btn.ham-btn:hover,
+  .ham-btn.ham-btn:active {
+    background: #D46800 !important;
+    transform: scale(1.05) !important;
+  }
+
+  /* White hamburger lines - HIGHLY VISIBLE */
+  #hamBtn span,
+  .ham-btn.ham-btn span {
+    display: block !important;
+    width: 20px !important;
+    height: 2.5px !important;
+    background: #ffffff !important;
+    border-radius: 2px !important;
+    transition: transform 0.3s ease, opacity 0.3s ease !important;
+    transform-origin: center !important;
+    opacity: 1 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+  }
+
+  /* X animation when open */
+  #hamBtn.open span:nth-child(1),
+  .ham-btn.ham-btn.open span:nth-child(1) {
+    transform: translateY(7px) rotate(45deg) !important;
+  }
+  #hamBtn.open span:nth-child(2),
+  .ham-btn.ham-btn.open span:nth-child(2) {
+    opacity: 0 !important;
+    transform: scaleX(0) !important;
+  }
+  #hamBtn.open span:nth-child(3),
+  .ham-btn.ham-btn.open span:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg) !important;
+  }
+}
+
+/* ── FLOAT BUTTONS (Call + WhatsApp) ── */
+
+/* Base: position at right side */
+.float-actions.float-actions,
+body .float-actions {
+  position: fixed !important;
+  top: 50% !important;
+  right: max(16px, env(safe-area-inset-right, 16px)) !important;
+  transform: translateY(-50%) !important;
+  z-index: 9998 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 14px !important;
+  align-items: center !important;
+  pointer-events: none !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.float-btn.float-btn,
+body .float-btn {
+  width: 56px !important;
+  height: 56px !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  text-decoration: none !important;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.35) !important;
+  transition: transform 0.2s, box-shadow 0.2s !important;
+  position: relative !important;
+  pointer-events: auto !important;
+  -webkit-tap-highlight-color: transparent !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.float-btn.float-btn:hover,
+body .float-btn:hover {
+  transform: scale(1.1) !important;
+}
+
+.float-btn.float-btn svg,
+body .float-btn svg {
+  width: 26px !important;
+  height: 26px !important;
+  display: block !important;
+  flex-shrink: 0 !important;
+}
+
+.float-btn.call.call,
+body .float-btn.call {
+  background: linear-gradient(135deg, #F47B00, #D46800) !important;
+  box-shadow: 0 6px 24px rgba(244,123,0,0.4) !important;
+  animation: floatPulseCall 2.6s ease-in-out infinite !important;
+}
+
+.float-btn.whatsapp.whatsapp,
+body .float-btn.whatsapp {
+  background: linear-gradient(135deg, #25D366, #128C7E) !important;
+  box-shadow: 0 6px 24px rgba(37,211,102,0.4) !important;
+  animation: floatPulseWA 2.6s ease-in-out infinite 0.4s !important;
+}
+
+/* Float button labels (desktop only) */
+.float-btn .float-label,
+body .float-btn .float-label {
+  position: absolute !important;
+  right: 68px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  background: #1A0800 !important;
+  color: #fff !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  white-space: nowrap !important;
+  padding: 7px 14px !important;
+  border-radius: 8px !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transition: opacity 0.2s, transform 0.2s !important;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.25) !important;
+}
+
+.float-btn:hover .float-label,
+body .float-btn:hover .float-label {
+  opacity: 1 !important;
+  transform: translateY(-50%) translateX(-4px) !important;
+}
+
+/* ── Mobile-specific float button positioning ── */
+@media (max-width: 960px) {
+  .float-actions.float-actions,
+  body .float-actions {
     position: fixed !important;
-    top: auto !important; /* Don't center vertically */
-    bottom: 24px !important; /* Position at bottom-right */
+    top: auto !important;
+    bottom: 24px !important;
     right: 16px !important;
     left: auto !important;
     transform: none !important;
-    flex-direction: row !important; /* Side by side on mobile */
+    flex-direction: row !important;
     gap: 12px !important;
     z-index: 9998 !important;
     isolation: isolate !important;
   }
 
-  .float-btn {
+  .float-btn.float-btn,
+  body .float-btn {
     width: 52px !important;
     height: 52px !important;
     min-width: 52px !important;
@@ -2547,135 +2579,138 @@ p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
     border-radius: 50% !important;
     box-shadow: 0 4px 20px rgba(0,0,0,0.4) !important;
     flex: none !important;
-    position: relative !important;
   }
 
-  .float-btn svg {
+  .float-btn.float-btn svg,
+  body .float-btn svg {
     width: 24px !important;
     height: 24px !important;
     display: block !important;
   }
 
-  .float-label {
-    display: none !important; /* Hide labels on mobile */
+  .float-btn .float-label,
+  body .float-btn .float-label {
+    display: none !important;
   }
 }
 
-/* Very small screens (375px and below) */
+/* Very small screens */
 @media (max-width: 480px) {
-  .float-actions {
+  .float-actions.float-actions,
+  body .float-actions {
     bottom: 16px !important;
     right: 12px !important;
     gap: 10px !important;
   }
 
-  .float-btn {
+  .float-btn.float-btn,
+  body .float-btn {
     width: 48px !important;
     height: 48px !important;
     min-width: 48px !important;
     min-height: 48px !important;
   }
 
-  .float-btn svg {
+  .float-btn.float-btn svg,
+  body .float-btn svg {
     width: 22px !important;
     height: 22px !important;
   }
 }
 
-/* Extra small screens (360px and below) */
+/* Extra small screens */
 @media (max-width: 360px) {
-  .float-actions {
+  .float-actions.float-actions,
+  body .float-actions {
     bottom: 12px !important;
     right: 10px !important;
     gap: 8px !important;
   }
 
-  .float-btn {
+  .float-btn.float-btn,
+  body .float-btn {
     width: 44px !important;
     height: 44px !important;
     min-width: 44px !important;
     min-height: 44px !important;
   }
 
-  .float-btn svg {
+  .float-btn.float-btn svg,
+  body .float-btn svg {
     width: 20px !important;
     height: 20px !important;
   }
 }
 
-/* Ensure float buttons are never hidden by other elements */
-.float-actions,
-.float-btn {
-  visibility: visible !important;
-  opacity: 1 !important;
+/* Safe area for notched phones */
+@supports (padding: max(0px)) {
+  @media (max-width: 960px) {
+    .float-actions.float-actions,
+    body .float-actions {
+      right: max(16px, env(safe-area-inset-right)) !important;
+      bottom: max(16px, env(safe-area-inset-bottom)) !important;
+    }
+  }
 }
 
-/* When booking modal is open, hide float buttons to avoid overlap */
+/* Hide float buttons when booking modal is open */
 #bkModal.open ~ .float-actions,
 #bkModal.open ~ body .float-actions,
 body:has(#bkModal.open) .float-actions {
   display: none !important;
 }
 
-/* ── FIX 3: Mobile Drawer — Ensure proper z-index and visibility ── */
-.mob-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(4,12,30,0.7);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  z-index: 490;
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.3s ease, visibility 0.3s ease;
-  display: block !important;
-}
-
-.mob-overlay.open {
-  opacity: 1;
-  visibility: visible;
-}
-
-.mob-drawer {
-  position: fixed;
-  top: 0;
-  right: 0;
-  width: min(320px, 85vw);
-  height: 100dvh;
-  background: linear-gradient(160deg, #1A0F08, #0D1A2A);
-  border-left: 1px solid rgba(244,123,0,0.25);
-  z-index: 500;
-  display: flex;
-  flex-direction: column;
-  transform: translateX(100%);
-  transition: transform 0.32s cubic-bezier(0.4,0,0.2,1);
-  box-shadow: -8px 0 40px rgba(4,12,30,0.6);
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
-.mob-drawer.open {
-  transform: translateX(0);
-}
-
-/* Ensure drawer is above float buttons when open */
-.mob-drawer.open {
-  z-index: 9997 !important;
-}
-
-.mob-overlay.open {
-  z-index: 9996 !important;
-}
-
-/* When drawer is open, hide float buttons */
+/* Hide float buttons when mobile drawer is open */
 body:has(.mob-drawer.open) .float-actions,
 body.drawer-open .float-actions {
   display: none !important;
 }
 
-/* ── FIX 4: Header mobile layout — prevent hamburger from being pushed off-screen ── */
+/* ── Mobile Drawer fixes ── */
+.mob-overlay.mob-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  background: rgba(4,12,30,0.7) !important;
+  backdrop-filter: blur(6px) !important;
+  -webkit-backdrop-filter: blur(6px) !important;
+  z-index: 9996 !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  transition: opacity 0.3s ease, visibility 0.3s ease !important;
+  display: block !important;
+}
+
+.mob-overlay.mob-overlay.open {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.mob-drawer.mob-drawer {
+  position: fixed !important;
+  top: 0 !important;
+  right: 0 !important;
+  width: min(320px, 85vw) !important;
+  height: 100dvh !important;
+  background: linear-gradient(160deg, #1A0F08, #0D1A2A) !important;
+  border-left: 1px solid rgba(244,123,0,0.25) !important;
+  z-index: 9997 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  transform: translateX(100%) !important;
+  transition: transform 0.32s cubic-bezier(0.4,0,0.2,1) !important;
+  box-shadow: -8px 0 40px rgba(4,12,30,0.6) !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+.mob-drawer.mob-drawer.open {
+  transform: translateX(0) !important;
+}
+
+/* ── Header mobile layout fixes ── */
 @media (max-width: 960px) {
-  header {
+  headerheader,
+  body header {
     padding: 0 12px !important;
     height: 56px !important;
     min-height: 56px !important;
@@ -2687,11 +2722,11 @@ body.drawer-open .float-actions {
     z-index: 200 !important;
   }
 
-  .hero {
+  .hero.hero {
     padding-top: 56px !important;
   }
 
-  .logo {
+  .logo.logo {
     flex: 1 1 auto !important;
     min-width: 0 !important;
     overflow: hidden !important;
@@ -2700,7 +2735,7 @@ body.drawer-open .float-actions {
     align-items: center !important;
   }
 
-  .logo-emblem {
+  .logo-emblem.logo-emblem {
     width: 36px !important;
     height: 36px !important;
     font-size: 18px !important;
@@ -2710,7 +2745,7 @@ body.drawer-open .float-actions {
     justify-content: center !important;
   }
 
-  .logo-name {
+  .logo-name.logo-name {
     font-size: 14px !important;
     white-space: nowrap !important;
     overflow: hidden !important;
@@ -2722,34 +2757,5 @@ body.drawer-open .float-actions {
   .logo-tagline,
   .logo-subtitle {
     display: none !important;
-  }
-}
-
-/* ── FIX 5: Ensure hamburger is always clickable and visible ── */
-.ham-btn {
-  -webkit-touch-callout: none;
-  -webkit-user-select: none;
-  user-select: none;
-  touch-action: manipulation;
-}
-
-/* Prevent any parent from clipping the hamburger */
-header {
-  overflow: visible !important;
-}
-
-/* Ensure the hamburger spans are always visible */
-.ham-btn span {
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-}
-
-/* ── FIX 6: Safe area handling for notched phones ── */
-@supports (padding: max(0px)) {
-  @media (max-width: 960px) {
-    .float-actions {
-      right: max(16px, env(safe-area-inset-right)) !important;
-      bottom: max(16px, env(safe-area-inset-bottom)) !important;
-    }
   }
 }
