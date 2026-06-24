@@ -136,7 +136,7 @@ header.scrolled {
   min-height: 100vh;
   position: relative; overflow: hidden;
   display: flex; align-items: center;
-  padding-top: 68px;
+  padding-top: 68px;        /* matches header height exactly — no extra gap */
   background: var(--nv-900);
 }
 
@@ -181,10 +181,14 @@ header.scrolled {
   mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%);
 }
 
-/* Tricolor accent stripe at top */
+/* Hide phone number from desktop nav — float buttons handle this */
+.nav-phone { display: none !important; }
+
+/* Tricolor stripe — keep inside hero only, prevent overflow */
 .tricolor-stripe {
   position: absolute; top: 0; left: 0; right: 0;
   height: 3px; display: flex;
+  overflow: hidden;
 }
 .tricolor-stripe span { flex: 1; }
 .tricolor-stripe span:nth-child(1) { background: var(--sf-500); }
@@ -194,7 +198,7 @@ header.scrolled {
 .hero-inner {
   position: relative; z-index: 2;
   max-width: 1240px; margin: 0 auto;
-  padding: 60px 5% 100px;
+  padding: 32px 5% 80px;
   display: grid; grid-template-columns: 0.9fr 1.1fr;
   gap: 64px; align-items: center;
   width: 100%;
@@ -2323,7 +2327,7 @@ p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
 
 /* ── Show hamburger on mobile, hide on desktop ── */
 @media (max-width: 960px) {
-  .ham-btn { display: flex; }
+  .ham-btn { display: flex !important; }
 }
 @media (min-width: 961px) {
   .ham-btn   { display: none !important; }
@@ -2331,13 +2335,26 @@ p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
   .mob-overlay { display: none !important; }
 }
 
-/* ── Hamburger on light/peach header ── */
-.light-theme .ham-btn,
-header .ham-btn {
-  background: rgba(244,123,0,0.18);
-  border: 1.5px solid rgba(244,123,0,0.35);
+/* ── Hamburger always visible on any screen — solid orange ── */
+.ham-btn {
+  background: #F47B00 !important;
+  border: none !important;
 }
-.light-theme .ham-btn span,
-header .ham-btn span {
-  background: #D46800;
+.ham-btn span {
+  background: #ffffff !important;  /* white lines on orange bg — visible on ANY header colour */
+  height: 3px !important;
+  width: 20px !important;
+}
+
+/* ── Shrink header on small screens so hamburger never gets pushed off ── */
+@media (max-width: 480px) {
+  header {
+    padding: 0 12px !important;
+  }
+  .logo { gap: 8px !important; }
+  .logo-emblem { width: 36px !important; height: 36px !important; font-size: 18px !important; }
+  .logo-name { font-size: 13px !important; }
+  .logo-tagline { font-size: 7.5px !important; letter-spacing: 1px !important; }
+  .logo-subtitle { font-size: 7px !important; letter-spacing: 1px !important; }
+  .ham-btn { width: 38px !important; height: 38px !important; flex-shrink: 0 !important; }
 }
