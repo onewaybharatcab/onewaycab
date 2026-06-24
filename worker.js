@@ -441,28 +441,27 @@ async function handleBookingNotify(request, env, allowOrigin) {
   }
 
   const stops = Array.isArray(b.extraCities) ? b.extraCities.filter(c => c.trim()) : [];
-  const tripDetails = `${b.vehicle || "—"} | ${b.from || "—"}${stops.length ? " → " + stops.join(" → ") : ""} → ${b.to || "—"}`;
-  const passenger   = `${b.name} (+91${b.phone})`;
-  const fareSummary = `Paid: ₹${Number(b.payAmt || b.advance || 0).toLocaleString("en-IN")} | Due: ₹${Number((b.fare || 0) - (b.payAmt || b.advance || 0)).toLocaleString("en-IN")}`;
-  const tripTiming  = `${b.date || "—"} ${b.time || ""}`.trim();
 
-  // Build fallback structures — Meta error 132000/132001 means wrong body params,
-  // so we try with and without the components array, and both "en" and "en_US".
+  // Template variables — must match oneway_notification exactly (8 params):
+  // {{1}} Booking ID  {{2}} Name  {{3}} Phone  {{4}} From  {{5}} To
+  // {{6}} Paid amt    {{7}} Due amt              {{8}} Trip timing
+  const fromCity   = `${b.from || "—"}${stops.length ? " → " + stops.join(" → ") : ""}`;
+  const toCity     = b.to || "—";
+  const paidAmt    = `₹${Number(b.payAmt || b.advance || 0).toLocaleString("en-IN")}`;
+  const dueAmt     = `₹${Number((b.fare || 0) - (b.payAmt || b.advance || 0)).toLocaleString("en-IN")}`;
+  const tripTiming = `${b.date || "—"} ${b.time || ""}`.trim();
+
   const makePayloads = (to) => [
-    // Attempt 1: 5 body params, language "en"
     { messaging_product: "whatsapp", to, type: "template", template: { name: notifTemplate, language: { code: "en" }, components: [{ type: "body", parameters: [
-      { type: "text", text: b.id }, { type: "text", text: passenger },
-      { type: "text", text: tripDetails }, { type: "text", text: fareSummary },
+      { type: "text", text: String(b.id) },
+      { type: "text", text: String(b.name) },
+      { type: "text", text: `+91${b.phone}` },
+      { type: "text", text: fromCity },
+      { type: "text", text: toCity },
+      { type: "text", text: paidAmt },
+      { type: "text", text: dueAmt },
       { type: "text", text: tripTiming }
     ]}]}},
-    // Attempt 2: same but language "en_US"
-    { messaging_product: "whatsapp", to, type: "template", template: { name: notifTemplate, language: { code: "en_US" }, components: [{ type: "body", parameters: [
-      { type: "text", text: b.id }, { type: "text", text: passenger },
-      { type: "text", text: tripDetails }, { type: "text", text: fareSummary },
-      { type: "text", text: tripTiming }
-    ]}]}},
-    // Attempt 3: no components (template has no variables)
-    { messaging_product: "whatsapp", to, type: "template", template: { name: notifTemplate, language: { code: "en" } }},
   ];
 
   const trySend = async (to, label) => {
@@ -728,22 +727,29 @@ async function handleCustomerConfirm(request, env, allowOrigin) {
   const stops = Array.isArray(b.extraCities) ? b.extraCities.filter(c => c.trim()) : [];
   const customerNumber = `91${b.phone}`;
   const notifTemplate  = env.WHATSAPP_NOTIFY_TEMPLATE_NAME || "oneway_notification";
-  const tripDetails    = `${b.vehicle || "—"} | ${b.from || "—"}${stops.length ? " → " + stops.join(" → ") : ""} → ${b.to || "—"}`;
-  const passenger      = `${b.name} (+91${b.phone})`;
-  const fareSummary    = `Paid: ₹${Number(b.payAmt || 0).toLocaleString("en-IN")} | Due: ₹${Number((b.fare || 0) - (b.payAmt || 0)).toLocaleString("en-IN")}`;
-  const tripTiming     = `${b.date || "—"} ${b.time || ""}`.trim();
+
+  // Template variables — must match oneway_notification exactly (8 params):
+  // {{1}} Booking ID  {{2}} Name  {{3}} Phone  {{4}} From  {{5}} To
+  // {{6}} Paid amt    {{7}} Due amt              {{8}} Trip timing
+  const fromCity   = `${b.from || "—"}${stops.length ? " → " + stops.join(" → ") : ""}`;
+  const toCity     = b.to || "—";
+  const paidAmt    = `₹${Number(b.payAmt || 0).toLocaleString("en-IN")}`;
+  const dueAmt     = `₹${Number((b.fare || 0) - (b.payAmt || 0)).toLocaleString("en-IN")}`;
+  const tripTiming = `${b.date || "—"} ${b.time || ""}`.trim();
 
   const params = [
-    { type: "text", text: b.id }, { type: "text", text: passenger },
-    { type: "text", text: tripDetails }, { type: "text", text: fareSummary },
+    { type: "text", text: String(b.id) },
+    { type: "text", text: String(b.name) },
+    { type: "text", text: `+91${b.phone}` },
+    { type: "text", text: fromCity },
+    { type: "text", text: toCity },
+    { type: "text", text: paidAmt },
+    { type: "text", text: dueAmt },
     { type: "text", text: tripTiming }
   ];
 
-  // Retry with fallback structures — same approach as OTP to handle Meta template mismatches
   const payloads = [
-    { messaging_product: "whatsapp", to: customerNumber, type: "template", template: { name: notifTemplate, language: { code: "en" },    components: [{ type: "body", parameters: params }] }},
-    { messaging_product: "whatsapp", to: customerNumber, type: "template", template: { name: notifTemplate, language: { code: "en_US" }, components: [{ type: "body", parameters: params }] }},
-    { messaging_product: "whatsapp", to: customerNumber, type: "template", template: { name: notifTemplate, language: { code: "en" } }},
+    { messaging_product: "whatsapp", to: customerNumber, type: "template", template: { name: notifTemplate, language: { code: "en" }, components: [{ type: "body", parameters: params }] }},
   ];
 
   for (const payload of payloads) {

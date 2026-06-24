@@ -1865,3 +1865,52 @@ p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
   0%,100% { box-shadow: 0 0 0 0 rgba(37,211,102,.5); }
   50%      { box-shadow: 0 0 0 10px rgba(37,211,102,.0); transform: scale(1.02); }
 }
+
+
+/* ═══════════════════════ MOBILE BOOKING WIDGET FIXES ═══════════════════════ */
+@media (max-width: 480px) {
+  /* Tighten widget padding so it fits narrow screens */
+  .widget-top-bar { padding: 14px 16px; }
+  .widget-body    { padding: 16px 14px; }
+  .widget-footer  { padding: 10px 14px; gap: 10px; flex-wrap: wrap; justify-content: center; }
+
+  /* Smaller footer trust items */
+  .wf-item { font-size: 10px; }
+
+  /* Trip tabs — slightly smaller text */
+  .trip-tab { font-size: 11px; padding: 8px 4px; }
+
+  /* Date + time row stacks on very small screens */
+  .row-2 { grid-template-columns: 1fr 1fr; gap: 8px; }
+
+  /* Search button */
+  .search-btn { font-size: 14px; padding: 14px; }
+
+  /* Field inputs */
+  .field-input { font-size: 13px; padding: 12px 12px 12px 38px; }
+  .field-icon  { font-size: 14px; left: 12px; }
+
+  /* Widget title */
+  .widget-title      { font-size: 14px; }
+  .widget-title-icon { width: 28px; height: 28px; font-size: 14px; }
+  .widget-instant    { font-size: 9px; letter-spacing: 1px; }
+
+  /* Hero section — remove excess top padding */
+  .hero-inner { padding-top: 10px !important; padding-bottom: 40px !important; }
+
+  /* Booking modal on mobile */
+  .bkm-box { border-radius: 16px; max-height: 95vh; }
+  .bkm-head { padding: 14px 16px; }
+  .bkm-body { padding: 14px 16px; }
+  .bkm-steps { gap: 4px; padding: 10px 16px; }
+  .bkm-step-pill { font-size: 9px; padding: 5px 8px; }
+  .bkm-fgrid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 360px) {
+  .widget-body  { padding: 12px 10px; }
+  .widget-top-bar { padding: 12px 12px; }
+  .trip-tab { font-size: 10px; padding: 7px 3px; letter-spacing: 0; }
+  .wf-item  { font-size: 9px; }
+  .row-2    { grid-template-columns: 1fr; gap: 8px; }
+}
