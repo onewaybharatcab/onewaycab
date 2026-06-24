@@ -114,6 +114,59 @@
   ]
 }
 </script>
+
+<style media="screen and (max-width: 960px)">
+  /* FORCE SHOW on mobile - cannot be overridden */
+  #hamBtn {
+    display: flex !important;
+    position: fixed !important;
+    top: 10px !important;
+    right: 10px !important;
+    z-index: 9999999 !important;
+    width: 44px !important;
+    height: 44px !important;
+    background: #F47B00 !important;
+    border-radius: 10px !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-direction: column !important;
+    gap: 4px !important;
+    border: none !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+  #hamBtn span {
+    display: block !important;
+    width: 20px !important;
+    height: 2px !important;
+    background: #fff !important;
+  }
+
+  .float-actions {
+    display: flex !important;
+    position: fixed !important;
+    bottom: 10px !important;
+    right: 10px !important;
+    z-index: 9999999 !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+
+  .float-btn {
+    display: flex !important;
+    width: 48px !important;
+    height: 48px !important;
+    border-radius: 50% !important;
+    align-items: center !important;
+    justify-content: center !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+  .float-btn.call { background: #F47B00 !important; }
+  .float-btn.whatsapp { background: #25D366 !important; }
+</style>
 </head>
 <a class="skip-to-content" href="#main-content" style="position:absolute;left:-9999px;top:0;z-index:9999;padding:8px 16px;background:var(--sf-accent,#f47b00);color:#fff;font-weight:600;border-radius:0 0 6px 0;text-decoration:none">Skip to main content</a>
 <body>
@@ -278,7 +331,7 @@
   </nav>
 
   <!-- Mobile hamburger button (hidden on desktop) -->
-  <button class="ham-btn" id="hamBtn" aria-label="Open menu" aria-expanded="false">
+  <button class="ham-btn" id="hamBtn" aria-label="Open menu" aria-expanded="false" style="display:flex;position:fixed;top:10px;right:10px;z-index:9999999;width:44px;height:44px;background:#F47B00;border-radius:10px;align-items:center;justify-content:center;flex-direction:column;gap:4px;border:none;" >
     <span></span><span></span><span></span>
   </button>
 </header>
@@ -991,7 +1044,7 @@
 
 
 <!-- Floating Call + WhatsApp -->
-<div class="float-actions">
+<div class="float-actions" style="display:flex;position:fixed;bottom:10px;right:10px;z-index:9999999;flex-direction:column;gap:8px;" >
   <a href="tel:+919355757579" class="float-btn call" title="Call us" aria-label="Call us">
     <span class="float-label">Call Us</span>
     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6.62 10.79a15.05 15.05 0 0 0 6.59 6.59l2.2-2.2a1 1 0 0 1 1.01-.24c1.12.37 2.33.57 3.58.57a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1C10.61 21 3 13.39 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.46.57 3.58a1 1 0 0 1-.24 1.01l-2.21 2.2z" fill="white"/></svg>
@@ -1007,67 +1060,5 @@
 
 
 <script defer src="./assets/js/main.js"></script>
-
-
-<!-- Android Touch Fix -->
-<script>
-// Force buttons clickable on Android (Vivo, OPPO, Samsung)
-(function() {
-  function makeClickable(selector, handler) {
-    var elements = document.querySelectorAll(selector);
-    elements.forEach(function(el) {
-      el.addEventListener('touchstart', function(e) {
-        e.stopPropagation();
-        if (handler) handler.call(this, e);
-      }, {passive: true});
-
-      el.addEventListener('click', function(e) {
-        e.stopPropagation();
-        if (handler) handler.call(this, e);
-      });
-    });
-  }
-
-  // Make hamburger clickable
-  makeClickable('#hamBtn', function(e) {
-    e.preventDefault();
-    if (typeof toggleMobMenu === 'function') {
-      toggleMobMenu();
-    } else if (typeof openMobMenu === 'function') {
-      openMobMenu();
-    } else {
-      // Fallback: toggle drawer manually
-      var drawer = document.getElementById('mobDrawer');
-      var overlay = document.getElementById('mobOverlay');
-      if (drawer) {
-        drawer.classList.toggle('open');
-        if (overlay) overlay.classList.toggle('open');
-      }
-    }
-  });
-
-  // Make float buttons clickable
-  makeClickable('.float-btn', function(e) {
-    e.preventDefault();
-    var href = this.getAttribute('href');
-    if (href) {
-      window.location.href = href;
-    }
-  });
-
-  // Ensure buttons are visible and clickable
-  document.addEventListener('DOMContentLoaded', function() {
-    var hamBtn = document.getElementById('hamBtn');
-    if (hamBtn) {
-      hamBtn.style.cssText = 'display:flex !important;visibility:visible !important;opacity:1 !important;z-index:999999 !important;position:relative !important;';
-    }
-
-    document.querySelectorAll('.float-btn').forEach(function(btn) {
-      btn.style.cssText = 'display:flex !important;visibility:visible !important;opacity:1 !important;z-index:999999 !important;position:relative !important;';
-    });
-  });
-})();
-</script>
-
 </body>
 </html>
