@@ -2489,3 +2489,192 @@ body:has(#bkModal.open) .float-actions {
   .float-btn { width: 44px !important; height: 44px !important; }
   .float-btn svg { width: 20px !important; height: 20px !important; }
 }
+
+
+
+/* ══════════════════════════════════════════════════════════════════════
+   MOBILE DRAWER — Peach Theme Fix
+   Changes the dark drawer to match the website's warm peach theme.
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* ─── Drawer Background — Peach instead of dark ─── */
+.mob-drawer {
+  background: linear-gradient(160deg, #FFF5EE, #FFE8DC) !important;
+  border-left: 1px solid rgba(244,123,0,0.25) !important;
+  box-shadow: -8px 0 40px rgba(180,90,30,0.2) !important;
+}
+
+/* ─── Drawer Header — Peach gradient ─── */
+.mob-drawer-head {
+  background: linear-gradient(135deg, rgba(244,123,0,0.12), rgba(255,240,232,0.9)) !important;
+  border-bottom: 1px solid rgba(244,123,0,0.2) !important;
+}
+
+/* ─── Logo name in header — Dark text on peach ─── */
+.mob-logo-name {
+  background: linear-gradient(135deg, #F47B00, #E8BD3A) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+}
+
+/* ─── Close button — Dark style for light background ─── */
+.mob-close {
+  background: rgba(60,25,5,0.08) !important;
+  color: rgba(60,25,5,0.6) !important;
+}
+
+.mob-close:hover {
+  background: rgba(244,123,0,0.2) !important;
+  color: #F47B00 !important;
+}
+
+/* ─── Navigation Links — Dark text on peach ─── */
+.mob-link {
+  color: rgba(60,25,5,0.85) !important;
+  border-bottom: 1px solid rgba(60,25,5,0.08) !important;
+}
+
+.mob-link:hover, .mob-link:active {
+  background: rgba(244,123,0,0.1) !important;
+  color: #F47B00 !important;
+}
+
+/* ─── Bottom Actions Area — Peach background ─── */
+.mob-actions {
+  border-top: 1px solid rgba(244,123,0,0.2) !important;
+  background: rgba(255,255,255,0.5) !important;
+}
+
+/* ─── Book Now Button — Keep orange gradient (already matches) ─── */
+.mob-book-btn {
+  background: linear-gradient(135deg, #F47B00, #A85200) !important;
+  color: #fff !important;
+  box-shadow: 0 6px 24px rgba(244,123,0,0.35) !important;
+}
+
+/* ─── Call Button — Dark style for light background ─── */
+.mob-call-btn {
+  background: rgba(60,25,5,0.07) !important;
+  border: 1px solid rgba(60,25,5,0.15) !important;
+  color: rgba(60,25,5,0.75) !important;
+}
+
+.mob-call-btn:hover {
+  background: rgba(244,123,0,0.12) !important;
+  border-color: rgba(244,123,0,0.35) !important;
+  color: #F47B00 !important;
+}
+
+/* ─── Overlay — Lighter for peach theme ─── */
+.mob-overlay {
+  background: rgba(60,25,5,0.4) !important;
+  backdrop-filter: blur(6px) !important;
+  -webkit-backdrop-filter: blur(6px) !important;
+}
+
+/* ─── Tricolor stripe — Keep as is (Indian flag colors) ─── */
+.mob-tricolor span:nth-child(1) { background: #FF9933 !important; }
+.mob-tricolor span:nth-child(2) { background: #ffffff !important; }
+.mob-tricolor span:nth-child(3) { background: #138808 !important; }
+
+
+
+/* ══════════════════════════════════════════════════════════════════════
+   ANDROID TOUCH FIX: Ensure hamburger & float buttons are clickable
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* ─── Force hamburger above all content ─── */
+#hamBtn {
+  position: relative !important;
+  z-index: 99999 !important;
+  pointer-events: auto !important;
+  touch-action: manipulation !important;
+  -webkit-touch-callout: none !important;
+  -webkit-user-select: none !important;
+  user-select: none !important;
+}
+
+/* ─── Force float buttons above all content ─── */
+.float-actions {
+  position: fixed !important;
+  z-index: 99999 !important;
+  pointer-events: auto !important;
+}
+
+.float-btn {
+  position: relative !important;
+  z-index: 99999 !important;
+  pointer-events: auto !important;
+  touch-action: manipulation !important;
+  -webkit-touch-callout: none !important;
+  -webkit-user-select: none !important;
+  user-select: none !important;
+}
+
+/* ─── Ensure header doesn't block hamburger clicks ─── */
+header {
+  pointer-events: none !important;
+}
+
+header > * {
+  pointer-events: auto !important;
+}
+
+/* ─── Ensure booking widget doesn't block float buttons ─── */
+.booking-widget {
+  pointer-events: auto !important;
+}
+
+/* ─── Hero section should not block clicks ─── */
+.hero-inner {
+  pointer-events: none !important;
+}
+
+.hero-inner > * {
+  pointer-events: auto !important;
+}
+
+/* ─── Specifically allow clicks on hamburger and float buttons ─── */
+#hamBtn,
+.float-btn,
+.float-actions {
+  pointer-events: auto !important;
+}
+
+/* ─── Android Chrome specific fix ─── */
+@supports (-webkit-touch-callout: none) {
+  #hamBtn,
+  .float-btn {
+    transform: translateZ(0) !important;
+    will-change: transform !important;
+  }
+}
+
+/* ─── Ensure no parent is blocking events ─── */
+header,
+.hero,
+.hero-inner,
+.booking-widget,
+.widget-body,
+.widget-top-bar {
+  position: relative !important;
+}
+
+/* ─── Fix for Vivo/OPPO Android browsers ─── */
+@media (max-width: 960px) {
+  #hamBtn {
+    position: relative !important;
+    z-index: 2147483647 !important; /* Max z-index */
+  }
+
+  .float-actions {
+    position: fixed !important;
+    z-index: 2147483647 !important; /* Max z-index */
+  }
+
+  .float-btn {
+    position: relative !important;
+    z-index: 2147483647 !important; /* Max z-index */
+  }
+}
