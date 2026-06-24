@@ -899,9 +899,13 @@ async function _bkmVerifyAndConfirm(response,statusEl){
     // best-effort (the worker already treats them as non-critical), so we
     // race them against a timeout — a slow/hanging WhatsApp API call must
     // never trap the customer on this screen after they've already paid.
-    await Promise.race([
-      _bkmNotifyPayment(response.razorpay_payment_id),
-      new Promise(resolve => setTimeout(resolve, 8000))
+    // Fire admin + customer notifications in parallel with independent
+    // 8-second timeouts — sequential was fine in theory but if the admin
+    // notify took the full 8s the customer message was silently skipped.
+    const _withTimeout = (p, ms) => Promise.race([p, new Promise(r => setTimeout(r, ms))]);
+    await Promise.all([
+      _withTimeout(_bkmNotifyPayment(response.razorpay_payment_id), 8000),
+      _withTimeout(_bkmNotifyCustomer(response.razorpay_payment_id), 8000)
     ]);
     _bkmShowDoneScreen();
   }catch(e){
@@ -984,10 +988,15 @@ async function _bkmNotifyAdmin(){
 }
 
 async function _bkmNotifyPayment(paymentId){
+  // Must send the full booking object — worker.js builds tripDetails
+  // (vehicle|from→to) and tripTiming (date time) from these fields.
+  // The old payload omitted from/to/date/time/extraCities, which caused
+  // the WhatsApp template parameters to arrive as "—", triggering Meta
+  // error 132000 (parameter mismatch) and silently dropping the message.
+  const S=BKM.S; const stops=(S.extraCities||[]).filter(c=>c.trim());
   try{
-    await fetch('/api/booking/notify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({booking:{id:BKM.S.bookingId,paymentId,payAmt:BKM.S.payAmt,name:BKM.S.name,phone:BKM.S.phone,vehicle:BKM.S.vehicleName,fare:BKM.S.totalFare,type:'payment'}})});
+    await fetch('/api/booking/notify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({booking:{id:S.bookingId,paymentId,payAmt:S.payAmt,name:S.name,phone:S.phone,email:S.email,from:S.pu,to:S.dr,vehicle:S.vehicleName,tripType:S.trip,date:S.date,time:S.time,retdate:S.retdate,fare:S.totalFare,advance:S.advAmt,distKm:S.distKm,pax:S.pax,notes:S.notes,extraCities:stops,type:'payment'}})});
   }catch(e){ /* non-critical */ }
-  await _bkmNotifyCustomer(paymentId);
 }
 
 async function _bkmNotifyCustomer(paymentId){
