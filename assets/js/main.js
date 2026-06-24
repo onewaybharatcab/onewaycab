@@ -892,11 +892,55 @@ async function _bkmVerifyAndConfirm(response,statusEl){
     }
     bkmToast('✅ Payment successful! Booking confirmed.');
     if(statusEl){ statusEl.style.display='block'; statusEl.style.color='var(--gr-300)'; statusEl.textContent='✅ Payment successful! Booking ID: '+BKM.S.bookingId; }
-    _bkmNotifyPayment(response.razorpay_payment_id);
-    _bkmGoStep(5);
+    // Lock the payment panel immediately so the booking can't be paid for
+    // twice and the form doesn't look "still active" once it's done.
+    _bkmLockPayPanel();
+    // Send both admin + customer WhatsApp notifications. These are
+    // best-effort (the worker already treats them as non-critical), so we
+    // race them against a timeout — a slow/hanging WhatsApp API call must
+    // never trap the customer on this screen after they've already paid.
+    await Promise.race([
+      _bkmNotifyPayment(response.razorpay_payment_id),
+      new Promise(resolve => setTimeout(resolve, 8000))
+    ]);
+    _bkmShowDoneScreen();
   }catch(e){
     bkmToast('⚠️ Could not confirm payment status. Please contact us if money was deducted.');
   }
+}
+
+// Disable the "Pay Now" button and payment-amount options the instant
+// payment is verified — prevents double-payment and stops the panel from
+// looking like it's still waiting for input.
+function _bkmLockPayPanel(){
+  document.querySelectorAll('.bkm-pay-opt').forEach(el=>{ el.disabled=true; el.style.opacity='.5'; el.style.pointerEvents='none'; });
+  const payBtn=document.querySelector('.bkm-btn-pay');
+  if(payBtn){ payBtn.disabled=true; payBtn.style.opacity='.5'; payBtn.style.pointerEvents='none'; payBtn.textContent='✓ PAID'; }
+  const customRow=document.getElementById('bkmCustomRow');
+  if(customRow) customRow.style.display='none';
+  // "Confirm on WhatsApp" is a manual fallback for when payment fails —
+  // once payment has actually succeeded and both WhatsApp notifications
+  // are on their way, it no longer serves a purpose, so hide it.
+  const waBtn=document.querySelector('.bkm-btn-wa');
+  if(waBtn) waBtn.style.display='none';
+}
+
+// Replaces the confirmation panel with a final "all done" message once
+// payment is verified and both notifications have been sent, then closes
+// the modal automatically after a short pause so the person has time to
+// read their booking ID.
+function _bkmShowDoneScreen(){
+  const wrap=document.querySelector('.bkm-confirm-wrap');
+  if(wrap){
+    const ic=wrap.querySelector('.bkm-confirm-ic');
+    if(ic) ic.textContent='✓';
+    const title=wrap.querySelector('h3');
+    if(title) title.textContent='BOOKING CONFIRMED!';
+    const sub=wrap.querySelector('p');
+    if(sub) sub.textContent='Payment received. We\u2019ve sent confirmation on WhatsApp — our team will assign your driver shortly.';
+  }
+  bkmToast('✅ Booking confirmed — closing…', 3500);
+  setTimeout(()=>{ bkmClose(); }, 3500);
 }
 
 function bkmSendWA(){
@@ -930,7 +974,7 @@ async function _bkmNotifyPayment(paymentId){
   try{
     await fetch('/api/booking/notify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({booking:{id:BKM.S.bookingId,paymentId,payAmt:BKM.S.payAmt,name:BKM.S.name,phone:BKM.S.phone,vehicle:BKM.S.vehicleName,fare:BKM.S.totalFare,type:'payment'}})});
   }catch(e){ /* non-critical */ }
-  _bkmNotifyCustomer(paymentId);
+  await _bkmNotifyCustomer(paymentId);
 }
 
 async function _bkmNotifyCustomer(paymentId){

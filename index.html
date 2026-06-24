@@ -14,12 +14,30 @@
       if(el) el.classList.add('out');
     }, Math.max(0, MIN-(Date.now()-start)));
   }
+  // Instantly hide the loader with no delay — used when the page is
+  // restored from the browser's back/forward cache (bfcache) rather than
+  // freshly loaded. On a bfcache restore, scripts don't re-run and the
+  // "load" event never fires again, so the normal dismiss() path above
+  // would never run and the loader would get stuck showing on top of the
+  // already-rendered page (this is what caused the loader to reappear
+  // mid-scroll when navigating back on mobile).
+  function hideNow(){
+    _d = true;
+    var el = document.getElementById('loader');
+    if(el) el.classList.add('out');
+  }
   window._loaderStart = Date.now();
   if(document.readyState==='complete'){ dismiss(); }
   else {
     window.addEventListener('load', dismiss);
     setTimeout(dismiss, 5000); // hard cap: loader gone in 5s no matter what
   }
+  // Fires on every page show, including bfcache restores (event.persisted
+  // is true in that case) and normal forward navigation. Always make sure
+  // the loader is gone the moment the page becomes visible again.
+  window.addEventListener('pageshow', function(e){
+    if(e.persisted) hideNow();
+  });
 })();
 </script>
 <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">

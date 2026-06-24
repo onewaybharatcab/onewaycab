@@ -838,7 +838,19 @@ header.scrolled {
 }
 .float-btn:hover .float-label { opacity: 1; transform: translateY(-50%) translateX(-4px); }
 @media (max-width: 768px) {
-  .float-actions { top: 50%; right: max(16px, env(safe-area-inset-right, 16px)); transform: translateY(-50%); gap: 12px; }
+  /* On mobile the booking widget sits at the top of the page (.hero { order:1 })
+     and its card extends almost to the right edge of the screen. Centering
+     these buttons vertically (top:50%) put them right on top of the
+     pickup/drop fields. Anchoring to the bottom-right corner instead keeps
+     them clear of the card and matches the usual mobile call/WhatsApp
+     button placement. */
+  .float-actions {
+    top: auto;
+    bottom: max(20px, env(safe-area-inset-bottom, 20px));
+    right: max(16px, env(safe-area-inset-right, 16px));
+    transform: none;
+    gap: 12px;
+  }
   .float-btn { width: 52px; height: 52px; }
   .float-btn svg { width: 25px; height: 25px; }
   .float-label { display: none; }
@@ -879,7 +891,10 @@ header.scrolled {
   #reviews { order: 8; }
   .cta-section { order: 9; }
   footer { order: 10; }
-  .float-actions { order: 11; }
+  /* .float-actions is position:fixed (taken out of flow), so a flex
+     "order" here has no effect — its on-screen position is controlled
+     entirely by the top/right/bottom rules in the .float-actions media
+     query above. */
 }
 
 @media (max-width: 620px) {

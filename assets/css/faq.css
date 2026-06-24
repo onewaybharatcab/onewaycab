@@ -700,7 +700,16 @@ p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
 }
 .float-btn:hover .float-label { opacity: 1; transform: translateY(-50%) translateX(-4px); }
 @media (max-width: 768px) {
-  .float-actions { top: 50%; right: 16px; transform: translateY(-50%); gap: 12px; }
+  /* Anchored to the bottom-right corner instead of vertically centered
+     (top:50%) so the buttons don't sit on top of page content on mobile —
+     see same fix applied in main.css for the homepage. */
+  .float-actions {
+    top: auto;
+    bottom: max(20px, env(safe-area-inset-bottom, 20px));
+    right: max(16px, env(safe-area-inset-right, 16px));
+    transform: none;
+    gap: 12px;
+  }
   .float-btn { width: 52px; height: 52px; }
   .float-btn svg { width: 25px; height: 25px; }
   .float-label { display: none; }
