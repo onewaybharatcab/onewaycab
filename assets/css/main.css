@@ -306,12 +306,13 @@ header.scrolled {
   padding: 20px 28px;
   display: flex; align-items: center; justify-content: space-between;
   border-radius: var(--r-xl) var(--r-xl) 0 0;
-  overflow: hidden;
+  overflow: hidden; gap: 8px;
 }
 .widget-title {
   font-family: 'Cinzel', serif;
   font-size: 16px; font-weight: 600;
   color: var(--wh); display: flex; align-items: center; gap: 10px;
+  flex-shrink: 0;
 }
 .widget-title-icon {
   width: 32px; height: 32px; border-radius: var(--r-sm);
@@ -322,6 +323,7 @@ header.scrolled {
   font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase;
   color: var(--gr-300); font-weight: 700;
   display: flex; align-items: center; gap: 4px;
+  white-space: nowrap; overflow: hidden; flex-shrink: 1; min-width: 0;
 }
 .widget-instant::before { content:''; width:6px;height:6px;border-radius:50%;background:var(--gr-400);animation:eyePulse 1.5s infinite; }
 
