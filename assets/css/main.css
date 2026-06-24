@@ -1844,3 +1844,9 @@ p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
 .u-error-msg{color:#fc8181;font-size:12px;text-align:center;margin-top:8px;font-weight:600}
 .u-drop-locked{background:rgba(244,123,0,.07)!important;color:rgba(255,255,255,.4)!important;cursor:not-allowed!important;border-color:rgba(244,123,0,.25)!important}
 .u-portal{position:fixed;z-index:9999;display:block;background:var(--nv-700);border:1px solid rgba(244,123,0,.25);border-radius:var(--r-md);box-shadow:0 16px 48px rgba(4,12,30,.7);max-height:260px;overflow-y:auto;font-family:'Nunito',sans-serif}
+
+/* WhatsApp button pulse when payment fails */
+@keyframes waPulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(37,211,102,.5); }
+  50%      { box-shadow: 0 0 0 10px rgba(37,211,102,.0); transform: scale(1.02); }
+}

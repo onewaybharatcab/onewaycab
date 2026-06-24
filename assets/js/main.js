@@ -1030,10 +1030,13 @@ async function bkmTriggerRazorpay(){
         clearInterval(poll);
         if(statusEl) statusEl.style.display='none';
         bkmTriggerRazorpay(); // retry now that it's loaded
-      } else if(waited>=5000){
+      } else if(waited>=12000){
         clearInterval(poll);
-        bkmToast('⚠️ Payment gateway failed to load. Please use WhatsApp to confirm.');
-        if(statusEl){ statusEl.style.display='block'; statusEl.style.color='var(--sf-400)'; statusEl.innerHTML='Payment gateway unavailable. <button onclick="bkmTriggerRazorpay()" style="text-decoration:underline;background:none;border:none;cursor:pointer;color:inherit;font-family:inherit;font-size:inherit;padding:0">Retry</button> or confirm via WhatsApp below.'; }
+        bkmToast('⚠️ Payment gateway could not load. Please check your internet and retry.');
+        if(statusEl){ statusEl.style.display='block'; statusEl.style.color='var(--bk-accent,#C86000)';
+          statusEl.innerHTML='<div style="background:rgba(244,123,0,.1);border:1px solid rgba(244,123,0,.25);border-radius:10px;padding:12px 14px;margin:6px 0;font-size:.84rem;line-height:1.6">⚠️ Payment gateway could not load (slow network?).<br><strong>Your booking is saved</strong> — tap <em>Confirm on WhatsApp</em> below, or <button onclick="bkmTriggerRazorpay()" style="text-decoration:underline;background:none;border:none;cursor:pointer;color:var(--bk-accent,#C86000);font-family:inherit;font-size:inherit;font-weight:700;padding:0">Retry Payment</button>.</div>';
+          const waBtn=document.querySelector('.bkm-btn-wa'); if(waBtn){setTimeout(()=>waBtn.scrollIntoView({behavior:'smooth',block:'center'}),300); waBtn.style.animation='waPulse 1s ease-in-out 3';}
+        }
       }
     },500);
     return;
@@ -1050,10 +1053,23 @@ async function bkmTriggerRazorpay(){
       body:JSON.stringify({ amount:amt, bookingId:BKM.S.bookingId })
     });
     order=await res.json();
-    if(!res.ok || !order.order_id) throw new Error(order.error||'order_failed');
+    if(!res.ok || !order.order_id){
+      console.error('[OWB] Payment order failed:', res.status, JSON.stringify(order));
+      throw new Error(order.error||'order_failed');
+    }
   }catch(e){
-    bkmToast('⚠️ Could not start payment. Please try again or confirm via WhatsApp.');
-    if(statusEl){ statusEl.style.display='block'; statusEl.style.color='var(--sf-400)'; statusEl.textContent='Payment could not be started. Please confirm via WhatsApp below.'; }
+    bkmToast('⚠️ Could not start payment. Please confirm via WhatsApp below.');
+    if(statusEl){
+      statusEl.style.display='block';
+      statusEl.style.color='var(--bk-accent,#C86000)';
+      statusEl.innerHTML=\`<div style="background:rgba(244,123,0,.1);border:1px solid rgba(244,123,0,.25);border-radius:10px;padding:12px 14px;margin:6px 0;font-size:.84rem;line-height:1.6">
+        ⚠️ Online payment is temporarily unavailable.<br>
+        <strong>Your booking is saved</strong> — please tap <em>Confirm on WhatsApp</em> below to secure your cab instantly.
+      </div>\`;
+    }
+    // Auto-scroll to WhatsApp button
+    const waBtn = document.querySelector('.bkm-btn-wa');
+    if(waBtn){ setTimeout(()=>waBtn.scrollIntoView({behavior:'smooth',block:'center'}),300); waBtn.style.animation='waPulse 1s ease-in-out 3'; }
     return;
   }
 

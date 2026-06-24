@@ -640,8 +640,14 @@ async function handleCreateOrder(request, env, allowOrigin) {
 
     const rpData = await rpRes.json();
     if (!rpRes.ok) {
-      console.error("Razorpay order creation failed:", JSON.stringify(rpData));
-      return jsonResponse({ error: "Could not initiate payment. Please try again." }, 502, allowOrigin);
+      const errCode = rpData?.error?.code || 'unknown';
+      const errDesc = rpData?.error?.description || JSON.stringify(rpData);
+      console.error(`Razorpay order creation failed [${rpRes.status}] code=${errCode}: ${errDesc}`);
+      // Surface the actual Razorpay error to the client for easier debugging
+      const clientMsg = errCode === 'BAD_REQUEST_ERROR'
+        ? `Payment error: ${errDesc}`
+        : "Could not initiate payment. Please try again.";
+      return jsonResponse({ error: clientMsg, debug_code: errCode }, 502, allowOrigin);
     }
 
     // key_id (the Razorpay "Key ID") is the public half of the pair — safe to
