@@ -1916,3 +1916,100 @@ p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
   .wf-item  { font-size: 9px; }
   .row-2    { grid-template-columns: 1fr; gap: 8px; }
 }
+
+
+/* ═══════════════════════ LOADER MOBILE FIXES ═══════════════════════ */
+@media (max-width: 480px) {
+  .loader-wrap {
+    width: 100%;
+    padding: 0 12px;
+    box-sizing: border-box;
+  }
+  .map-area {
+    width: 100% !important;
+  }
+  .map-area img {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+  }
+  .chakra-wrap {
+    /* Scale chakra position proportionally: 460px → ~343px on iPhone SE = 0.745x */
+    top: calc(164px * 0.72) !important;
+    left: calc(118px * 0.72) !important;
+    width: calc(146px * 0.72) !important;
+    height: calc(146px * 0.72) !important;
+  }
+  .chakra-spin {
+    width: calc(146px * 0.72) !important;
+    height: calc(146px * 0.72) !important;
+  }
+  .dot1 { top: calc(60px * 0.72);  left: calc(200px * 0.72); }
+  .dot2 { top: calc(120px * 0.72); left: calc(320px * 0.72); }
+  .dot3 { top: calc(280px * 0.72); left: calc(155px * 0.72); }
+  .dot4 { top: calc(340px * 0.72); left: calc(260px * 0.72); }
+  .dot5 { top: calc(170px * 0.72); left: calc(350px * 0.72); }
+  .loading-title {
+    font-size: 14px !important;
+    letter-spacing: 2px !important;
+  }
+  .tagline {
+    font-size: 11px !important;
+    letter-spacing: 2px !important;
+    margin-top: 6px !important;
+  }
+  .progress-wrap { width: 90% !important; }
+  .text-area { margin-top: 12px !important; }
+}
+
+@media (max-width: 360px) {
+  .loading-title { font-size: 12px !important; letter-spacing: 1.5px !important; }
+  .tagline       { font-size: 10px !important; letter-spacing: 1.5px !important; }
+}
+
+
+/* ═══════════════════════ MOBILE OVERFLOW FIXES (375px) ═══════════════════════ */
+@media (max-width: 480px) {
+
+  /* 1. INSTANT CONFIRM badge — shrink text, never overflow */
+  .widget-top-bar {
+    flex-wrap: nowrap;
+    overflow: hidden;
+  }
+  .widget-title {
+    flex-shrink: 0;
+    font-size: 13px !important;
+    gap: 7px;
+  }
+  .widget-instant {
+    flex-shrink: 1;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    font-size: 8px !important;
+    letter-spacing: 0.8px !important;
+  }
+
+  /* 2. Hero eyebrow pill — wrap or shrink on small screens */
+  .hero-eyebrow {
+    font-size: 8.5px !important;
+    letter-spacing: 1.2px !important;
+    padding: 6px 12px !important;
+    white-space: normal !important;
+    text-align: center !important;
+    line-height: 1.5 !important;
+  }
+
+  /* 3. Float buttons — move up so they don't cover widget footer */
+  .float-actions {
+    bottom: max(80px, env(safe-area-inset-bottom, 80px)) !important;
+  }
+
+  /* 4. Widget footer — add right padding so text clears the buttons */
+  .widget-footer {
+    padding-right: 70px !important;
+    justify-content: flex-start !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+}
