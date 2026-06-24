@@ -2374,388 +2374,118 @@ p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
 }
 
 
-
 /* ══════════════════════════════════════════════════════════════════════
-   FIX: HAMBURGER & WHATSAPP BUTTONS — High Specificity Override
-   Uses ID selectors and duplicated classes to ensure these rules win.
+   MOBILE FIX v3: Minimal & Bulletproof
    ══════════════════════════════════════════════════════════════════════ */
 
-/* ── HAMBURGER BUTTON — Force hide on desktop, show on mobile ── */
-
-/* Desktop (min-width: 961px): hide hamburger */
-@media (min-width: 961px) {
-  #hamBtn,
-  button#hamBtn,
-  header #hamBtn,
-  .ham-btn.ham-btn {
-    display: none !important;
-    visibility: hidden !important;
-    pointer-events: none !important;
-  }
-}
-
-/* Mobile (max-width: 960px): show hamburger with visible styling */
-@media (max-width: 960px) {
-  #hamBtn,
-  button#hamBtn,
-  header #hamBtn,
-  .ham-btn.ham-btn {
-    display: flex !important;
-    flex-direction: column !important;
-    justify-content: center !important;
-    align-items: center !important;
-    gap: 5px !important;
-    width: 44px !important;
-    height: 44px !important;
-    min-width: 44px !important;
-    min-height: 44px !important;
-    border: none !important;
-    background: #F47B00 !important;
-    border-radius: 10px !important;
-    cursor: pointer !important;
-    padding: 0 !important;
-    flex-shrink: 0 !important;
-    position: relative !important;
-    z-index: 250 !important;
-    box-shadow: 0 4px 16px rgba(244,123,0,0.4) !important;
-    -webkit-tap-highlight-color: transparent !important;
-    opacity: 1 !important;
-    visibility: visible !important;
-  }
-
-  #hamBtn:hover,
-  #hamBtn:active,
-  .ham-btn.ham-btn:hover,
-  .ham-btn.ham-btn:active {
-    background: #D46800 !important;
-    transform: scale(1.05) !important;
-  }
-
-  /* White hamburger lines - HIGHLY VISIBLE */
-  #hamBtn span,
-  .ham-btn.ham-btn span {
-    display: block !important;
-    width: 20px !important;
-    height: 2.5px !important;
-    background: #ffffff !important;
-    border-radius: 2px !important;
-    transition: transform 0.3s ease, opacity 0.3s ease !important;
-    transform-origin: center !important;
-    opacity: 1 !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    border: none !important;
-  }
-
-  /* X animation when open */
-  #hamBtn.open span:nth-child(1),
-  .ham-btn.ham-btn.open span:nth-child(1) {
-    transform: translateY(7px) rotate(45deg) !important;
-  }
-  #hamBtn.open span:nth-child(2),
-  .ham-btn.ham-btn.open span:nth-child(2) {
-    opacity: 0 !important;
-    transform: scaleX(0) !important;
-  }
-  #hamBtn.open span:nth-child(3),
-  .ham-btn.ham-btn.open span:nth-child(3) {
-    transform: translateY(-7px) rotate(-45deg) !important;
-  }
-}
-
-/* ── FLOAT BUTTONS (Call + WhatsApp) ── */
-
-/* Base: position at right side */
-.float-actions.float-actions,
-body .float-actions {
-  position: fixed !important;
-  top: 50% !important;
-  right: max(16px, env(safe-area-inset-right, 16px)) !important;
-  transform: translateY(-50%) !important;
-  z-index: 9998 !important;
+/* ─── HAMBURGER: Orange button with white lines ─── */
+#hamBtn {
+  background: #F47B00 !important;
   display: flex !important;
-  flex-direction: column !important;
-  gap: 14px !important;
+  width: 44px !important;
+  height: 44px !important;
+  border-radius: 10px !important;
+  border: none !important;
   align-items: center !important;
-  pointer-events: none !important;
-  visibility: visible !important;
-  opacity: 1 !important;
+  justify-content: center !important;
+  flex-direction: column !important;
+  gap: 5px !important;
+  cursor: pointer !important;
+  padding: 0 !important;
+  flex-shrink: 0 !important;
+  box-shadow: 0 4px 12px rgba(244,123,0,0.4) !important;
 }
 
-.float-btn.float-btn,
-body .float-btn {
-  width: 56px !important;
-  height: 56px !important;
+#hamBtn span {
+  display: block !important;
+  width: 20px !important;
+  height: 2.5px !important;
+  background: #ffffff !important;
+  border-radius: 2px !important;
+}
+
+/* X when open */
+#hamBtn.open span:nth-child(1) { transform: translateY(7px) rotate(45deg) !important; }
+#hamBtn.open span:nth-child(2) { opacity: 0 !important; }
+#hamBtn.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg) !important; }
+
+/* ─── FLOAT BUTTONS: Bottom-right on mobile ─── */
+.float-actions {
+  position: fixed !important;
+  bottom: 20px !important;
+  right: 16px !important;
+  z-index: 9999 !important;
+  display: flex !important;
+  flex-direction: row !important;
+  gap: 12px !important;
+}
+
+.float-btn {
+  width: 52px !important;
+  height: 52px !important;
   border-radius: 50% !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  cursor: pointer !important;
-  text-decoration: none !important;
-  box-shadow: 0 6px 24px rgba(0,0,0,0.35) !important;
-  transition: transform 0.2s, box-shadow 0.2s !important;
-  position: relative !important;
-  pointer-events: auto !important;
-  -webkit-tap-highlight-color: transparent !important;
-  visibility: visible !important;
-  opacity: 1 !important;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3) !important;
 }
 
-.float-btn.float-btn:hover,
-body .float-btn:hover {
-  transform: scale(1.1) !important;
-}
-
-.float-btn.float-btn svg,
-body .float-btn svg {
-  width: 26px !important;
-  height: 26px !important;
-  display: block !important;
-  flex-shrink: 0 !important;
-}
-
-.float-btn.call.call,
-body .float-btn.call {
+.float-btn.call {
   background: linear-gradient(135deg, #F47B00, #D46800) !important;
-  box-shadow: 0 6px 24px rgba(244,123,0,0.4) !important;
-  animation: floatPulseCall 2.6s ease-in-out infinite !important;
+  animation: pulseCall 2.5s infinite !important;
 }
 
-.float-btn.whatsapp.whatsapp,
-body .float-btn.whatsapp {
+.float-btn.whatsapp {
   background: linear-gradient(135deg, #25D366, #128C7E) !important;
-  box-shadow: 0 6px 24px rgba(37,211,102,0.4) !important;
-  animation: floatPulseWA 2.6s ease-in-out infinite 0.4s !important;
+  animation: pulseWA 2.5s infinite 0.3s !important;
 }
 
-/* Float button labels (desktop only) */
-.float-btn .float-label,
-body .float-btn .float-label {
-  position: absolute !important;
-  right: 68px !important;
-  top: 50% !important;
-  transform: translateY(-50%) !important;
-  background: #1A0800 !important;
-  color: #fff !important;
-  font-size: 12px !important;
-  font-weight: 600 !important;
-  white-space: nowrap !important;
-  padding: 7px 14px !important;
-  border-radius: 8px !important;
-  opacity: 0 !important;
-  pointer-events: none !important;
-  transition: opacity 0.2s, transform 0.2s !important;
-  box-shadow: 0 4px 14px rgba(0,0,0,0.25) !important;
+.float-btn svg {
+  width: 24px !important;
+  height: 24px !important;
 }
 
-.float-btn:hover .float-label,
-body .float-btn:hover .float-label {
-  opacity: 1 !important;
-  transform: translateY(-50%) translateX(-4px) !important;
+.float-label { display: none !important; }
+
+@keyframes pulseCall {
+  0%,100% { box-shadow: 0 0 0 0 rgba(244,123,0,0.5); }
+  50% { box-shadow: 0 0 0 10px rgba(244,123,0,0); }
 }
 
-/* ── Mobile-specific float button positioning ── */
-@media (max-width: 960px) {
-  .float-actions.float-actions,
-  body .float-actions {
-    position: fixed !important;
-    top: auto !important;
-    bottom: 24px !important;
-    right: 16px !important;
-    left: auto !important;
-    transform: none !important;
-    flex-direction: row !important;
-    gap: 12px !important;
-    z-index: 9998 !important;
-    isolation: isolate !important;
-  }
-
-  .float-btn.float-btn,
-  body .float-btn {
-    width: 52px !important;
-    height: 52px !important;
-    min-width: 52px !important;
-    min-height: 52px !important;
-    border-radius: 50% !important;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.4) !important;
-    flex: none !important;
-  }
-
-  .float-btn.float-btn svg,
-  body .float-btn svg {
-    width: 24px !important;
-    height: 24px !important;
-    display: block !important;
-  }
-
-  .float-btn .float-label,
-  body .float-btn .float-label {
-    display: none !important;
-  }
+@keyframes pulseWA {
+  0%,100% { box-shadow: 0 0 0 0 rgba(37,211,102,0.5); }
+  50% { box-shadow: 0 0 0 10px rgba(37,211,102,0); }
 }
 
-/* Very small screens */
-@media (max-width: 480px) {
-  .float-actions.float-actions,
-  body .float-actions {
-    bottom: 16px !important;
-    right: 12px !important;
-    gap: 10px !important;
-  }
-
-  .float-btn.float-btn,
-  body .float-btn {
-    width: 48px !important;
-    height: 48px !important;
-    min-width: 48px !important;
-    min-height: 48px !important;
-  }
-
-  .float-btn.float-btn svg,
-  body .float-btn svg {
-    width: 22px !important;
-    height: 22px !important;
-  }
-}
-
-/* Extra small screens */
-@media (max-width: 360px) {
-  .float-actions.float-actions,
-  body .float-actions {
-    bottom: 12px !important;
-    right: 10px !important;
-    gap: 8px !important;
-  }
-
-  .float-btn.float-btn,
-  body .float-btn {
-    width: 44px !important;
-    height: 44px !important;
-    min-width: 44px !important;
-    min-height: 44px !important;
-  }
-
-  .float-btn.float-btn svg,
-  body .float-btn svg {
-    width: 20px !important;
-    height: 20px !important;
-  }
-}
-
-/* Safe area for notched phones */
-@supports (padding: max(0px)) {
-  @media (max-width: 960px) {
-    .float-actions.float-actions,
-    body .float-actions {
-      right: max(16px, env(safe-area-inset-right)) !important;
-      bottom: max(16px, env(safe-area-inset-bottom)) !important;
-    }
-  }
-}
-
-/* Hide float buttons when booking modal is open */
-#bkModal.open ~ .float-actions,
-#bkModal.open ~ body .float-actions,
+/* Hide float buttons when drawer/modal is open */
+body:has(.mob-drawer.open) .float-actions,
 body:has(#bkModal.open) .float-actions {
   display: none !important;
 }
 
-/* Hide float buttons when mobile drawer is open */
-body:has(.mob-drawer.open) .float-actions,
-body.drawer-open .float-actions {
-  display: none !important;
-}
-
-/* ── Mobile Drawer fixes ── */
-.mob-overlay.mob-overlay {
-  position: fixed !important;
-  inset: 0 !important;
-  background: rgba(4,12,30,0.7) !important;
-  backdrop-filter: blur(6px) !important;
-  -webkit-backdrop-filter: blur(6px) !important;
-  z-index: 9996 !important;
-  opacity: 0 !important;
-  visibility: hidden !important;
-  transition: opacity 0.3s ease, visibility 0.3s ease !important;
-  display: block !important;
-}
-
-.mob-overlay.mob-overlay.open {
-  opacity: 1 !important;
-  visibility: visible !important;
-}
-
-.mob-drawer.mob-drawer {
-  position: fixed !important;
-  top: 0 !important;
-  right: 0 !important;
-  width: min(320px, 85vw) !important;
-  height: 100dvh !important;
-  background: linear-gradient(160deg, #1A0F08, #0D1A2A) !important;
-  border-left: 1px solid rgba(244,123,0,0.25) !important;
-  z-index: 9997 !important;
-  display: flex !important;
-  flex-direction: column !important;
-  transform: translateX(100%) !important;
-  transition: transform 0.32s cubic-bezier(0.4,0,0.2,1) !important;
-  box-shadow: -8px 0 40px rgba(4,12,30,0.6) !important;
-  overflow-y: auto !important;
-  -webkit-overflow-scrolling: touch !important;
-}
-
-.mob-drawer.mob-drawer.open {
-  transform: translateX(0) !important;
-}
-
-/* ── Header mobile layout fixes ── */
+/* ─── Mobile header fix ─── */
 @media (max-width: 960px) {
-  headerheader,
-  body header {
+  header {
     padding: 0 12px !important;
     height: 56px !important;
-    min-height: 56px !important;
-    display: flex !important;
-    align-items: center !important;
     justify-content: space-between !important;
-    overflow: visible !important;
-    position: fixed !important;
-    z-index: 200 !important;
   }
-
-  .hero.hero {
-    padding-top: 56px !important;
-  }
-
-  .logo.logo {
-    flex: 1 1 auto !important;
-    min-width: 0 !important;
-    overflow: hidden !important;
-    gap: 8px !important;
-    display: flex !important;
-    align-items: center !important;
-  }
-
-  .logo-emblem.logo-emblem {
-    width: 36px !important;
-    height: 36px !important;
-    font-size: 18px !important;
-    flex-shrink: 0 !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-  }
-
-  .logo-name.logo-name {
+  .logo-name {
     font-size: 14px !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    display: block !important;
-    max-width: calc(100vw - 120px) !important;
+    max-width: calc(100vw - 100px) !important;
   }
+  .logo-tagline, .logo-subtitle { display: none !important; }
+}
 
-  .logo-tagline,
-  .logo-subtitle {
-    display: none !important;
-  }
+/* ─── Small screen adjustments ─── */
+@media (max-width: 480px) {
+  .float-actions { right: 12px !important; bottom: 16px !important; gap: 10px !important; }
+  .float-btn { width: 48px !important; height: 48px !important; }
+  .float-btn svg { width: 22px !important; height: 22px !important; }
+}
+
+@media (max-width: 360px) {
+  .float-actions { right: 10px !important; bottom: 12px !important; gap: 8px !important; }
+  .float-btn { width: 44px !important; height: 44px !important; }
+  .float-btn svg { width: 20px !important; height: 20px !important; }
 }
