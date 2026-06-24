@@ -1070,6 +1070,14 @@ header.scrolled {
   color: #1A0800 !important;
   -webkit-text-fill-color: #1A0800 !important;
   caret-color: #1A0800 !important;
+  opacity: 1 !important;
+}
+/* Ensure number inputs are never transparent/invisible */
+input[type="number"].field-input,
+input[type="number"].field-input:not(:placeholder-shown) {
+  color: #1A0800 !important;
+  -webkit-text-fill-color: #1A0800 !important;
+  opacity: 1 !important;
 }
 .field-input::placeholder { color: rgba(60,25,5,0.32) !important; }
 .field-input:focus {

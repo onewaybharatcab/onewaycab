@@ -100,6 +100,7 @@ function searchCabs() {
   // Pre-seed coordinates from hero autocomplete if available
   if (pickupPlaceData && pickupPlaceData.lat) BKM._puData = pickupPlaceData;
   if (dropPlaceData   && dropPlaceData.lat)   BKM._drData = dropPlaceData;
+  BKM._preDistKm = 0; // force live distance calc for manual input
   bkmOpen({ prefill: true });
 }
 
@@ -707,6 +708,13 @@ async function _bkmStep1Next(){
     }
   }
 
+  // #4: Block if distance is still unknown — fares would be wrong
+  if(!BKM.S.distKm || BKM.S.distKm === 0){
+    bkmToast('⚠️ Could not calculate route distance. Please check locations and try again.');
+    _bkmShowDist('Distance unavailable — please retry');
+    return;
+  }
+
   _bkmGoStep(2);
   _bkmBuildCabs();
 }
@@ -979,9 +987,22 @@ async function bkmTriggerRazorpay(){
 
   const statusEl=document.getElementById('bkmPayStatus');
   if(typeof Razorpay==='undefined'){
-    // Razorpay not loaded — show WhatsApp fallback message
-    bkmToast('💳 Payment gateway loading... Redirecting to WhatsApp confirmation.');
-    if(statusEl){ statusEl.style.display='block'; statusEl.style.color='var(--sf-400)'; statusEl.textContent='Payment gateway not loaded. Please confirm via WhatsApp below.'; }
+    // Script still loading — wait up to 5s then retry automatically
+    bkmToast('⏳ Loading payment gateway, please wait…');
+    if(statusEl){ statusEl.style.display='block'; statusEl.style.color='var(--sf-400)'; statusEl.textContent='Loading payment gateway…'; }
+    let waited=0;
+    const poll=setInterval(()=>{
+      waited+=500;
+      if(typeof Razorpay!=='undefined'){
+        clearInterval(poll);
+        if(statusEl) statusEl.style.display='none';
+        bkmTriggerRazorpay(); // retry now that it's loaded
+      } else if(waited>=5000){
+        clearInterval(poll);
+        bkmToast('⚠️ Payment gateway failed to load. Please use WhatsApp to confirm.');
+        if(statusEl){ statusEl.style.display='block'; statusEl.style.color='var(--sf-400)'; statusEl.innerHTML='Payment gateway unavailable. <button onclick="bkmTriggerRazorpay()" style="text-decoration:underline;background:none;border:none;cursor:pointer;color:inherit;font-family:inherit;font-size:inherit;padding:0">Retry</button> or confirm via WhatsApp below.'; }
+      }
+    },500);
     return;
   }
 
@@ -1074,13 +1095,16 @@ async function _bkmNotifyAdmin(){
     await fetch('/api/booking/notify',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({booking:{
-        id:S.bookingId, name:S.name, phone:S.phone, email:S.email,
-        from:S.pu, to:S.dr, vehicle:S.vehicleName, tripType:S.trip,
-        date:S.date, time:S.time, retdate:S.retdate,
-        fare:S.totalFare, advance:S.advAmt, pax:S.pax,
-        distKm:S.distKm, notes:S.notes, extraCities:S.extraCities||[]
-      }})
+      body:JSON.stringify({
+        verifyToken: S.verifyToken,
+        booking:{
+          id:S.bookingId, name:S.name, phone:S.phone, email:S.email,
+          from:S.pu, to:S.dr, vehicle:S.vehicleName, tripType:S.trip,
+          date:S.date, time:S.time, retdate:S.retdate,
+          fare:S.totalFare, advance:S.advAmt, pax:S.pax,
+          distKm:S.distKm, notes:S.notes, extraCities:S.extraCities||[]
+        }
+      })
     });
   }catch(e){ /* non-critical */ }
 }
@@ -1096,6 +1120,30 @@ async function _bkmNotifyPayment(paymentId){
         vehicle:BKM.S.vehicleName, fare:BKM.S.totalFare,
         type:'payment'
       }})
+    });
+  }catch(e){ /* non-critical */ }
+  // #21: Also send customer a booking confirmation on WhatsApp
+  _bkmNotifyCustomer(paymentId);
+}
+
+async function _bkmNotifyCustomer(paymentId){
+  const S=BKM.S;
+  const stops=(S.extraCities||[]).filter(c=>c.trim());
+  try{
+    await fetch('/api/booking/customer-confirm',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        verifyToken: S.verifyToken,
+        booking:{
+          id:S.bookingId, name:S.name, phone:S.phone,
+          from:S.pu, to:S.dr, vehicle:S.vehicleName, tripType:S.trip,
+          date:S.date, time:S.time, retdate:S.retdate,
+          fare:S.totalFare, advance:S.advAmt, payAmt:S.payAmt,
+          distKm:S.distKm, pax:S.pax, notes:S.notes,
+          extraCities:stops, paymentId: paymentId||''
+        }
+      })
     });
   }catch(e){ /* non-critical */ }
 }

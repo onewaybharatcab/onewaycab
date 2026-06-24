@@ -83,6 +83,11 @@ var worker_default = {
       return addSecurityHeaders(await withRateLimit(request, env, ctx, "notify", () => handleBookingNotify(request, env, allowOrigin), allowOrigin))
     }
 
+    // 2b. Customer confirmation (WhatsApp message to customer after payment)
+    if (url.pathname.includes("booking/customer-confirm")) {
+      return addSecurityHeaders(await withRateLimit(request, env, ctx, "customer-confirm", () => handleCustomerConfirm(request, env, allowOrigin), allowOrigin))
+    }
+
     // 2. Distance Matrix endpoint — used by booking modal to get road distance + ETA
     if (url.pathname.includes("distance")) {
       return addSecurityHeaders(await withRateLimit(request, env, ctx, "distance", () => handleDistance(request, url, env, allowOrigin), allowOrigin))
@@ -415,7 +420,26 @@ async function handleBookingNotify(request, env, allowOrigin) {
     return jsonResponse({ error: "Missing required booking fields" }, 400, allowOrigin);
   }
 
-  const adminNumber  = env.ADMIN_WHATSAPP_NUMBER || "919355757579"; // e.g. 919355757579
+  // #16: Validate verifyToken — payment notifications (type==="payment") are
+  // exempt since they're triggered only after server-side Razorpay signature
+  // verification. Booking notifications must carry the OTP-issued token.
+  const isPayment = b.type === "payment";
+  if (!isPayment) {
+    const submittedToken = String(body.verifyToken || "");
+    const rawPhone = String(b.phone || "").replace(/\D/g, "").slice(-10);
+    if (!submittedToken || !rawPhone) {
+      console.warn("[OWB] Booking notify rejected: missing token or phone");
+      return jsonResponse({ error: "Unauthorized" }, 403, allowOrigin);
+    }
+    let storedToken = null;
+    try { storedToken = await env.RATE_LIMIT_KV.get(`verified:${rawPhone}`); } catch (e) { /* KV hiccup */ }
+    if (!storedToken || storedToken !== submittedToken) {
+      console.warn("[OWB] Booking notify rejected: token mismatch for phone", rawPhone);
+      return jsonResponse({ error: "Unauthorized" }, 403, allowOrigin);
+    }
+  }
+
+  const adminNumber  = env.ADMIN_WHATSAPP_NUMBER || "919355757579";
   const accessToken  = env.WHATSAPP_ACCESS_TOKEN;
   const phoneNumberId = env.WHATSAPP_PHONE_NUMBER_ID;
 
@@ -426,7 +450,6 @@ async function handleBookingNotify(request, env, allowOrigin) {
   }
 
   // Build the message text
-  const isPayment = b.type === "payment";
   const stops = Array.isArray(b.extraCities) ? b.extraCities.filter(c => c.trim()) : [];
   const stopLine = stops.length ? `\n🛑 Stops: ${stops.join(" → ")}` : "";
 
@@ -485,6 +508,88 @@ async function handleBookingNotify(request, env, allowOrigin) {
   }
 }
 __name(handleBookingNotify, "handleBookingNotify");
+
+// ── Customer confirmation — WhatsApp message to customer after payment ────────
+async function handleCustomerConfirm(request, env, allowOrigin) {
+  if (request.method !== "POST") return jsonResponse({ error: "Method not allowed" }, 405, allowOrigin);
+
+  let body;
+  try { body = await request.json(); } catch {
+    return jsonResponse({ error: "Invalid JSON" }, 400, allowOrigin);
+  }
+
+  const b = body.booking || {};
+  if (!b.id || !b.phone) {
+    return jsonResponse({ error: "Missing required fields" }, 400, allowOrigin);
+  }
+
+  // Validate verifyToken — same logic as booking/notify
+  const submittedToken = String(body.verifyToken || "");
+  const rawPhone = String(b.phone || "").replace(/\D/g, "").slice(-10);
+  if (!submittedToken || !rawPhone) {
+    return jsonResponse({ error: "Unauthorized" }, 403, allowOrigin);
+  }
+  let storedToken = null;
+  try { storedToken = await env.RATE_LIMIT_KV.get(`verified:${rawPhone}`); } catch (e) { /* KV hiccup */ }
+  if (!storedToken || storedToken !== submittedToken) {
+    console.warn("[OWB] Customer confirm rejected: token mismatch for phone", rawPhone);
+    return jsonResponse({ error: "Unauthorized" }, 403, allowOrigin);
+  }
+
+  const accessToken   = env.WHATSAPP_ACCESS_TOKEN;
+  const phoneNumberId = env.WHATSAPP_PHONE_NUMBER_ID;
+  if (!accessToken || !phoneNumberId) {
+    console.warn("WhatsApp not configured — skipping customer confirmation");
+    return jsonResponse({ sent: false, reason: "not_configured" }, 200, allowOrigin);
+  }
+
+  const stops = Array.isArray(b.extraCities) ? b.extraCities.filter(c => c.trim()) : [];
+  const stopLine = stops.length ? `\n🛑 Via: ${stops.join(" → ")}` : "";
+  const remaining = Number(b.fare || 0) - Number(b.payAmt || 0);
+  const e164 = `91${rawPhone}`;
+
+  const msg =
+    `✅ *Booking Confirmed — One-Way Bhaarat*\n\n` +
+    `🔖 Booking ID: ${b.id}\n` +
+    `👤 ${b.name}\n` +
+    `🚗 ${b.vehicle || "—"} · ${b.tripType === "roundtrip" ? "Round Trip" : "One Way"}\n` +
+    `📍 ${b.from || "—"}${stopLine}\n` +
+    `🏁 ${b.to || "—"}\n` +
+    `📅 ${b.date || "—"}${b.time ? " at " + b.time : ""}` +
+    `${b.retdate ? "\n🔄 Return: " + b.retdate : ""}\n` +
+    `📏 ~${b.distKm || "?"} km · ${b.pax || "—"}\n` +
+    `💰 Total Fare: ₹${Number(b.fare || 0).toLocaleString("en-IN")}\n` +
+    `✅ Paid: ₹${Number(b.payAmt || 0).toLocaleString("en-IN")}` +
+    `${remaining > 0 ? ` · Balance ₹${remaining.toLocaleString("en-IN")} to driver` : " (Full paid)"}\n` +
+    `${b.notes ? "📝 " + b.notes + "\n" : ""}` +
+    `\nFor support: +91-93557 57579\nThank you for choosing One-Way Bhaarat! 🙏`;
+
+  try {
+    const waRes = await fetch(
+      `https://graph.facebook.com/${WHATSAPP_API_VERSION}/${phoneNumberId}/messages`,
+      {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${accessToken}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messaging_product: "whatsapp",
+          to: e164,
+          type: "text",
+          text: { body: msg }
+        })
+      }
+    );
+    const waData = await waRes.json();
+    if (!waRes.ok) {
+      console.error("Customer WA confirm failed:", JSON.stringify(waData));
+      return jsonResponse({ sent: false, reason: "upstream_error" }, 200, allowOrigin);
+    }
+    return jsonResponse({ sent: true }, 200, allowOrigin);
+  } catch (err) {
+    console.error("Customer WA confirm exception:", err.message);
+    return jsonResponse({ sent: false, reason: err.message }, 200, allowOrigin);
+  }
+}
+__name(handleCustomerConfirm, "handleCustomerConfirm");
 
 // ── Razorpay: create order ───────────────────────────────────────────────────
 // Frontend calls this BEFORE opening the Razorpay checkout widget. Creating
