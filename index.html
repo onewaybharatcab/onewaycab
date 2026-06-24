@@ -502,7 +502,8 @@
           <label class="field-label">Distance (km)</label>
           <div class="field-wrap">
             <div class="field-icon" style="top:50%;transform:translateY(-50%)">📏</div>
-            <input class="field-input" type="number" id="calcDist" value="281" min="1" max="3000" oninput="calcFare()" placeholder="e.g. 281">
+            <input class="field-input" type="text" id="calcDist" value="281" inputmode="numeric" autocomplete="off" oninput="calcDistInput(this)" placeholder="e.g. 281">
+            <div class="calc-dist-error" id="calcDistError"></div>
           </div>
         </div>
       </div>

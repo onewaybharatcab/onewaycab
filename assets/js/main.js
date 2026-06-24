@@ -109,11 +109,44 @@ const RATES = {
   sedan_ow:16,ertiga_ow:21,innova_ow:30,tempo_ow:42,
   sedan_rt:11,ertiga_rt:15,innova_rt:20,tempo_rt:35
 };
+function calcDistInput(input) {
+  const errEl = document.getElementById('calcDistError');
+  const raw = input.value;
+
+  // Strip any non-digit characters silently as user types
+  const cleaned = raw.replace(/[^0-9]/g, '');
+  if (cleaned !== raw) {
+    input.value = cleaned;
+    // Show error only if non-numeric chars were actually typed (not on empty)
+    if (raw.length > 0) {
+      errEl.textContent = '⚠️ Only numbers allowed. Please enter distance in km.';
+      errEl.style.display = 'block';
+      setTimeout(() => { errEl.style.display = 'none'; }, 2500);
+    }
+  } else {
+    errEl.style.display = 'none';
+  }
+
+  calcFare();
+}
+
 function calcFare() {
   const v = document.getElementById('calcVehicle').value;
-  const d = parseFloat(document.getElementById('calcDist').value) || 0;
+  const rawVal = document.getElementById('calcDist').value.trim();
+  const d = parseFloat(rawVal) || 0;
   const panel = document.getElementById('calcResult');
+  const errEl = document.getElementById('calcDistError');
+
   if (d < 1) { panel.classList.remove('show'); return; }
+  if (d > 3000) {
+    errEl.textContent = '⚠️ Distance must be between 1 and 3000 km.';
+    errEl.style.display = 'block';
+    panel.classList.remove('show');
+    return;
+  }
+
+  errEl.style.display = 'none';
+
   const r = RATES[v], base = d * r, driver = d > 300 ? 400 : 200;
   const tax = Math.round(base * 0.05), gst = Math.round(base * 0.05);
   const toll = Math.round(d / 50) * 30, total = Math.round(base + driver + tax + gst + toll);

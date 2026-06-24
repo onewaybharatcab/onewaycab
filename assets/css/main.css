@@ -557,6 +557,27 @@ header.scrolled {
   box-shadow: var(--shadow-card);
 }
 .calc-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+
+/* Distance input error message */
+.calc-dist-error {
+  display: none;
+  font-size: 12px;
+  font-weight: 600;
+  color: #F47B00;
+  margin-top: 6px;
+  padding: 6px 10px;
+  background: rgba(244,123,0,0.12);
+  border: 1px solid rgba(244,123,0,0.30);
+  border-radius: 6px;
+  animation: fadeInErr 0.2s ease;
+}
+@keyframes fadeInErr {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Ensure field-icon never blocks input interaction */
+.field-icon { pointer-events: none !important; }
 .calc-result-panel {
   background: linear-gradient(135deg, rgba(244,123,0,0.08), rgba(201,162,39,0.04));
   border: 1px solid rgba(244,123,0,0.2);
@@ -1135,6 +1156,7 @@ input[type="number"].field-input:not(:placeholder-shown) {
 /* ── CALC ── */
 .calc-section { background: #FFF0E8 !important; }
 .calc-glass { background: rgba(255,255,255,0.88) !important; border-color: rgba(60,25,5,0.10) !important; }
+.calc-dist-error { background: rgba(244,123,0,0.10) !important; border-color: rgba(244,123,0,0.35) !important; color: #B85000 !important; }
 .calc-result-panel { background: rgba(244,123,0,0.06) !important; border-color: rgba(244,123,0,0.20) !important; }
 .cr-title { color: #C86000 !important; }
 .cr-title::before, .cr-title::after { background: rgba(244,123,0,0.25) !important; }
