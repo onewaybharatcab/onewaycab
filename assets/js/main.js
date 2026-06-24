@@ -1,5 +1,5 @@
 // ── Loader dismiss is handled by inline <script> in <head> of index.html ──
-// (kept here as no-op for safety on other pages)
+// (kept here as fallback for other pages that don't have the inline script)
 (function(){
   if(window._loaderStart) return; // already handled inline
   var el=document.getElementById('loader');
@@ -8,21 +8,11 @@
 
 // ── Header scroll effect ──────────────────────────────
 window.addEventListener('scroll', () => {
-  document.getElementById('header').classList.toggle('scrolled', window.scrollY > 60);
+  const h = document.getElementById('header');
+  if(h) h.classList.toggle('scrolled', window.scrollY > 60);
 });
 
-// ── Date defaults ──────────────────────────────────────
-const today = new Date().toISOString().split('T')[0];
-document.getElementById('pdate').min = today;
-document.getElementById('pdate').value = today;
-
-// ── Time default: now + 75 minutes ──────────────────────
-const defaultTime = new Date(Date.now() + 75 * 60 * 1000);
-const defHH = String(defaultTime.getHours()).padStart(2, '0');
-const defMM = String(defaultTime.getMinutes()).padStart(2, '0');
-document.getElementById('ptime').value = `${defHH}:${defMM}`;
-
-// ── Trip type ──────────────────────────────────────────
+// ── Trip type (hero widget) ─────────────────────────────────────────────────
 function setTrip(el, type) {
   document.querySelectorAll('.trip-tab').forEach(t => {
     t.classList.remove('active');
@@ -30,21 +20,23 @@ function setTrip(el, type) {
   });
   el.classList.add('active');
   el.setAttribute('aria-pressed', 'true');
-  document.getElementById('returnRow').style.display = type === 'roundtrip' ? 'block' : 'none';
+  const row = document.getElementById('returnRow');
+  if(row) row.style.display = type === 'roundtrip' ? 'block' : 'none';
 }
 
 // ── Swap ───────────────────────────────────────────────
 function swapLocs() {
   const a = document.getElementById('pickup'), b = document.getElementById('drop');
-  [a.value, b.value] = [b.value, a.value];
+  if(a && b) [a.value, b.value] = [b.value, a.value];
 }
 
 // ── Search — opens modal, pre-fills from hero widget ──
 function searchCabs() {
-  const p = document.getElementById('pickup').value.trim();
-  const d = document.getElementById('drop').value.trim();
   const pickupInput = document.getElementById('pickup');
   const dropInput   = document.getElementById('drop');
+  if(!pickupInput || !dropInput) return;
+  const p = pickupInput.value.trim();
+  const d = dropInput.value.trim();
   pickupInput.style.borderColor = '';
   dropInput.style.borderColor   = '';
   let hasError = false;
@@ -56,7 +48,8 @@ function searchCabs() {
       msg = document.createElement('p');
       msg.id = 'search-error-msg';
       msg.className = 'u-error-msg';
-      document.querySelector('.search-btn').insertAdjacentElement('afterend', msg);
+      const btn = document.querySelector('.search-btn');
+      if(btn) btn.insertAdjacentElement('afterend', msg);
     }
     msg.textContent = (!p && !d) ? 'Please enter both pickup and drop locations.'
                     : !p ? 'Please enter a pickup location.'
@@ -66,9 +59,10 @@ function searchCabs() {
   const msg = document.getElementById('search-error-msg');
   if (msg) msg.remove();
 
-  // Validate pickup date/time is at least 60 min from now
-  const pickupDate = document.getElementById('pdate').value;
-  const pickupTime = document.getElementById('ptime').value;
+  const pdateEl = document.getElementById('pdate');
+  const ptimeEl = document.getElementById('ptime');
+  const pickupDate = pdateEl ? pdateEl.value : '';
+  const pickupTime = ptimeEl ? ptimeEl.value : '';
   if (pickupDate && pickupTime) {
     const pickupDT = new Date(`${pickupDate}T${pickupTime}`);
     if (pickupDT < new Date(Date.now() + 60 * 60 * 1000)) {
@@ -77,22 +71,21 @@ function searchCabs() {
         errMsg = document.createElement('p');
         errMsg.id = 'search-error-msg';
         errMsg.className = 'u-error-msg';
-        document.querySelector('.search-btn').insertAdjacentElement('afterend', errMsg);
+        const btn = document.querySelector('.search-btn');
+        if(btn) btn.insertAdjacentElement('afterend', errMsg);
       }
       errMsg.textContent = 'Pickup time must be at least 1 hour from now.';
       return;
     }
   }
 
-  // Pre-fill modal with hero widget values then open it
   BKM.S.pu   = p;
   BKM.S.dr   = d;
-  BKM.S.date = document.getElementById('pdate').value;
-  BKM.S.time = document.getElementById('ptime').value;
-  // Pre-seed coordinates from hero autocomplete if available
+  BKM.S.date = pickupDate;
+  BKM.S.time = pickupTime;
   if (pickupPlaceData && pickupPlaceData.lat) BKM._puData = pickupPlaceData;
   if (dropPlaceData   && dropPlaceData.lat)   BKM._drData = dropPlaceData;
-  BKM._preDistKm = 0; // force live distance calc for manual input
+  BKM._preDistKm = 0;
   bkmOpen({ prefill: true });
 }
 
@@ -104,58 +97,50 @@ const RATES = {
 function calcDistInput(input) {
   const errEl = document.getElementById('calcDistError');
   const raw = input.value;
-
-  // Strip any non-digit characters silently as user types
   const cleaned = raw.replace(/[^0-9]/g, '');
   if (cleaned !== raw) {
     input.value = cleaned;
-    // Show error only if non-numeric chars were actually typed (not on empty)
-    if (raw.length > 0) {
+    if (raw.length > 0 && errEl) {
       errEl.textContent = '⚠️ Only numbers allowed. Please enter distance in km.';
       errEl.style.display = 'block';
       setTimeout(() => { errEl.style.display = 'none'; }, 2500);
     }
   } else {
-    errEl.style.display = 'none';
+    if(errEl) errEl.style.display = 'none';
   }
-
   calcFare();
 }
 
 function calcFare() {
-  const v = document.getElementById('calcVehicle').value;
-  const rawVal = document.getElementById('calcDist').value.trim();
-  const d = parseFloat(rawVal) || 0;
+  const vEl = document.getElementById('calcVehicle');
+  const dEl = document.getElementById('calcDist');
   const panel = document.getElementById('calcResult');
   const errEl = document.getElementById('calcDistError');
+  if(!vEl || !dEl || !panel) return;
+  const v = vEl.value;
+  const d = parseFloat(dEl.value.trim()) || 0;
 
   if (d < 1) { panel.classList.remove('show'); return; }
   if (d > 3000) {
-    errEl.textContent = '⚠️ Distance must be between 1 and 3000 km.';
-    errEl.style.display = 'block';
+    if(errEl){ errEl.textContent = '⚠️ Distance must be between 1 and 3000 km.'; errEl.style.display = 'block'; }
     panel.classList.remove('show');
     return;
   }
-
-  errEl.style.display = 'none';
+  if(errEl) errEl.style.display = 'none';
 
   const r = RATES[v], base = d * r, driver = d > 300 ? 400 : 200;
   const tax = Math.round(base * 0.05), gst = Math.round(base * 0.05);
   const toll = Math.round(d / 50) * 30, total = Math.round(base + driver + tax + gst + toll);
   const adv = Math.round(total * 0.1);
   const fmt = n => '₹' + n.toLocaleString('en-IN');
-  document.getElementById('r_base_lbl').textContent = `Base Fare (${d} km × ₹${r})`;
-  document.getElementById('r_base').textContent = fmt(base);
-  document.getElementById('r_driver').textContent = fmt(driver);
-  document.getElementById('r_tax').textContent = fmt(tax);
-  document.getElementById('r_gst').textContent = fmt(gst);
-  document.getElementById('r_toll').textContent = fmt(toll) + ' (approx)';
-  document.getElementById('r_total').textContent = fmt(total);
-  document.getElementById('r_advance').textContent = fmt(adv);
-  document.getElementById('r_remaining').textContent = fmt(total - adv);
+  const set = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
+  set('r_base_lbl', `Base Fare (${d} km × ₹${r})`);
+  set('r_base', fmt(base)); set('r_driver', fmt(driver));
+  set('r_tax', fmt(tax)); set('r_gst', fmt(gst));
+  set('r_toll', fmt(toll) + ' (approx)'); set('r_total', fmt(total));
+  set('r_advance', fmt(adv)); set('r_remaining', fmt(total - adv));
   panel.classList.add('show');
 }
-calcFare();
 
 // ── Routes ─────────────────────────────────────────────
 const ROUTES = [
@@ -173,92 +158,46 @@ const ROUTES = [
   {from:'Kolkata',to:'Darjeeling',d:590,icon:'🍵',p:9800},{from:'Bhubaneswar',to:'Puri',d:64,icon:'🛕',p:1400},
 ];
 
-const grid = document.getElementById('routesGrid');
-if (grid) {
-  ROUTES.forEach(r => {
-    const el = document.createElement('div');
-    el.className = 'route-card';
-    el.style.cursor = 'pointer';
-    el.onclick = () => {
-      BKM.S.pu = r.from; BKM.S.dr = r.to;
-      BKM._preDistKm = r.d;
-      bkmOpen({ prefill: true });
-    };
-    el.innerHTML = `
-      <div class="route-emoji">${r.icon}</div>
-      <div class="route-info">
-        <div class="route-name">${r.from} → ${r.to}</div>
-        <div class="route-meta">${r.d} km · Sedan One Way</div>
-      </div>
-      <div class="route-price-col">
-        <div class="route-price">₹${r.p.toLocaleString('en-IN')}</div>
-        <div class="route-dist">${r.d} km</div>
-      </div>
-    `;
-    grid.appendChild(el);
-  });
-}
-
 // ── Scroll reveal ──────────────────────────────────────
 const ro = new IntersectionObserver(entries => {
   entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
 }, { threshold: 0.08 });
-document.querySelectorAll('.reveal').forEach(el => ro.observe(el));
 
 // ══════════════════════════════════════════════════════════════
 //  LOCATION AUTOCOMPLETE
-//  - On Cloudflare (one-waybharat.com): uses /api/places proxy
-//    so the Google key stays hidden server-side
-//  - Local file / direct open: uses Google SDK directly
-//    (key is injected by Cloudflare worker at runtime)
 // ══════════════════════════════════════════════════════════════
-
 let pickupPlaceData = {}, dropPlaceData = {};
-
-// ── Detect environment ────────────────────────────────────────
 const IS_LOCAL = location.protocol === 'file:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
 
-// ── Session token (groups autocomplete + detail = 1 billing call) ──
 function newSessionToken() {
   return Math.random().toString(36).slice(2) + Date.now().toString(36);
 }
 let sessionToken = newSessionToken();
 
-// ── Debounce ──────────────────────────────────────────────────
 function debounce(fn, ms) {
   let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); };
 }
 
-// ── Render dropdown list ──────────────────────────────────────
 function renderDropdown(listEl, predictions, onPick) {
   listEl.innerHTML = '';
   if (!predictions.length) return;
   predictions.forEach(p => {
     const item = document.createElement('div');
     item.className = 'autocomplete-item';
-
     const icon = document.createElement('span');
-    icon.className = 'ac-icon';
-    icon.textContent = '📍';
-
+    icon.className = 'ac-icon'; icon.textContent = '📍';
     const textWrap = document.createElement('span');
-    const main = document.createElement('div');
-    main.className = 'ac-main';
+    const main = document.createElement('div'); main.className = 'ac-main';
     main.textContent = p.main_text || p.description || '';
-    const sub = document.createElement('div');
-    sub.className = 'ac-sub';
+    const sub = document.createElement('div'); sub.className = 'ac-sub';
     sub.textContent = p.secondary_text || '';
-    textWrap.appendChild(main);
-    textWrap.appendChild(sub);
-
-    item.appendChild(icon);
-    item.appendChild(textWrap);
+    textWrap.appendChild(main); textWrap.appendChild(sub);
+    item.appendChild(icon); item.appendChild(textWrap);
     item.addEventListener('mousedown', e => { e.preventDefault(); onPick(p); listEl.innerHTML = ''; });
     listEl.appendChild(item);
   });
 }
 
-// ── Fetch via Cloudflare proxy (production) ───────────────────
 async function fetchPredictionsProxy(query) {
   const res = await fetch(`/api/places?input=${encodeURIComponent(query)}&sessiontoken=${sessionToken}`);
   const data = await res.json();
@@ -277,12 +216,9 @@ async function fetchDetailsProxy(placeId) {
   };
 }
 
-// ── Fetch via Google SDK (local / fallback) ───────────────────
 let _sdkService = null;
 function getSDKService() {
-  if (!_sdkService && window.google) {
-    _sdkService = new google.maps.places.AutocompleteService();
-  }
+  if (!_sdkService && window.google) _sdkService = new google.maps.places.AutocompleteService();
   return _sdkService;
 }
 
@@ -324,38 +260,31 @@ function fetchDetailsSDK(placeId) {
   });
 }
 
-// ── Attach autocomplete to one input ─────────────────────────
 function attachAutocomplete(inputId, listId, onSelect) {
   const input  = document.getElementById(inputId);
   const listEl = document.getElementById(listId);
-
+  if(!input || !listEl) return;
   const suggest = debounce(async (query) => {
     if (query.length < 2) { listEl.innerHTML = ''; return; }
     try {
-      const preds = IS_LOCAL
-        ? await fetchPredictionsSDK(query)
-        : await fetchPredictionsProxy(query);
+      const preds = IS_LOCAL ? await fetchPredictionsSDK(query) : await fetchPredictionsProxy(query);
       renderDropdown(listEl, preds, async (p) => {
         input.value = p.main_text || p.description;
         input.style.borderColor = '';
         try {
-          const detail = IS_LOCAL
-            ? await fetchDetailsSDK(p.place_id)
-            : await fetchDetailsProxy(p.place_id);
+          const detail = IS_LOCAL ? await fetchDetailsSDK(p.place_id) : await fetchDetailsProxy(p.place_id);
           onSelect({ ...detail, place_id: p.place_id });
           sessionToken = newSessionToken();
         } catch(e) { console.warn('Place detail error', e); }
       });
     } catch(e) { console.warn('Autocomplete error', e); }
   }, 280);
-
   input.addEventListener('input', () => suggest(input.value.trim()));
   document.addEventListener('click', e => {
     if (!input.contains(e.target) && !listEl.contains(e.target)) listEl.innerHTML = '';
   });
 }
 
-// ── Init (called by Google SDK callback OR on DOMContentLoaded) ──
 function initAutocomplete() {
   attachAutocomplete('pickup', 'pickup-list', d => { pickupPlaceData = d; });
   attachAutocomplete('drop',   'drop-list',   d => { dropPlaceData   = d; });
@@ -363,18 +292,9 @@ function initAutocomplete() {
   if (banner) banner.style.display = 'none';
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  // If SDK already loaded (local with key), init now; else wait for callback
-  if (window.google && google.maps && google.maps.places) initAutocomplete();
-  // Always attach even without SDK so proxy works on production
-  else if (!IS_LOCAL) initAutocomplete();
-});
-
 // ══════════════════════════════════════════════════════════════
-//  BOOKING MODAL — 5-Step Flow (BRG-style, OWB themed)
-//  Vehicles, fares, OTP, payment options, WhatsApp confirm
+//  BOOKING MODAL — 5-Step Flow
 // ══════════════════════════════════════════════════════════════
-
 const ADMIN_WA = '919355757579';
 
 const BKM_VEHICLES = [
@@ -384,7 +304,6 @@ const BKM_VEHICLES = [
   {key:'tempo',  name:'Tempo Traveller', sub:'12-Seater Force / Mahindra',         icon:'🚌', seats:12, badge:'Group',    ow:42, rt:35, minFare:4000},
 ];
 
-// Booking state object — everything lives here
 const BKM = {
   S: {
     trip:'oneway', pu:'', dr:'', date:'', time:'', retdate:'',
@@ -396,28 +315,26 @@ const BKM = {
   },
   _step:1,
   _puData:{}, _drData:{},
-  _preDistKm:0,  // set from route cards
+  _preDistKm:0,
   _sessionToken: null,
 };
 
-// ── Toast ────────────────────────────────────────────────────
 let _toastTimer;
 function bkmToast(msg, dur=3200){
   const el = document.getElementById('owb-toast');
+  if(!el) return;
   el.textContent = msg; el.classList.add('show');
   clearTimeout(_toastTimer);
   _toastTimer = setTimeout(() => el.classList.remove('show'), dur);
 }
 
-// ── Open/Close ──────────────────────────────────────────────
 function bkmOpen(opts={}){
   const modal = document.getElementById('bkModal');
+  if(!modal) return;
   if(!opts.prefill){ _bkmReset(); }
   modal.classList.add('open');
   document.body.style.overflow = 'hidden';
   _bkmGoStep(1);
-
-  // Pre-fill fields if called from hero widget or route card
   if(opts.prefill || BKM.S.pu){
     const puEl = document.getElementById('bk-pu');
     const drEl = document.getElementById('bk-dr');
@@ -427,10 +344,9 @@ function bkmOpen(opts={}){
     if(drEl && BKM.S.dr) drEl.value = BKM.S.dr;
     if(dtEl && BKM.S.date) dtEl.value = BKM.S.date;
     if(tmEl && BKM.S.time) tmEl.value = BKM.S.time;
-    // Always reset distance first, then recalculate fresh for new locations
     BKM.S.distKm = 0;
-    document.getElementById('bkm-dist').classList.remove('show');
-    // If a pre-calculated distance is available (from route card), use it
+    const distEl = document.getElementById('bkm-dist');
+    if(distEl) distEl.classList.remove('show');
     if(BKM._preDistKm > 0){
       BKM.S.distKm = BKM._preDistKm;
       _bkmShowDist(`~${BKM._preDistKm} km`);
@@ -442,17 +358,12 @@ function bkmOpen(opts={}){
 }
 
 function bkmClose(){
-  document.getElementById('bkModal').classList.remove('open');
+  const modal = document.getElementById('bkModal');
+  if(modal) modal.classList.remove('open');
   document.body.style.overflow = '';
   _bkmHidePortal();
 }
 
-// Close on overlay click
-document.getElementById('bkModal').addEventListener('click', e => {
-  if(e.target === document.getElementById('bkModal')) bkmClose();
-});
-
-// ── Reset ────────────────────────────────────────────────────
 function _bkmReset(){
   const S = BKM.S;
   S.trip='oneway'; S.pu=''; S.dr=''; S.date=''; S.time='';
@@ -462,16 +373,15 @@ function _bkmReset(){
   S.name=''; S.phone=''; S.email=''; S.notes='';
   S.bookingId=''; S.extraCities=[];
   BKM._preDistKm=0; BKM._puData={}; BKM._drData={};
-
-  // Reset UI inputs
   ['bk-pu','bk-dr','bk-dt','bk-tm','bk-ret','bk-ret-tm','bk-pn','bk-ph','bk-em','bk-notes']
     .forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
-  document.getElementById('bkm-dist').classList.remove('show');
-  document.getElementById('bkm-stop-list').innerHTML='';
+  const distEl = document.getElementById('bkm-dist');
+  if(distEl) distEl.classList.remove('show');
+  const stopList = document.getElementById('bkm-stop-list');
+  if(stopList) stopList.innerHTML='';
   bkmSetTrip('oneway');
 }
 
-// ── Step navigation ─────────────────────────────────────────
 function _bkmGoStep(n){
   BKM._step = n;
   [1,2,3,4,5].forEach(i => {
@@ -484,7 +394,6 @@ function _bkmGoStep(n){
       else if(i === n) p.classList.add('active');
     }
   });
-  // Foot visibility
   const foot = document.getElementById('bkmFoot');
   if(foot) foot.style.display = n===5 ? 'none' : '';
   _bkmUpdateBtn();
@@ -496,7 +405,6 @@ function _bkmUpdateBtn(){
   const n = BKM._step;
   if(next){
     next.textContent = n===1 ? 'Search Cabs →' : n===3 ? 'Send OTP →' : 'Verify OTP →';
-    // Step 2: hide next button — cab tap auto-advances
     next.style.display = n===2 ? 'none' : '';
   }
   if(back) back.style.display = n>1 ? '' : 'none';
@@ -514,7 +422,6 @@ function bkmBack(){
   if(BKM._step > 1) _bkmGoStep(BKM._step-1);
 }
 
-// ── Trip type ────────────────────────────────────────────────
 function bkmSetTrip(t){
   BKM.S.trip = t;
   ['oneway','roundtrip'].forEach(k => {
@@ -527,20 +434,20 @@ function bkmSetTrip(t){
   if(stopsBlock) stopsBlock.style.display = t==='roundtrip' ? '' : 'none';
   if(t==='oneway'){
     BKM.S.extraCities=[];
-    document.getElementById('bkm-stop-list').innerHTML='';
+    const stopList = document.getElementById('bkm-stop-list');
+    if(stopList) stopList.innerHTML='';
   }
-  // Rerender live fares for new trip type
   if(BKM.S.distKm > 0) _bkmRenderLiveFares();
-  // Round trip — lock drop = pickup
   _bkmSyncRTDrop(t);
 }
 
 function _bkmSyncRTDrop(t){
   const drEl    = document.getElementById('bk-dr');
   const drLabel = document.getElementById('bk-dr-label');
+  const puEl    = document.getElementById('bk-pu');
   if(!drEl) return;
   if(t==='roundtrip'){
-    drEl.value    = document.getElementById('bk-pu').value;
+    drEl.value    = puEl ? puEl.value : '';
     drEl.readOnly = true;
     drEl.classList.add('u-drop-locked');
     if(drLabel) drLabel.innerHTML = '🔄 Return To <span style="font-size:.62rem;color:var(--sf-400);font-weight:700">(same as pickup)</span>';
@@ -548,51 +455,23 @@ function _bkmSyncRTDrop(t){
     drEl.readOnly = false;
     drEl.classList.remove('u-drop-locked');
     drEl.style.background=''; drEl.style.color=''; drEl.style.cursor=''; drEl.style.borderColor='';
-    // Clear drop field when switching back to one-way so user must re-enter destination
     drEl.value = '';
-    BKM.S.dr = '';
-    BKM.S.distKm = 0;
-    BKM._preDistKm = 0;
-    document.getElementById('bkm-dist').classList.remove('show');
-    const lf = document.getElementById('bkmLiveFares'); if(lf) lf.classList.remove('show');
+    BKM.S.dr = ''; BKM.S.distKm = 0; BKM._preDistKm = 0;
+    const distEl = document.getElementById('bkm-dist');
+    if(distEl) distEl.classList.remove('show');
+    const lf = document.getElementById('bkmLiveFares');
+    if(lf) lf.classList.remove('show');
     if(drLabel) drLabel.textContent = '🏁 To Location *';
   }
 }
 
-// Mirror pickup into locked drop on input
-document.getElementById('bk-pu').addEventListener('input', function(){
-  if(BKM.S.trip==='roundtrip'){
-    const drEl = document.getElementById('bk-dr');
-    if(drEl){ drEl.value = this.value; BKM.S.dr = this.value; }
-  }
-});
-
-// ── Date defaults ────────────────────────────────────────────
-(function(){
-  const today = new Date().toISOString().split('T')[0];
-  ['bk-dt','bk-ret'].forEach(id => {
-    const el = document.getElementById(id); if(el) el.min = today;
-  });
-  const bkDt = document.getElementById('bk-dt');
-  if(bkDt && !bkDt.value) bkDt.value = today;
-  // Default time: now + 2h
-  const t = new Date(Date.now() + 2*60*60*1000);
-  const hh = String(t.getHours()).padStart(2,'0');
-  const mm = String(t.getMinutes()).padStart(2,'0');
-  const bkTm = document.getElementById('bk-tm');
-  if(bkTm && !bkTm.value) bkTm.value = `${hh}:${mm}`;
-})();
-
-// ── Distance display helper ──────────────────────────────────
 function _bkmShowDist(txt){
   const el = document.getElementById('bkm-dist');
   const tx = document.getElementById('bkm-dist-txt');
   if(el && tx){ tx.textContent=txt; el.classList.add('show'); }
-  // Render live fares once distance is known
   if(BKM.S.distKm > 0) _bkmRenderLiveFares();
 }
 
-// ── Live fare panel (Step 1) — shows inline fare list ────────
 function _bkmRenderLiveFares(){
   const km = BKM.S.distKm || 0;
   const isRound = BKM.S.trip === 'roundtrip';
@@ -600,9 +479,7 @@ function _bkmRenderLiveFares(){
   const rows  = document.getElementById('bkmLiveFareRows');
   const title = panel ? panel.querySelector('.bkm-lf-title') : null;
   if(!panel || !rows || km < 1) return;
-
   if(title) title.textContent = isRound ? '🔄 ROUND TRIP RATES' : '🚕 ONE WAY RATES';
-
   rows.innerHTML = BKM_VEHICLES.map(v => {
     let fare;
     if(isRound){
@@ -627,21 +504,12 @@ function _bkmRenderLiveFares(){
   panel.classList.add('show');
 }
 
-// Pre-select vehicle from live fare click (stores for step 2)
 function _bkmPreSelectVehicle(key){
   BKM._preSelectedVehicle = key;
 }
 
-
-// ── Fetch distance ────────────────────────────────────────────
-// Retries once on failure (network hiccups / transient upstream errors are
-// common) before giving up. Never fabricates a flat-number fallback like the
-// old "~50 km" — showing a specific wrong distance is worse than showing
-// nothing, since the user has no way to tell it's not real.
 async function _bkmFetchDist(origin, destination, _isRetry){
-  // Guard: if origin or destination coords are null, skip distance API call
   if (!origin || !destination || origin === 'null,null' || destination === 'null,null') {
-    console.warn('[OWB] Distance skipped: missing coordinates for', origin, destination);
     _bkmShowDist('Route distance unavailable');
     return null;
   }
@@ -656,13 +524,11 @@ async function _bkmFetchDist(origin, destination, _isRetry){
     } else if(!_isRetry){
       return _bkmFetchDist(origin, destination, true);
     } else {
-      _bkmDistFallback();
-      return false;
+      _bkmDistFallback(); return false;
     }
   } catch(e){
     if(!_isRetry) return _bkmFetchDist(origin, destination, true);
-    _bkmDistFallback();
-    return false;
+    _bkmDistFallback(); return false;
   }
 }
 
@@ -671,7 +537,6 @@ function _bkmDistFallback(){
   _bkmShowDist(`Distance unavailable — we'll confirm by phone`);
 }
 
-// ── Multi-stop distance (chains legs) ────────────────────────
 async function _bkmFetchDistMultiStop(waypoints){
   _bkmShowDist('Calculating…');
   try {
@@ -684,106 +549,70 @@ async function _bkmFetchDistMultiStop(waypoints){
     }
     BKM.S.distKm = total;
     _bkmShowDist(`~${total} km via ${waypoints.length-2} stop(s)`);
-  } catch(e){
-    _bkmDistFallback();
-  }
+  } catch(e){ _bkmDistFallback(); }
 }
 
-// ── Step 1 validation + proceed ─────────────────────────────
 async function _bkmStep1Next(){
-  const pu = document.getElementById('bk-pu').value.trim();
-  const dr = document.getElementById('bk-dr').value.trim();
-  const dt = document.getElementById('bk-dt').value;
-  const tm = document.getElementById('bk-tm').value;
+  const pu = (document.getElementById('bk-pu')||{}).value?.trim();
+  const dr = (document.getElementById('bk-dr')||{}).value?.trim();
+  const dt = (document.getElementById('bk-dt')||{}).value;
+  const tm = (document.getElementById('bk-tm')||{}).value;
   const ret= document.getElementById('bk-ret')?.value || '';
-
   let ok = true;
   ['bkfg-pu','bkfg-dr','bkfg-dt'].forEach(id => document.getElementById(id)?.classList.remove('err'));
-
-  if(!pu){ document.getElementById('bkfg-pu').classList.add('err'); ok=false; }
-  if(!dr){ document.getElementById('bkfg-dr').classList.add('err'); ok=false; }
-  if(!dt){ document.getElementById('bkfg-dt').classList.add('err'); ok=false; }
+  if(!pu){ document.getElementById('bkfg-pu')?.classList.add('err'); ok=false; }
+  if(!dr){ document.getElementById('bkfg-dr')?.classList.add('err'); ok=false; }
+  if(!dt){ document.getElementById('bkfg-dt')?.classList.add('err'); ok=false; }
   if(!ok){ bkmToast('⚠️ Please fill all required fields'); return; }
-
-  if(BKM.S.trip==='roundtrip' && !ret){
-    bkmToast('⚠️ Please select a return date');
-    return;
-  }
-
-  // Pickup time must be ≥ now + 60 min
+  if(BKM.S.trip==='roundtrip' && !ret){ bkmToast('⚠️ Please select a return date'); return; }
   if(tm){
     const pickupDT = new Date(`${dt}T${tm}`);
-    if(pickupDT < new Date(Date.now() + 60*60*1000)){
-      bkmToast('⚠️ Pickup time must be at least 1 hour from now');
-      return;
-    }
+    if(pickupDT < new Date(Date.now() + 60*60*1000)){ bkmToast('⚠️ Pickup time must be at least 1 hour from now'); return; }
   }
-
   BKM.S.pu = pu; BKM.S.dr = dr; BKM.S.date = dt; BKM.S.time = tm;
   BKM.S.retdate = ret;
   BKM.S.rettime = document.getElementById('bk-ret-tm')?.value || '';
-  BKM.S.pax = document.getElementById('bk-pax').value;
-
-  // Fetch distance if not already known
+  BKM.S.pax = (document.getElementById('bk-pax')||{}).value || '3–4 Passengers';
   if(!BKM.S.distKm || BKM.S.distKm === 0){
     const stops = (BKM.S.extraCities||[]).filter(c=>c.trim());
     const waypoints = [pu, ...stops, dr];
-    if(waypoints.length > 2){
-      await _bkmFetchDistMultiStop(waypoints);
-    } else {
-      await _bkmFetchDist(pu, dr);
-    }
+    if(waypoints.length > 2){ await _bkmFetchDistMultiStop(waypoints); }
+    else { await _bkmFetchDist(pu, dr); }
   }
-
-  // #4: Block if distance is still unknown — fares would be wrong
   if(!BKM.S.distKm || BKM.S.distKm === 0){
     bkmToast('⚠️ Could not calculate route distance. Please check locations and try again.');
     _bkmShowDist('Distance unavailable — please retry');
     return;
   }
-
   _bkmGoStep(2);
   _bkmBuildCabs();
 }
 
-// ── Build cab results (step 2) ───────────────────────────────
 function _bkmBuildCabs(){
   const S = BKM.S;
   const isRound = S.trip==='roundtrip';
   const km = S.distKm || 50;
-
-  // Summary header
-  document.getElementById('bkrs-pu').textContent = S.pu;
-  document.getElementById('bkrs-dr').textContent = S.dr;
-  document.getElementById('bkrs-date').textContent = S.date + (S.time ? ' at '+_bkmFmtTime(S.time) : '');
-  document.getElementById('bkrs-type').textContent = isRound ? 'Round Trip' : 'One Way';
-
+  const set = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
+  set('bkrs-pu', S.pu); set('bkrs-dr', S.dr);
+  set('bkrs-date', S.date + (S.time ? ' at '+_bkmFmtTime(S.time) : ''));
+  set('bkrs-type', isRound ? 'Round Trip' : 'One Way');
   let kmLabel = `~${km} km`;
-  if(isRound){
-    const days = _bkmCalcDays();
-    kmLabel = `~${km} km · ${days} day${days>1?'s':''} · +₹${days*300} driver allowance`;
-  }
-  document.getElementById('bkrs-km').textContent = kmLabel;
-
-  // Cab cards
-  document.getElementById('bkmCabList').innerHTML = BKM_VEHICLES.map((v,i) => {
+  if(isRound){ const days=_bkmCalcDays(); kmLabel=`~${km} km · ${days} day${days>1?'s':''} · +₹${days*300} driver allowance`; }
+  set('bkrs-km', kmLabel);
+  const cabList = document.getElementById('bkmCabList');
+  if(cabList) cabList.innerHTML = BKM_VEHICLES.map((v,i) => {
     let fare;
     if(isRound){
-      const days = _bkmCalcDays();
-      const minKm = 250 * days;
-      const billedKm = Math.max(km, minKm);
-      fare = Math.ceil(billedKm * v.rt) + (days * 300);
+      const days=_bkmCalcDays(); const minKm=250*days; const billedKm=Math.max(km,minKm);
+      fare=Math.ceil(billedKm*v.rt)+(days*300);
     } else {
-      const perKm = Math.ceil(km * v.ow);
-      const base  = km < 100 ? Math.max(perKm, v.minFare) : perKm;
-      const stops = (S.extraCities||[]).filter(c=>c.trim()).length;
-      fare = stops ? Math.ceil(base * (1 + 0.15*stops)) : base;
+      const perKm=Math.ceil(km*v.ow); const base=km<100?Math.max(perKm,v.minFare):perKm;
+      const stops=(S.extraCities||[]).filter(c=>c.trim()).length;
+      fare=stops?Math.ceil(base*(1+0.15*stops)):base;
     }
-    const adv = Math.ceil(fare * 0.10 / 10) * 10;
-    const rate = isRound ? v.rt : v.ow;
-    const isMin = !isRound && km<100 && fare===v.minFare;
-    return `
-    <div class="bkm-cab" id="bkc-${v.key}" onclick="_bkmSelectCab('${v.key}','${v.name.replace(/'/g,"\\'")}',${rate},${fare},${adv})" style="animation:bkmIn .3s ${i*.07}s ease both">
+    const adv=Math.ceil(fare*0.10/10)*10; const rate=isRound?v.rt:v.ow;
+    const isMin=!isRound&&km<100&&fare===v.minFare;
+    return `<div class="bkm-cab" id="bkc-${v.key}" onclick="_bkmSelectCab('${v.key}','${v.name.replace(/'/g,"\\'")}',${rate},${fare},${adv})" style="animation:bkmIn .3s ${i*.07}s ease both">
       <div class="bkm-cab-icon">${v.icon}</div>
       <div class="bkm-cab-info">
         <div class="bkm-cab-name">${v.name}<span class="bkm-cab-badge">${v.badge}</span></div>
@@ -803,86 +632,78 @@ function _bkmBuildCabs(){
       </div>
     </div>`;
   }).join('');
-
-  // Auto-select if user tapped a fare row in step 1
   if(BKM._preSelectedVehicle){
-    const el = document.getElementById('bkc-'+BKM._preSelectedVehicle);
+    const el=document.getElementById('bkc-'+BKM._preSelectedVehicle);
     if(el) el.click();
-    BKM._preSelectedVehicle = null;
+    BKM._preSelectedVehicle=null;
   }
 }
 
 function _bkmCalcDays(){
-  const S = BKM.S;
-  if(!S.date || !S.retdate) return 1;
-  const d1 = new Date(S.date), d2 = new Date(S.retdate);
-  const diff = Math.ceil((d2-d1)/(1000*60*60*24));
-  return Math.max(1, diff);
+  const S=BKM.S;
+  if(!S.date||!S.retdate) return 1;
+  const d1=new Date(S.date),d2=new Date(S.retdate);
+  const diff=Math.ceil((d2-d1)/(1000*60*60*24));
+  return Math.max(1,diff);
 }
 
-function _bkmSelectCab(key, name, rate, fare, adv){
+function _bkmSelectCab(key,name,rate,fare,adv){
   document.querySelectorAll('.bkm-cab').forEach(c=>c.classList.remove('sel'));
-  const el = document.getElementById('bkc-'+key);
+  const el=document.getElementById('bkc-'+key);
   if(el) el.classList.add('sel');
   BKM.S.vehicle=key; BKM.S.vehicleName=name; BKM.S.rate=rate;
   BKM.S.totalFare=fare; BKM.S.advAmt=adv;
   bkmToast(`✓ ${name} selected — proceeding…`);
-  // Auto-advance after 600ms so user sees the selection highlight
   setTimeout(() => _bkmGoStep(3), 600);
 }
 
-// ── Step 2 → 3 ───────────────────────────────────────────────
 function _bkmStep2Next(){
   if(!BKM.S.vehicle){ bkmToast('⚠️ Please select a cab first'); return; }
   _bkmGoStep(3);
 }
 
-// ── Step 3 → 4 (send OTP) ────────────────────────────────────
 async function _bkmStep3Next(){
-  const name  = document.getElementById('bk-pn').value.trim();
-  const phone = document.getElementById('bk-ph').value.replace(/\D/g,'');
-  const email = document.getElementById('bk-em').value.trim();
-  let ok = true;
-  ['bkfg-pn','bkfg-ph','bkfg-em'].forEach(id => document.getElementById(id)?.classList.remove('err'));
-  if(!name)  { document.getElementById('bkfg-pn').classList.add('err'); ok=false; }
-  if(phone.length!==10){ document.getElementById('bkfg-ph').classList.add('err'); ok=false; }
-  if(!email||!email.includes('@')){ document.getElementById('bkfg-em').classList.add('err'); ok=false; }
+  const name  = (document.getElementById('bk-pn')||{}).value?.trim();
+  const phone = (document.getElementById('bk-ph')||{}).value?.replace(/\D/g,'')||'';
+  const email = (document.getElementById('bk-em')||{}).value?.trim();
+  let ok=true;
+  ['bkfg-pn','bkfg-ph','bkfg-em'].forEach(id=>document.getElementById(id)?.classList.remove('err'));
+  if(!name)  { document.getElementById('bkfg-pn')?.classList.add('err'); ok=false; }
+  if(phone.length!==10){ document.getElementById('bkfg-ph')?.classList.add('err'); ok=false; }
+  if(!email||!email.includes('@')){ document.getElementById('bkfg-em')?.classList.add('err'); ok=false; }
   if(!ok){ bkmToast('⚠️ Please fill all required fields correctly'); return; }
-
-  BKM.S.name  = name;
-  BKM.S.phone = phone;
-  BKM.S.email = email;
-  BKM.S.notes = document.getElementById('bk-notes').value.trim();
-  BKM.S.bookingId = 'OWB-'+Date.now().toString().slice(-6)+Math.random().toString(36).slice(2,4).toUpperCase();
-
-  const btn = document.getElementById('bkmBtnNext');
-  btn.textContent = 'Sending…'; btn.disabled=true;
-
+  BKM.S.name=name; BKM.S.phone=phone; BKM.S.email=email;
+  BKM.S.notes=(document.getElementById('bk-notes')||{}).value?.trim()||'';
+  BKM.S.bookingId='OWB-'+Date.now().toString().slice(-6)+Math.random().toString(36).slice(2,4).toUpperCase();
+  const btn=document.getElementById('bkmBtnNext');
+  if(btn){ btn.textContent='Sending…'; btn.disabled=true; }
   try {
-    const res  = await fetch('/api/otp/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone,name})});
-    const data = await res.json();
+    const res=await fetch('/api/otp/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone,name})});
+    const data=await res.json();
     if(data.success){
       bkmToast('📱 OTP sent via WhatsApp to +91 '+phone);
-      document.getElementById('bk-otp-num').textContent = '+91 '+phone;
-      ['bo1','bo2','bo3','bo4','bo5','bo6'].forEach(id=>{ const el=document.getElementById(id); if(el){el.value='';el.classList.remove('filled');} });
+      const otpNum=document.getElementById('bk-otp-num');
+      if(otpNum) otpNum.textContent='+91 '+phone;
+      ['bo1','bo2','bo3','bo4','bo5','bo6'].forEach(id=>{const el=document.getElementById(id);if(el){el.value='';el.classList.remove('filled');}});
       _bkmGoStep(4);
       _bkmStartOTPTimer();
     } else {
       bkmToast('⚠️ Could not send OTP — '+(data.error||'please try again'));
     }
-  } catch(e){
-    bkmToast('⚠️ Network error sending OTP');
-  }
-  btn.disabled=false; _bkmUpdateBtn();
+  } catch(e){ bkmToast('⚠️ Network error sending OTP'); }
+  if(btn){ btn.disabled=false; } _bkmUpdateBtn();
 }
 
-// ── OTP Timer ────────────────────────────────────────────────
 function _bkmStartOTPTimer(){
   let secs=30;
   const cd=document.getElementById('bkmCD');
   const btn=document.getElementById('bkmResend');
-  btn.style.pointerEvents='none'; btn.style.opacity='.4'; btn.classList.remove('active');
-  const iv=setInterval(()=>{secs--;if(cd)cd.textContent=secs;if(secs<=0){clearInterval(iv);if(btn){btn.style.pointerEvents='auto';btn.style.opacity='1';btn.classList.add('active');}}},1000);
+  if(btn){ btn.style.pointerEvents='none'; btn.style.opacity='.4'; btn.classList.remove('active'); }
+  const iv=setInterval(()=>{
+    secs--;
+    if(cd) cd.textContent=secs;
+    if(secs<=0){ clearInterval(iv); if(btn){ btn.style.pointerEvents='auto'; btn.style.opacity='1'; btn.classList.add('active'); } }
+  },1000);
 }
 
 function bkmResendOTP(){ _bkmStep3Resend(); _bkmStartOTPTimer(); }
@@ -893,52 +714,42 @@ async function _bkmStep3Resend(){
   }catch(e){ bkmToast('⚠️ Could not resend OTP'); }
 }
 
-// OTP input helpers
-function bkmOtpMove(inp, nextId){
+function bkmOtpMove(inp,nextId){
   if(inp.value.length>1) inp.value=inp.value.slice(-1);
   inp.classList.toggle('filled',inp.value.length>0);
-  if(inp.value.length>=1 && nextId){ const n=document.getElementById(nextId); if(n)n.focus(); }
+  if(inp.value.length>=1&&nextId){ const n=document.getElementById(nextId); if(n) n.focus(); }
 }
 function bkmOtpBack(e,inp,prevId){
   if(e.key==='Backspace'&&!inp.value&&prevId) document.getElementById(prevId).focus();
 }
 
-// ── Verify OTP ───────────────────────────────────────────────
 async function _bkmVerifyOTP(){
-  const entered=['bo1','bo2','bo3','bo4','bo5','bo6'].map(id=>document.getElementById(id).value).join('');
+  const entered=['bo1','bo2','bo3','bo4','bo5','bo6'].map(id=>(document.getElementById(id)||{}).value||'').join('');
   if(entered.length<6){ bkmToast('⚠️ Please enter the complete 6-digit OTP'); return; }
-
   const btn=document.getElementById('bkmBtnNext');
-  btn.textContent='Verifying…'; btn.disabled=true;
-
+  if(btn){ btn.textContent='Verifying…'; btn.disabled=true; }
   try{
-    const res  = await fetch('/api/otp/verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:BKM.S.phone,code:entered})});
-    const data = await res.json();
-
+    const res=await fetch('/api/otp/verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:BKM.S.phone,code:entered})});
+    const data=await res.json();
     if(data.verified){
-      BKM.S.verifyToken = data.token || '';
+      BKM.S.verifyToken=data.token||'';
       bkmToast('✅ Verified! Please complete payment to confirm.');
-      _bkmGoStep(5);
-      _bkmBuildSummary();
-      _bkmInitPayPanel();
-      _bkmNotifyAdmin();
+      _bkmGoStep(5); _bkmBuildSummary(); _bkmInitPayPanel(); _bkmNotifyAdmin();
     } else {
       bkmToast('❌ '+(data.error||'Invalid OTP — please try again'));
-      ['bo1','bo2','bo3','bo4','bo5','bo6'].forEach(id=>{ const el=document.getElementById(id); if(el){el.value='';el.classList.remove('filled');} });
-      document.getElementById('bo1').focus();
+      ['bo1','bo2','bo3','bo4','bo5','bo6'].forEach(id=>{const el=document.getElementById(id);if(el){el.value='';el.classList.remove('filled');}});
+      const bo1=document.getElementById('bo1'); if(bo1) bo1.focus();
     }
-  } catch(e){
-    bkmToast('⚠️ Network error verifying OTP');
-  }
-  btn.disabled=false; _bkmUpdateBtn();
+  } catch(e){ bkmToast('⚠️ Network error verifying OTP'); }
+  if(btn){ btn.disabled=false; } _bkmUpdateBtn();
 }
 
-// ── Booking Summary ──────────────────────────────────────────
 function _bkmBuildSummary(){
   const S=BKM.S;
-  document.getElementById('bkRef').textContent = S.bookingId;
+  const refEl=document.getElementById('bkRef'); if(refEl) refEl.textContent=S.bookingId;
   const stops=(S.extraCities||[]).filter(c=>c.trim());
-  document.getElementById('bkmSumFinal').innerHTML=`
+  const sumEl=document.getElementById('bkmSumFinal');
+  if(sumEl) sumEl.innerHTML=`
     <div class="bkm-row"><span class="bl">Passenger</span><span class="bv">${S.name} · +91 ${S.phone}</span></div>
     <div class="bkm-row"><span class="bl">Vehicle</span><span class="bv">${S.vehicleName}</span></div>
     <div class="bkm-row"><span class="bl">Trip</span><span class="bv">${S.trip==='roundtrip'?'Round Trip':'One Way'}${stops.length?' · '+stops.length+' stop(s)':''}</span></div>
@@ -952,13 +763,12 @@ function _bkmBuildSummary(){
   `;
 }
 
-// ── Payment panel ────────────────────────────────────────────
 function _bkmInitPayPanel(){
-  const S=BKM.S;
-  const adv=S.advAmt;
-  document.getElementById('ppAdv10').textContent='₹'+adv.toLocaleString('en-IN');
-  document.getElementById('ppFull').textContent='₹'+S.totalFare.toLocaleString('en-IN');
-  document.getElementById('bkmMinLabel').textContent=adv.toLocaleString('en-IN');
+  const S=BKM.S; const adv=S.advAmt;
+  const set=(id,val)=>{const el=document.getElementById(id);if(el)el.textContent=val;};
+  set('ppAdv10','₹'+adv.toLocaleString('en-IN'));
+  set('ppFull','₹'+S.totalFare.toLocaleString('en-IN'));
+  set('bkmMinLabel',adv.toLocaleString('en-IN'));
   bkmSelectPayOpt('partial');
 }
 
@@ -967,18 +777,17 @@ function bkmSelectPayOpt(mode){
   ['ppOpt10','ppOptCustom','ppOptFull'].forEach(id=>document.getElementById(id)?.classList.remove('on'));
   const customRow=document.getElementById('bkmCustomRow');
   const summary=document.getElementById('bkmPaySummary');
-
   if(mode==='partial'){
-    document.getElementById('ppOpt10').classList.add('on');
+    document.getElementById('ppOpt10')?.classList.add('on');
     if(customRow) customRow.style.display='none';
     BKM.S.payAmt=BKM.S.advAmt;
     if(summary) summary.textContent=`Pay ₹${BKM.S.advAmt.toLocaleString('en-IN')} now. Remaining ₹${(BKM.S.totalFare-BKM.S.advAmt).toLocaleString('en-IN')} to driver.`;
   } else if(mode==='custom'){
-    document.getElementById('ppOptCustom').classList.add('on');
+    document.getElementById('ppOptCustom')?.classList.add('on');
     if(customRow) customRow.style.display='';
     if(summary) summary.textContent='Enter any amount ≥ 10% advance.';
   } else {
-    document.getElementById('ppOptFull').classList.add('on');
+    document.getElementById('ppOptFull')?.classList.add('on');
     if(customRow) customRow.style.display='none';
     BKM.S.payAmt=BKM.S.totalFare;
     if(summary) summary.textContent=`Full fare paid upfront. No balance due to driver.`;
@@ -988,117 +797,75 @@ function bkmSelectPayOpt(mode){
 function bkmValidateCustom(){
   const inp=document.getElementById('bkmCustomAmt');
   const err=document.getElementById('bkmCustomErr');
-  const v=parseFloat(inp.value)||0;
-  const min=BKM.S.advAmt;
+  if(!inp) return;
+  const v=parseFloat(inp.value)||0; const min=BKM.S.advAmt;
   if(v<min){
-    err.style.display='block';
-    err.textContent=`Minimum ₹${min.toLocaleString('en-IN')} (10% advance)`;
+    if(err){ err.style.display='block'; err.textContent=`Minimum ₹${min.toLocaleString('en-IN')} (10% advance)`; }
     BKM.S.payAmt=0;
   } else {
-    err.style.display='none';
+    if(err) err.style.display='none';
     BKM.S.payAmt=v;
     const summary=document.getElementById('bkmPaySummary');
     if(summary) summary.textContent=`Pay ₹${v.toLocaleString('en-IN')} now. Balance ₹${(BKM.S.totalFare-v).toLocaleString('en-IN')} to driver.`;
   }
 }
 
-// ── Razorpay trigger ─────────────────────────────────────────
 async function bkmTriggerRazorpay(){
   if(BKM.S.payMode==='custom'){
-    const v=parseFloat(document.getElementById('bkmCustomAmt').value)||0;
-    if(v < BKM.S.advAmt){ bkmToast('⚠️ Amount must be at least ₹'+BKM.S.advAmt.toLocaleString('en-IN')); return; }
+    const v=parseFloat((document.getElementById('bkmCustomAmt')||{}).value)||0;
+    if(v<BKM.S.advAmt){ bkmToast('⚠️ Amount must be at least ₹'+BKM.S.advAmt.toLocaleString('en-IN')); return; }
     BKM.S.payAmt=v;
   }
   const amt=BKM.S.payAmt;
   if(!amt){ bkmToast('⚠️ Please select a payment amount'); return; }
-
   const statusEl=document.getElementById('bkmPayStatus');
   if(typeof Razorpay==='undefined'){
-    // Script still loading — wait up to 5s then retry automatically
     bkmToast('⏳ Loading payment gateway, please wait…');
     if(statusEl){ statusEl.style.display='block'; statusEl.style.color='var(--sf-400)'; statusEl.textContent='Loading payment gateway…'; }
     let waited=0;
     const poll=setInterval(()=>{
       waited+=500;
-      if(typeof Razorpay!=='undefined'){
-        clearInterval(poll);
-        if(statusEl) statusEl.style.display='none';
-        bkmTriggerRazorpay(); // retry now that it's loaded
-      } else if(waited>=12000){
-        clearInterval(poll);
-        bkmToast('⚠️ Payment gateway could not load. Please check your internet and retry.');
+      if(typeof Razorpay!=='undefined'){ clearInterval(poll); if(statusEl) statusEl.style.display='none'; bkmTriggerRazorpay(); }
+      else if(waited>=12000){
+        clearInterval(poll); bkmToast('⚠️ Payment gateway could not load.');
         if(statusEl){ statusEl.style.display='block'; statusEl.style.color='var(--bk-accent,#C86000)';
-          statusEl.innerHTML='<div style="background:rgba(244,123,0,.1);border:1px solid rgba(244,123,0,.25);border-radius:10px;padding:12px 14px;margin:6px 0;font-size:.84rem;line-height:1.6">⚠️ Payment gateway could not load (slow network?).<br><strong>Your booking is saved</strong> — tap <em>Confirm on WhatsApp</em> below, or <button onclick="bkmTriggerRazorpay()" style="text-decoration:underline;background:none;border:none;cursor:pointer;color:var(--bk-accent,#C86000);font-family:inherit;font-size:inherit;font-weight:700;padding:0">Retry Payment</button>.</div>';
+          statusEl.innerHTML='<div style="background:rgba(244,123,0,.1);border:1px solid rgba(244,123,0,.25);border-radius:10px;padding:12px 14px;margin:6px 0;font-size:.84rem;line-height:1.6">⚠️ Payment gateway could not load.<br><strong>Your booking is saved</strong> — tap <em>Confirm on WhatsApp</em> below.</div>';
           const waBtn=document.querySelector('.bkm-btn-wa'); if(waBtn){setTimeout(()=>waBtn.scrollIntoView({behavior:'smooth',block:'center'}),300); waBtn.style.animation='waPulse 1s ease-in-out 3';}
         }
       }
     },500);
     return;
   }
-
-  // Ask our own server to create the Razorpay order first. This pins the
-  // amount server-side (so it can't be tampered with in devtools) and gives
-  // us an order_id we can verify the signature against after payment.
   let order;
   try{
-    const res=await fetch('/api/payment/create-order',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({ amount:amt, bookingId:BKM.S.bookingId })
-    });
+    const res=await fetch('/api/payment/create-order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({amount:amt,bookingId:BKM.S.bookingId})});
     order=await res.json();
-    if(!res.ok || !order.order_id){
-      console.error('[OWB] Payment order failed:', res.status, JSON.stringify(order));
-      throw new Error(order.error||'order_failed');
-    }
+    if(!res.ok||!order.order_id) throw new Error(order.error||'order_failed');
   }catch(e){
     bkmToast('⚠️ Could not start payment. Please confirm via WhatsApp below.');
-    if(statusEl){
-      statusEl.style.display='block';
-      statusEl.style.color='var(--bk-accent,#C86000)';
-      statusEl.innerHTML=\`<div style="background:rgba(244,123,0,.1);border:1px solid rgba(244,123,0,.25);border-radius:10px;padding:12px 14px;margin:6px 0;font-size:.84rem;line-height:1.6">
-        ⚠️ Online payment is temporarily unavailable.<br>
-        <strong>Your booking is saved</strong> — please tap <em>Confirm on WhatsApp</em> below to secure your cab instantly.
-      </div>\`;
-    }
-    // Auto-scroll to WhatsApp button
-    const waBtn = document.querySelector('.bkm-btn-wa');
+    if(statusEl){ statusEl.style.display='block'; statusEl.style.color='var(--bk-accent,#C86000)';
+      statusEl.innerHTML=`<div style="background:rgba(244,123,0,.1);border:1px solid rgba(244,123,0,.25);border-radius:10px;padding:12px 14px;margin:6px 0;font-size:.84rem;line-height:1.6">⚠️ Online payment is temporarily unavailable.<br><strong>Your booking is saved</strong> — please tap <em>Confirm on WhatsApp</em> below.</div>`; }
+    const waBtn=document.querySelector('.bkm-btn-wa');
     if(waBtn){ setTimeout(()=>waBtn.scrollIntoView({behavior:'smooth',block:'center'}),300); waBtn.style.animation='waPulse 1s ease-in-out 3'; }
     return;
   }
-
   const options={
-    key: order.key_id,
-    order_id: order.order_id,
-    amount: order.amount,
-    currency: order.currency||'INR',
-    name:'One-Way Bhaarat',
-    description:`Cab Booking — ${BKM.S.vehicleName}`,
-    prefill:{ name:BKM.S.name, email:BKM.S.email, contact:'91'+BKM.S.phone },
-    notes:{ booking_id:BKM.S.bookingId },
-    theme:{ color:'#F47B00' },
-    handler(response){ _bkmVerifyAndConfirm(response, statusEl); }
+    key:order.key_id, order_id:order.order_id, amount:order.amount, currency:order.currency||'INR',
+    name:'One-Way Bhaarat', description:`Cab Booking — ${BKM.S.vehicleName}`,
+    prefill:{name:BKM.S.name,email:BKM.S.email,contact:'91'+BKM.S.phone},
+    notes:{booking_id:BKM.S.bookingId}, theme:{color:'#F47B00'},
+    handler(response){ _bkmVerifyAndConfirm(response,statusEl); }
   };
   new Razorpay(options).open();
 }
 
-// Verifies the payment signature server-side before treating it as
-// successful — the client-side handler() callback alone can be spoofed.
-async function _bkmVerifyAndConfirm(response, statusEl){
+async function _bkmVerifyAndConfirm(response,statusEl){
   try{
-    const res=await fetch('/api/payment/verify',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        razorpay_order_id: response.razorpay_order_id,
-        razorpay_payment_id: response.razorpay_payment_id,
-        razorpay_signature: response.razorpay_signature
-      })
-    });
+    const res=await fetch('/api/payment/verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({razorpay_order_id:response.razorpay_order_id,razorpay_payment_id:response.razorpay_payment_id,razorpay_signature:response.razorpay_signature})});
     const data=await res.json();
     if(!data.verified){
       bkmToast('⚠️ Payment could not be verified. Please contact us if money was deducted.');
-      if(statusEl){ statusEl.style.display='block'; statusEl.style.color='var(--sf-400)'; statusEl.textContent='⚠️ Payment verification failed. Please confirm via WhatsApp below.'; }
+      if(statusEl){ statusEl.style.display='block'; statusEl.style.color='var(--sf-400)'; statusEl.textContent='⚠️ Payment verification failed.'; }
       return;
     }
     bkmToast('✅ Payment successful! Booking confirmed.');
@@ -1106,11 +873,9 @@ async function _bkmVerifyAndConfirm(response, statusEl){
     _bkmNotifyPayment(response.razorpay_payment_id);
   }catch(e){
     bkmToast('⚠️ Could not confirm payment status. Please contact us if money was deducted.');
-    if(statusEl){ statusEl.style.display='block'; statusEl.style.color='var(--sf-400)'; statusEl.textContent='⚠️ Could not confirm payment. Please confirm via WhatsApp below.'; }
   }
 }
 
-// ── WhatsApp confirm ─────────────────────────────────────────
 function bkmSendWA(){
   const S=BKM.S;
   const stops=(S.extraCities||[]).filter(c=>c.trim());
@@ -1131,81 +896,39 @@ function bkmSendWA(){
   window.open(`https://wa.me/${ADMIN_WA}?text=${msg}`,'_blank');
 }
 
-// ── Admin notify ─────────────────────────────────────────────
 async function _bkmNotifyAdmin(){
   const S=BKM.S;
   try{
-    await fetch('/api/booking/notify',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        verifyToken: S.verifyToken,
-        booking:{
-          id:S.bookingId, name:S.name, phone:S.phone, email:S.email,
-          from:S.pu, to:S.dr, vehicle:S.vehicleName, tripType:S.trip,
-          date:S.date, time:S.time, retdate:S.retdate,
-          fare:S.totalFare, advance:S.advAmt, pax:S.pax,
-          distKm:S.distKm, notes:S.notes, extraCities:S.extraCities||[]
-        }
-      })
-    });
+    await fetch('/api/booking/notify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({verifyToken:S.verifyToken,booking:{id:S.bookingId,name:S.name,phone:S.phone,email:S.email,from:S.pu,to:S.dr,vehicle:S.vehicleName,tripType:S.trip,date:S.date,time:S.time,retdate:S.retdate,fare:S.totalFare,advance:S.advAmt,pax:S.pax,distKm:S.distKm,notes:S.notes,extraCities:S.extraCities||[]}})});
   }catch(e){ /* non-critical */ }
 }
 
 async function _bkmNotifyPayment(paymentId){
   try{
-    await fetch('/api/booking/notify',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({booking:{
-        id:BKM.S.bookingId, paymentId, payAmt:BKM.S.payAmt,
-        name:BKM.S.name, phone:BKM.S.phone,
-        vehicle:BKM.S.vehicleName, fare:BKM.S.totalFare,
-        type:'payment'
-      }})
-    });
+    await fetch('/api/booking/notify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({booking:{id:BKM.S.bookingId,paymentId,payAmt:BKM.S.payAmt,name:BKM.S.name,phone:BKM.S.phone,vehicle:BKM.S.vehicleName,fare:BKM.S.totalFare,type:'payment'}})});
   }catch(e){ /* non-critical */ }
-  // #21: Also send customer a booking confirmation on WhatsApp
   _bkmNotifyCustomer(paymentId);
 }
 
 async function _bkmNotifyCustomer(paymentId){
-  const S=BKM.S;
-  const stops=(S.extraCities||[]).filter(c=>c.trim());
+  const S=BKM.S; const stops=(S.extraCities||[]).filter(c=>c.trim());
   try{
-    await fetch('/api/booking/customer-confirm',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        verifyToken: S.verifyToken,
-        booking:{
-          id:S.bookingId, name:S.name, phone:S.phone,
-          from:S.pu, to:S.dr, vehicle:S.vehicleName, tripType:S.trip,
-          date:S.date, time:S.time, retdate:S.retdate,
-          fare:S.totalFare, advance:S.advAmt, payAmt:S.payAmt,
-          distKm:S.distKm, pax:S.pax, notes:S.notes,
-          extraCities:stops, paymentId: paymentId||''
-        }
-      })
-    });
+    await fetch('/api/booking/customer-confirm',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({verifyToken:S.verifyToken,booking:{id:S.bookingId,name:S.name,phone:S.phone,from:S.pu,to:S.dr,vehicle:S.vehicleName,tripType:S.trip,date:S.date,time:S.time,retdate:S.retdate,fare:S.totalFare,advance:S.advAmt,payAmt:S.payAmt,distKm:S.distKm,pax:S.pax,notes:S.notes,extraCities:stops,paymentId:paymentId||''}})});
   }catch(e){ /* non-critical */ }
 }
 
-// ── Multi-stop (modal) ───────────────────────────────────────
 function bkmAddStop(){
   const idx=(BKM.S.extraCities||[]).length;
   if(!BKM.S.extraCities) BKM.S.extraCities=[];
   const list=document.getElementById('bkm-stop-list');
+  if(!list) return;
   const row=document.createElement('div');
   row.id='bkm-srow-'+idx; row.className='bkm-stop-item';
-  row.innerHTML=`
-    <input type="text" id="bkm-sinp-${idx}" placeholder="Enter stop location…" autocomplete="off"
-      style="flex:1;border:1.5px solid rgba(244,123,0,.3);border-radius:9px;padding:9px 12px;font-size:.82rem;background:rgba(255,255,255,.05);color:#fff;font-family:'Nunito',sans-serif;outline:none;box-sizing:border-box"/>
+  row.innerHTML=`<input type="text" id="bkm-sinp-${idx}" placeholder="Enter stop location…" autocomplete="off" style="flex:1;border:1.5px solid rgba(244,123,0,.3);border-radius:9px;padding:9px 12px;font-size:.82rem;background:rgba(255,255,255,.05);color:#fff;font-family:'Nunito',sans-serif;outline:none;box-sizing:border-box"/>
     <button type="button" onclick="bkmConfirmStop(${idx})" style="background:linear-gradient(135deg,var(--sf-500),var(--sf-700));border:none;border-radius:8px;padding:7px 12px;color:#fff;cursor:pointer;font-size:.78rem;font-weight:700;flex-shrink:0;white-space:nowrap;font-family:'Nunito',sans-serif">Add ✓</button>`;
   list.appendChild(row);
   const inp=document.getElementById('bkm-sinp-'+idx);
-  inp.focus();
-  _bkmAttachAC(inp, name=>{ inp.value=name; });
+  if(inp){ inp.focus(); _bkmAttachAC(inp,name=>{ inp.value=name; }); }
 }
 
 function bkmConfirmStop(idx){
@@ -1215,14 +938,14 @@ function bkmConfirmStop(idx){
   if(!BKM.S.extraCities) BKM.S.extraCities=[];
   BKM.S.extraCities[idx]=val;
   _bkmRenderStops();
-  // Reset distance since route has changed, then recalculate
   BKM.S.distKm=0;
-  document.getElementById('bkm-dist').classList.remove('show');
+  const distEl=document.getElementById('bkm-dist'); if(distEl) distEl.classList.remove('show');
   _bkmMaybeLiveDist();
 }
 
 function _bkmRenderStops(){
   const list=document.getElementById('bkm-stop-list');
+  if(!list) return;
   list.innerHTML=(BKM.S.extraCities||[]).filter(c=>c.trim()).map((c,i)=>`
     <div class="bkm-stop-item">
       <div class="bkm-stop-pill">📍 Stop ${i+1}: ${c}</div>
@@ -1231,30 +954,22 @@ function _bkmRenderStops(){
 }
 
 function bkmRemoveStop(i){
-  BKM.S.extraCities.splice(i,1);
-  _bkmRenderStops();
+  BKM.S.extraCities.splice(i,1); _bkmRenderStops();
   BKM.S.distKm=0;
-  document.getElementById('bkm-dist').classList.remove('show');
+  const distEl=document.getElementById('bkm-dist'); if(distEl) distEl.classList.remove('show');
   _bkmMaybeLiveDist();
 }
 
-// ── Autocomplete for modal ────────────────────────────────────
-// Uses the same portal approach as BRG — appended to body
 const _bkmAcReqIds={};
 let _bkmPortalActive=null;
 
-function _bkmAttachAC(inp, cb){
+function _bkmAttachAC(inp,cb){
+  if(!inp) return;
   const id=inp.id||('ac-'+Math.random().toString(36).slice(2));
   inp.id=id;
   let timer;
-  inp.addEventListener('input',()=>{
-    clearTimeout(timer);
-    timer=setTimeout(()=>_bkmFetchAC(inp.value.trim(),id,cb,inp),280);
-  });
-  inp.addEventListener('blur',()=>{
-    const portal=document.getElementById('owb-ac-portal');
-    if(portal && !portal._touching) setTimeout(()=>_bkmHidePortal(),120);
-  });
+  inp.addEventListener('input',()=>{ clearTimeout(timer); timer=setTimeout(()=>_bkmFetchAC(inp.value.trim(),id,cb,inp),280); });
+  inp.addEventListener('blur',()=>{ const portal=document.getElementById('owb-ac-portal'); if(portal&&!portal._touching) setTimeout(()=>_bkmHidePortal(),120); });
   inp.addEventListener('focus',()=>{ if(inp.value.trim().length>=2) _bkmFetchAC(inp.value.trim(),id,cb,inp); });
 }
 
@@ -1272,24 +987,15 @@ async function _bkmFetchAC(q,id,cb,inp){
 
 function _bkmShowPortal(preds,cb,inp){
   const portal=document.getElementById('owb-ac-portal');
+  if(!portal) return;
   if(!preds.length){ _bkmHidePortal(); return; }
   portal._touching=false;
-  portal.innerHTML=preds.map(p=>`
-    <div class="bkm-ac-item">
-      <div>
-        <div class="bkm-ac-main">📍 ${p.n}</div>
-        ${p.s?`<div class="bkm-ac-sub">${p.s}</div>`:''}
-      </div>
-    </div>`).join('');
+  portal.innerHTML=preds.map(p=>`<div class="bkm-ac-item"><div><div class="bkm-ac-main">📍 ${p.n}</div>${p.s?`<div class="bkm-ac-sub">${p.s}</div>`:''}</div></div>`).join('');
   portal.querySelectorAll('.bkm-ac-item').forEach((el,i)=>{
-    el.addEventListener('mousedown', e=>{ e.preventDefault(); cb(preds[i].n); _bkmHidePortal(); });
-    el.addEventListener('touchstart',()=>{ portal._touching=true; },{ passive:true });
-    el.addEventListener('touchend',()=>{
-      cb(preds[i].n); _bkmHidePortal();
-      setTimeout(()=>{ portal._touching=false; },50);
-    });
+    el.addEventListener('mousedown',e=>{e.preventDefault();cb(preds[i].n);_bkmHidePortal();});
+    el.addEventListener('touchstart',()=>{portal._touching=true;},{passive:true});
+    el.addEventListener('touchend',()=>{cb(preds[i].n);_bkmHidePortal();setTimeout(()=>{portal._touching=false;},50);});
   });
-  // Position portal under input
   const rect=inp.getBoundingClientRect();
   portal.className='u-portal';
   portal.style.top=`${rect.bottom+4}px`;
@@ -1300,50 +1006,21 @@ function _bkmShowPortal(preds,cb,inp){
 
 function _bkmHidePortal(){
   const portal=document.getElementById('owb-ac-portal');
-  if(portal){ portal.style.display='none'; portal.innerHTML=''; }
+  if(portal){portal.style.display='none';portal.innerHTML='';}
   _bkmPortalActive=null;
 }
 
-// Attach AC to modal pickup, drop inputs
-document.addEventListener('DOMContentLoaded',()=>{
-  _bkmAttachAC(document.getElementById('bk-pu'), name=>{
-    document.getElementById('bk-pu').value=name; BKM.S.pu=name;
-    if(BKM.S.trip==='roundtrip'){
-      document.getElementById('bk-dr').value=name; BKM.S.dr=name;
-    }
-    // Reset distance + live fares on new location pick
-    BKM.S.distKm=0; BKM._preDistKm=0;
-    document.getElementById('bkm-dist').classList.remove('show');
-    const lf=document.getElementById('bkmLiveFares'); if(lf) lf.classList.remove('show');
-    _bkmMaybeLiveDist();
-  });
-  _bkmAttachAC(document.getElementById('bk-dr'), name=>{
-    document.getElementById('bk-dr').value=name; BKM.S.dr=name;
-    BKM.S.distKm=0; BKM._preDistKm=0;
-    document.getElementById('bkm-dist').classList.remove('show');
-    const lf=document.getElementById('bkmLiveFares'); if(lf) lf.classList.remove('show');
-    _bkmMaybeLiveDist();
-  });
-});
-
-// ── Live distance: fire as soon as both pickup & drop are set ──────────────
-// Mirrors brgcabs.in — distance shows under the "To Location" field right
-// after both ends are picked, not only after clicking "Search Cabs".
 function _bkmMaybeLiveDist(){
-  const pu = (BKM.S.pu || document.getElementById('bk-pu').value || '').trim();
-  const dr = (BKM.S.dr || document.getElementById('bk-dr').value || '').trim();
-  if(!pu || !dr || pu===dr) return;
-  const stops = (BKM.S.extraCities||[]).filter(c=>c.trim());
-  const waypoints = [pu, ...stops, dr];
+  const pu=(BKM.S.pu||(document.getElementById('bk-pu')||{}).value||'').trim();
+  const dr=(BKM.S.dr||(document.getElementById('bk-dr')||{}).value||'').trim();
+  if(!pu||!dr||pu===dr) return;
+  const stops=(BKM.S.extraCities||[]).filter(c=>c.trim());
+  const waypoints=[pu,...stops,dr];
   _bkmShowDist('Calculating…');
-  if(waypoints.length > 2){
-    _bkmFetchDistMultiStop(waypoints);
-  } else {
-    _bkmFetchDist(pu, dr);
-  }
+  if(waypoints.length>2){ _bkmFetchDistMultiStop(waypoints); }
+  else { _bkmFetchDist(pu,dr); }
 }
 
-// ── Date/Time formatters ─────────────────────────────────────
 function _bkmFmtDate(s){
   if(!s) return '—';
   const d=new Date(s+'T00:00:00');
@@ -1356,14 +1033,98 @@ function _bkmFmtTime(s){
   return `${((hr%12)||12)}:${m} ${ampm}`;
 }
 
-// Close portal on outside click
-document.addEventListener('click',e=>{
-  const portal=document.getElementById('owb-ac-portal');
-  if(portal && _bkmPortalActive && !_bkmPortalActive.contains(e.target) && !portal.contains(e.target)){
-    _bkmHidePortal();
+// ══════════════════════════════════════════════════════════════
+//  DOM-DEPENDENT INIT — runs after DOM is ready
+// ══════════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+
+  // Date/time defaults (hero widget)
+  const pdateEl = document.getElementById('pdate');
+  const ptimeEl = document.getElementById('ptime');
+  const todayStr = new Date().toISOString().split('T')[0];
+  if(pdateEl){ pdateEl.min = todayStr; pdateEl.value = todayStr; }
+  if(ptimeEl){
+    const defaultTime = new Date(Date.now() + 75 * 60 * 1000);
+    const defHH = String(defaultTime.getHours()).padStart(2, '0');
+    const defMM = String(defaultTime.getMinutes()).padStart(2, '0');
+    ptimeEl.value = `${defHH}:${defMM}`;
   }
+
+  // Route cards
+  const grid = document.getElementById('routesGrid');
+  if(grid){
+    ROUTES.forEach(r => {
+      const el = document.createElement('div');
+      el.className = 'route-card'; el.style.cursor = 'pointer';
+      el.onclick = () => { BKM.S.pu=r.from; BKM.S.dr=r.to; BKM._preDistKm=r.d; bkmOpen({prefill:true}); };
+      el.innerHTML = `
+        <div class="route-emoji">${r.icon}</div>
+        <div class="route-info">
+          <div class="route-name">${r.from} → ${r.to}</div>
+          <div class="route-meta">${r.d} km · Sedan One Way</div>
+        </div>
+        <div class="route-price-col">
+          <div class="route-price">₹${r.p.toLocaleString('en-IN')}</div>
+          <div class="route-dist">${r.d} km</div>
+        </div>`;
+      grid.appendChild(el);
+    });
+  }
+
+  // Scroll reveal
+  document.querySelectorAll('.reveal').forEach(el => ro.observe(el));
+
+  // Autocomplete
+  if(window.google && google.maps && google.maps.places) initAutocomplete();
+  else if(!IS_LOCAL) initAutocomplete();
+
+  // Booking modal: close on overlay click
+  const bkModal = document.getElementById('bkModal');
+  if(bkModal) bkModal.addEventListener('click', e => { if(e.target===bkModal) bkmClose(); });
+
+  // Modal pickup mirrors to locked drop in round-trip mode
+  const bkPu = document.getElementById('bk-pu');
+  if(bkPu) bkPu.addEventListener('input', function(){
+    if(BKM.S.trip==='roundtrip'){
+      const drEl=document.getElementById('bk-dr');
+      if(drEl){ drEl.value=this.value; BKM.S.dr=this.value; }
+    }
+  });
+
+  // Modal date defaults
+  const todayDate = new Date().toISOString().split('T')[0];
+  ['bk-dt','bk-ret'].forEach(id => { const el=document.getElementById(id); if(el) el.min=todayDate; });
+  const bkDt=document.getElementById('bk-dt'); if(bkDt&&!bkDt.value) bkDt.value=todayDate;
+  const t=new Date(Date.now()+2*60*60*1000);
+  const hh=String(t.getHours()).padStart(2,'0'); const mm=String(t.getMinutes()).padStart(2,'0');
+  const bkTm=document.getElementById('bk-tm'); if(bkTm&&!bkTm.value) bkTm.value=`${hh}:${mm}`;
+
+  // Modal AC
+  const bkPuEl=document.getElementById('bk-pu');
+  const bkDrEl=document.getElementById('bk-dr');
+  if(bkPuEl) _bkmAttachAC(bkPuEl, name=>{
+    bkPuEl.value=name; BKM.S.pu=name;
+    if(BKM.S.trip==='roundtrip'&&bkDrEl){ bkDrEl.value=name; BKM.S.dr=name; }
+    BKM.S.distKm=0; BKM._preDistKm=0;
+    const distEl=document.getElementById('bkm-dist'); if(distEl) distEl.classList.remove('show');
+    const lf=document.getElementById('bkmLiveFares'); if(lf) lf.classList.remove('show');
+    _bkmMaybeLiveDist();
+  });
+  if(bkDrEl) _bkmAttachAC(bkDrEl, name=>{
+    bkDrEl.value=name; BKM.S.dr=name;
+    BKM.S.distKm=0; BKM._preDistKm=0;
+    const distEl=document.getElementById('bkm-dist'); if(distEl) distEl.classList.remove('show');
+    const lf=document.getElementById('bkmLiveFares'); if(lf) lf.classList.remove('show');
+    _bkmMaybeLiveDist();
+  });
+
+  // Portal close on outside click + Escape
+  document.addEventListener('click', e=>{
+    const portal=document.getElementById('owb-ac-portal');
+    if(portal&&_bkmPortalActive&&!_bkmPortalActive.contains(e.target)&&!portal.contains(e.target)) _bkmHidePortal();
+  });
+  document.addEventListener('keydown', e=>{ if(e.key==='Escape') bkmClose(); });
+
+  // Run calc fare if elements exist
+  calcFare();
 });
-
-// Escape key closes modal
-document.addEventListener('keydown', e=>{ if(e.key==='Escape') bkmClose(); });
-
