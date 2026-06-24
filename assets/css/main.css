@@ -877,27 +877,27 @@ header.scrolled {
 }
 
 /* MOBILE REORDERING: Booking → Header → Routes */
-@media (max-width: 768px) {
-  body {
-    display: flex;
-    flex-direction: column;
-  }
-  
-  .hero { order: 1; }
-  #header { order: 2; }
-  .trust-bar { order: 3; }
-  #routes { order: 4; }
-  .fleet-section { order: 5; }
-  .calc-section { order: 6; }
-  #why { order: 7; }
-  #reviews { order: 8; }
-  .cta-section { order: 9; }
-  footer { order: 10; }
-  /* .float-actions is position:fixed (taken out of flow), so a flex
-     "order" here has no effect — its on-screen position is controlled
-     entirely by the top/right/bottom rules in the .float-actions media
-     query above. */
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 @media (max-width: 620px) {
   .footer-top { grid-template-columns: 1fr; }
@@ -1515,6 +1515,8 @@ p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
   position: fixed; inset: 0; z-index: 9999;
   background: #FFDAB9;
   display: flex; align-items: center; justify-content: center;
+  /* FIX: allow scroll if content is taller than viewport (mobile) */
+  overflow-y: auto;
   transition: opacity 0.8s ease, visibility 0.8s ease;
 }
 #loader.out { opacity: 0; visibility: hidden; pointer-events: none; }
@@ -1918,34 +1920,51 @@ p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
 }
 
 
-/* ═══════════════════════ LOADER MOBILE FIXES ═══════════════════════ */
+/* ═══════════════════════ LOADER MOBILE FIXES (v2 — all bugs fixed) ═══════════════════════ */
 @media (max-width: 480px) {
+  /* Switch from centered to top-aligned so bottom text is never cut */
+  #loader {
+    align-items: flex-start !important;
+    padding: 24px 0 32px !important;
+  }
   .loader-wrap {
     width: 100%;
-    padding: 0 12px;
+    padding: 0 16px;
     box-sizing: border-box;
   }
   .map-area {
+    /* FIX 1: Lock the true image aspect ratio (479:488) so % children
+       always position against the actual rendered image height, not a
+       square fallback. Without this the browser uses the HTML width/height
+       attrs (480×480) until the image loads → chakra shifts. */
     width: 100% !important;
-    position: relative !important; /* ensure % children position against this */
+    position: relative !important;
+    aspect-ratio: 479 / 488; /* true source image ratio */
   }
   .map-area img {
+    /* Must be 100% of parent in BOTH dimensions so the
+       aspect-ratio above controls the height */
     width: 100% !important;
-    max-width: 100% !important;
-    height: auto !important;
+    height: 100% !important;   /* ← was 'auto', which broke % child positioning */
+    object-fit: contain !important;
     display: block !important;
   }
   .chakra-wrap {
     /*
-      Percentage-based so the chakra stays locked to the map at any width.
-      Source image: 479×488 px. Displayed at 460px → rendered height ≈ 469px.
-      left = 118/460 = 25.65%   top = 164/469 = 34.97%
-      width = height = 146/460 = 31.74%
+      FIX 1 (continued): Now that .map-area has a true aspect-ratio,
+      percentage top/left/width/height values reliably track the image.
+      Source image: 479×488 px.
+      Chakra desktop px:  top=164, left=118, size=146×146
+      → top   = 164/488 = 33.61%
+      → left  = 118/479 = 24.64%
+      → width = height = 146/479 = 30.48%
     */
-    top: 34.97% !important;
-    left: 25.65% !important;
-    width: 31.74% !important;
-    height: 31.74% !important;
+    position: absolute !important;
+    top:   33.61% !important;
+    left:  24.64% !important;
+    width:  30.48% !important;
+    height: 30.48% !important;
+    animation: chakraGlow 3s ease-in-out infinite;
   }
   .chakra-spin {
     width: 100% !important;
@@ -1955,12 +1974,14 @@ p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
     width: 51% !important;   /* 74/146 ≈ 50.68% */
     height: 51% !important;
   }
-  /* Dots: top = px/469, left = px/460 — stay pinned to the map */
-  .dot1 { top: 12.79% !important; left: 43.48% !important; }
-  .dot2 { top: 25.59% !important; left: 69.57% !important; }
-  .dot3 { top: 59.70% !important; left: 33.70% !important; }
-  .dot4 { top: 72.49% !important; left: 56.52% !important; }
-  .dot5 { top: 36.25% !important; left: 76.09% !important; }
+  /* FIX 1 (dots): Recalculated against true image dimensions 479×488 px */
+  /* Also increase size — 6-10px dots are invisible on small screens */
+  .dot  { width: 10px !important; height: 10px !important; }  /* base size up */
+  .dot1 { top: 12.30% !important; left: 41.75% !important; width: 12px !important; height: 12px !important; }  /* 60/488, 200/479 */
+  .dot2 { top: 24.59% !important; left: 62.00% !important; width: 10px !important; height: 10px !important; }  /* moved left — NE India is narrow, dot was on empty space */
+  .dot3 { top: 57.38% !important; left: 32.36% !important; width: 11px !important; height: 11px !important; }  /* 280/488, 155/479 */
+  .dot4 { top: 69.67% !important; left: 54.28% !important; width:  9px !important; height:  9px !important; }  /* 340/488, 260/479 */
+  .dot5 { top: 34.84% !important; left: 68.00% !important; width: 11px !important; height: 11px !important; }  /* moved left slightly — same NE reason */
   .loading-title {
     font-size: 14px !important;
     letter-spacing: 2px !important;
@@ -1979,6 +2000,53 @@ p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
   .tagline       { font-size: 10px !important; letter-spacing: 1.5px !important; }
 }
 
+
+/* ══════════════════════════════════════════════════════════════════════
+   FIX 2: CONTENT CUTTING ON MOBILE
+   Root cause: .hero has overflow:hidden which clips child content on
+   narrow viewports. Also hero-inner padding overshoots on 375px screens.
+   ══════════════════════════════════════════════════════════════════════ */
+@media (max-width: 480px) {
+  .hero {
+    overflow: visible !important;  /* was 'hidden' — this was clipping content */
+    min-height: unset !important;
+    height: auto !important;
+  }
+  .hero-inner {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    overflow: visible !important;
+  }
+  .booking-widget {
+    max-width: 100% !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+  }
+  section {
+    overflow-x: hidden !important;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   FIX 3: BLUE / COLD BACKGROUND ON MOBILE DRAWER
+   Root cause: .mob-drawer background was linear-gradient(#0B1F3A, #061428)
+   — a cold blue-navy. Replaced with warm dark navy to match OWB brand.
+   ══════════════════════════════════════════════════════════════════════ */
+.mob-drawer {
+  background: linear-gradient(160deg, #1A0F08, #0D1A2A) !important;
+  border-left: 1px solid rgba(244,123,0,0.25) !important;
+}
+.mob-drawer-head {
+  background: linear-gradient(135deg, rgba(244,123,0,0.15), rgba(201,162,39,0.08)) !important;
+}
+.mob-link:hover, .mob-link:active {
+  background: rgba(244,123,0,0.13) !important;
+  color: #F5A030 !important;
+  padding-left: 30px;
+}
 
 /* ═══════════════════════ MOBILE OVERFLOW FIXES (375px) ═══════════════════════ */
 @media (max-width: 480px) {
@@ -2023,21 +2091,22 @@ p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
     line-height: 1.5 !important;
   }
 
-  /* 4. Float buttons — smaller size + right-edge flush so they don't
-        cover the search button or input fields */
+  /* 4. Float buttons — visible bottom-right, clear of content */
   .float-actions {
-    right: 0 !important;
-    bottom: max(24px, env(safe-area-inset-bottom, 24px)) !important;
+    right: 12px !important;
+    bottom: max(20px, env(safe-area-inset-bottom, 20px)) !important;
     gap: 10px !important;
+    z-index: 400 !important;
   }
   .float-btn {
-    width: 44px !important;
-    height: 44px !important;
-    border-radius: 12px 0 0 12px !important;  /* flat right edge, flush to screen */
+    width: 48px !important;
+    height: 48px !important;
+    border-radius: 50% !important;   /* full circle — always visible */
+    box-shadow: 0 4px 16px rgba(0,0,0,0.35) !important;
   }
   .float-btn svg {
-    width: 22px !important;
-    height: 22px !important;
+    width: 24px !important;
+    height: 24px !important;
   }
 
   /* 5. Widget footer — needs right clearance for the 44px flush buttons */
@@ -2080,8 +2149,8 @@ p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
 .ham-btn span {
   display: block;
   width: 22px;
-  height: 2px;
-  background: var(--sf-400);
+  height: 2.5px;                    /* slightly thicker — more visible */
+  background: #F47B00;              /* solid orange — not a variable, always visible */
   border-radius: 2px;
   transition: transform 0.3s ease, opacity 0.3s ease;
   transform-origin: center;
@@ -2114,7 +2183,7 @@ p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
   top: 0; right: 0;
   width: min(300px, 85vw);
   height: 100dvh;
-  background: linear-gradient(160deg, #0B1F3A, #061428);
+  background: linear-gradient(160deg, #1A0F08, #0D1A2A);
   border-left: 1px solid rgba(244,123,0,0.2);
   z-index: 500;
   display: flex;
@@ -2205,6 +2274,19 @@ p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
   border-top: 1px solid rgba(244,123,0,0.15);
   flex-shrink: 0;
 }
+
+/* Tricolor stripe inside mobile drawer */
+.mob-tricolor {
+  display: flex;
+  height: 4px;
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+.mob-tricolor span { flex: 1; }
+.mob-tricolor span:nth-child(1) { background: #FF9933; }
+.mob-tricolor span:nth-child(2) { background: #ffffff; }
+.mob-tricolor span:nth-child(3) { background: #138808; }
 .mob-book-btn {
   width: 100%;
   padding: 14px;
@@ -2249,10 +2331,13 @@ p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
   .mob-overlay { display: none !important; }
 }
 
-/* ── Light theme override for hamburger ── */
-.light-theme .ham-btn {
-  background: rgba(244,123,0,0.12);
+/* ── Hamburger on light/peach header ── */
+.light-theme .ham-btn,
+header .ham-btn {
+  background: rgba(244,123,0,0.18);
+  border: 1.5px solid rgba(244,123,0,0.35);
 }
-.light-theme .ham-btn span {
-  background: var(--sf-600);
+.light-theme .ham-btn span,
+header .ham-btn span {
+  background: #D46800;
 }
