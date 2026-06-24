@@ -838,15 +838,31 @@ async function bkmTriggerRazorpay(){
   }
   let order;
   try{
-    const res=await fetch('/api/payment/create-order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({amount:amt,bookingId:BKM.S.bookingId})});
-    order=await res.json();
-    if(!res.ok||!order.order_id) throw new Error(order.error||'order_failed');
+    let res, rawText;
+    try{
+      res = await fetch('/api/payment/create-order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({amount:amt,bookingId:BKM.S.bookingId})});
+      rawText = await res.text();
+      order = JSON.parse(rawText);
+    }catch(fetchErr){
+      // Network failure OR worker route not found (returned HTML instead of JSON)
+      const isRouteError = rawText && rawText.trim().startsWith('<');
+      throw new Error(isRouteError
+        ? 'Worker route not responding — check Cloudflare route config'
+        : ('Network/parse error: '+fetchErr.message));
+    }
+    if(!res.ok || !order.order_id){
+      // Log the full server response for debugging
+      console.error('[OWB Pay] Server error:', JSON.stringify(order));
+      throw new Error(order.error || ('Server returned HTTP '+res.status));
+    }
   }catch(e){
-    console.error('[OWB Payment] create-order failed:', e.message);
+    console.error('[OWB Pay] create-order failed:', e.message);
     bkmToast('⚠️ Could not start payment. Please confirm via WhatsApp below.');
     if(statusEl){ statusEl.style.display='block'; statusEl.style.color='var(--bk-accent,#C86000)';
-      const errDetail = e.message && e.message !== 'order_failed' ? `<br><small style="opacity:.65;font-size:.78rem">Error: ${e.message}</small>` : '';
-      statusEl.innerHTML=`<div style="background:rgba(244,123,0,.1);border:1px solid rgba(244,123,0,.25);border-radius:10px;padding:12px 14px;margin:6px 0;font-size:.84rem;line-height:1.6">⚠️ Online payment is temporarily unavailable.<br><strong>Your booking is saved</strong> — please tap <em>Confirm on WhatsApp</em> below.${errDetail}</div>`; }
+      const errMsg = e.message && e.message!=='order_failed'
+        ? `<br><small style="opacity:.7;font-size:.8rem;display:block;margin-top:4px">Debug: ${e.message}</small>`
+        : '';
+      statusEl.innerHTML=`<div style="background:rgba(244,123,0,.1);border:1px solid rgba(244,123,0,.25);border-radius:10px;padding:12px 14px;margin:6px 0;font-size:.84rem;line-height:1.6">⚠️ Online payment is temporarily unavailable.<br><strong>Your booking is saved</strong> — please tap <em>Confirm on WhatsApp</em> below.${errMsg}</div>`; }
     const waBtn=document.querySelector('.bkm-btn-wa');
     if(waBtn){ setTimeout(()=>waBtn.scrollIntoView({behavior:'smooth',block:'center'}),300); waBtn.style.animation='waPulse 1s ease-in-out 3'; }
     return;
