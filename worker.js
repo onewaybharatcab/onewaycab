@@ -36,8 +36,8 @@ function addSecurityHeaders(response) {
     "style-src 'self' https://fonts.googleapis.com; " +
     "font-src https://fonts.gstatic.com; " +
     "img-src 'self' data: https:; " +
-    "connect-src 'self' https://maps.googleapis.com https://graph.facebook.com https://api.razorpay.com https://checkout.razorpay.com https://lumberjack.razorpay.com; " +
-    "frame-src https://api.razorpay.com https://checkout.razorpay.com; " +
+    "connect-src 'self' https://maps.googleapis.com https://graph.facebook.com https://api.razorpay.com; " +
+    "frame-src https://api.razorpay.com; " +
     "object-src 'none'; " +
     "base-uri 'self';"
   );
@@ -62,25 +62,6 @@ var worker_default = {
     const origin = request.headers.get("Origin") || "";
     const allowOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : null;
 
-    // health — always works, no secrets needed. GET /api/health
-    if (url.pathname === "/api/health" || url.pathname === "/api/health/") {
-      return new Response(JSON.stringify({ ok: true, ts: Date.now() }), {
-        status: 200,
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
-      });
-    }
-
-    // payment/ping — tests Razorpay key validity. GET /api/payment/ping
-    if (url.pathname.includes("payment/ping")) {
-      return addSecurityHeaders(await handlePaymentPing(request, env, allowOrigin));
-    }
-
-    // payment/test-order — actually attempts to create a ₹1 order, shows full Razorpay response
-    // Use this to diagnose why create-order is failing. DELETE after debugging.
-    if (url.pathname.includes("payment/test-order")) {
-      return addSecurityHeaders(await handleTestOrder(request, env, allowOrigin));
-    }
-
     // 0. Razorpay endpoints (order creation + payment signature verification)
     if (url.pathname.includes("payment/create-order")) {
       return addSecurityHeaders(await withRateLimit(request, env, ctx, "payment-create", () => handleCreateOrder(request, env, allowOrigin), allowOrigin, 10))
@@ -90,11 +71,6 @@ var worker_default = {
     }
 
     // 1. OTP endpoints (booking-flow phone verification via WhatsApp)
-    // otp/ping — diagnoses WhatsApp config. GET /api/otp/ping
-    if (url.pathname.includes("otp/ping")) {
-      return addSecurityHeaders(await handleOtpPing(request, env, allowOrigin));
-    }
-
     if (url.pathname.includes("otp/send")) {
       return addSecurityHeaders(await withRateLimit(request, env, ctx, "otp-send", () => handleSendOtp(request, env, allowOrigin), allowOrigin, OTP_SEND_RATE_LIMIT_MAX))
     }
@@ -107,7 +83,7 @@ var worker_default = {
       return addSecurityHeaders(await withRateLimit(request, env, ctx, "notify", () => handleBookingNotify(request, env, allowOrigin), allowOrigin))
     }
 
-    // 2b. Customer confirmation (WhatsApp message to customer after payment)
+    // 2b. Customer confirmation WhatsApp message after payment
     if (url.pathname.includes("booking/customer-confirm")) {
       return addSecurityHeaders(await withRateLimit(request, env, ctx, "customer-confirm", () => handleCustomerConfirm(request, env, allowOrigin), allowOrigin))
     }
@@ -177,88 +153,6 @@ async function ctx_safe_put(env, key, value, ttl) {
 }
 __name(ctx_safe_put, "ctx_safe_put");
 
-// ── OTP: ping / diagnostic ──────────────────────────────────────────────────
-// GET https://one-waybharat.com/api/otp/ping — checks WhatsApp config + token validity
-async function handleOtpPing(request, env, allowOrigin) {
-  const accessToken   = env.WHATSAPP_ACCESS_TOKEN;
-  const phoneNumberId = env.WHATSAPP_PHONE_NUMBER_ID;
-  const templateName  = env.WHATSAPP_OTP_TEMPLATE_NAME;
-
-  const secrets = {
-    WHATSAPP_ACCESS_TOKEN:    !!accessToken,
-    WHATSAPP_PHONE_NUMBER_ID: !!phoneNumberId,
-    WHATSAPP_OTP_TEMPLATE_NAME: templateName || "NOT SET"
-  };
-
-  if (!accessToken || !phoneNumberId) {
-    return jsonResponse({ secrets, error: "Missing secrets" }, 200, allowOrigin);
-  }
-
-  // Check token validity by fetching the phone number info
-  let tokenOk = false, tokenError = null, phoneInfo = null;
-  try {
-    const r = await fetch(
-      `https://graph.facebook.com/v21.0/${phoneNumberId}?fields=display_phone_number,verified_name,quality_rating,status`,
-      { headers: { "Authorization": `Bearer ${accessToken}` } }
-    );
-    const d = await r.json();
-    if (r.ok) {
-      tokenOk = true;
-      phoneInfo = { display_phone: d.display_phone_number, name: d.verified_name, quality: d.quality_rating, status: d.status };
-    } else {
-      tokenError = d?.error?.message || JSON.stringify(d);
-    }
-  } catch (e) { tokenError = e.message; }
-
-  // Check if the template exists and is approved
-  let templateOk = false, templateError = null, templateInfo = null;
-  if (tokenOk) {
-    try {
-      // Get WABA ID from phone number
-      const r2 = await fetch(
-        `https://graph.facebook.com/v21.0/${phoneNumberId}?fields=whatsapp_business_account`,
-        { headers: { "Authorization": `Bearer ${accessToken}` } }
-      );
-      const d2 = await r2.json();
-      const wabaId = d2?.whatsapp_business_account?.id;
-      if (!wabaId) {
-        templateError = `Could not get WABA ID from phone number. Raw response: ${JSON.stringify(d2).slice(0,300)}`;
-      } else {
-        const r3 = await fetch(
-          `https://graph.facebook.com/v21.0/${wabaId}/message_templates?name=${templateName}&fields=name,status,components,language`,
-          { headers: { "Authorization": `Bearer ${accessToken}` } }
-        );
-        const d3 = await r3.json();
-        const tmpl = d3?.data?.[0];
-        if (tmpl) {
-          templateOk = tmpl.status === "APPROVED";
-          templateInfo = { name: tmpl.name, status: tmpl.status, language: tmpl.language, components: tmpl.components };
-          if (!templateOk) templateError = `Template status is "${tmpl.status}" — must be APPROVED`;
-        } else {
-          // Template not found — list all templates so we can see what exists
-          const r4 = await fetch(
-            `https://graph.facebook.com/v21.0/${wabaId}/message_templates?fields=name,status&limit=20`,
-            { headers: { "Authorization": `Bearer ${accessToken}` } }
-          );
-          const d4 = await r4.json();
-          const allTemplates = (d4?.data || []).map(t => `${t.name}(${t.status})`);
-          templateError = `Template "${templateName}" not found. All templates: [${allTemplates.join(", ")}]`;
-        }
-      }
-    } catch (e) { templateError = e.message; }
-  }
-
-  return jsonResponse({
-    secrets,
-    token_valid: tokenOk,
-    token_error: tokenError,
-    phone_number_info: phoneInfo,
-    template_approved: templateOk,
-    template_error: templateError,
-    template_info: templateInfo
-  }, 200, allowOrigin);
-}
-
 // ── OTP: send via WhatsApp ─────────────────────────────────────────────────
 async function handleSendOtp(request, env, allowOrigin) {
   if (request.method !== "POST") return jsonResponse({ error: "Method not allowed" }, 405, allowOrigin);
@@ -305,72 +199,42 @@ async function handleSendOtp(request, env, allowOrigin) {
   const otp = generateOtp();
   const e164 = `91${rawPhone}`; // India country code, digits only, no leading '+' — required by WhatsApp Cloud API
 
-  // Try two template structures:
-  // Attempt 1: Authentication template with Copy Code button (Meta recommended for OTP)
-  // Attempt 2: Simple utility template with body-only (no button) — fallback
-  const templatePayloads = [
-    {
-      // Authentication / utility template WITH Copy Code button
-      messaging_product: "whatsapp", to: e164, type: "template",
-      template: {
-        name: templateName, language: { code: "en" },
-        components: [
-          { type: "body", parameters: [{ type: "text", text: otp }] },
-          { type: "button", sub_type: "copy_code", index: "0", parameters: [{ type: "coupon_code", coupon_code: otp }] }
-        ]
-      }
-    },
-    {
-      // Simple template with body only (no button) — works for utility/marketing templates
-      messaging_product: "whatsapp", to: e164, type: "template",
-      template: {
-        name: templateName, language: { code: "en" },
-        components: [
-          { type: "body", parameters: [{ type: "text", text: otp }] }
-        ]
-      }
-    },
-    {
-      // Minimal — no components at all (works if template has no variables)
-      messaging_product: "whatsapp", to: e164, type: "template",
-      template: { name: templateName, language: { code: "en" } }
+  try {
+    const waRes = await fetch(`https://graph.facebook.com/${WHATSAPP_API_VERSION}/${phoneNumberId}/messages`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${accessToken}`,
+        "Content-Type": "application/json"
+      },
+      // NOTE: the "components" structure below assumes an Authentication-category
+      // template with a one-time-passcode "Copy Code" button, which is what Meta
+      // recommends for OTP. When you create this template in WhatsApp Manager,
+      // Meta shows you the exact sample request for YOUR template — match that
+      // exactly, since the button parameter shape varies by button type
+      // (copy_code vs one-tap autofill vs url).
+      body: JSON.stringify({
+        messaging_product: "whatsapp",
+        to: e164,
+        type: "template",
+        template: {
+          name: templateName,
+          language: { code: "en" },
+          components: [
+            { type: "body", parameters: [{ type: "text", text: otp }] },
+            { type: "button", sub_type: "copy_code", index: "0", parameters: [{ type: "coupon_code", coupon_code: otp }] }
+          ]
+        }
+      })
+    });
+
+    const waData = await waRes.json();
+    if (!waRes.ok) {
+      console.error("WhatsApp send failed:", JSON.stringify(waData));
+      return jsonResponse({ error: "Could not send OTP. Please try again." }, 502, allowOrigin);
     }
-  ];
-
-  let lastWaError = null;
-  let sent = false;
-
-  for (const payload of templatePayloads) {
-    try {
-      const waRes = await fetch(`https://graph.facebook.com/${WHATSAPP_API_VERSION}/${phoneNumberId}/messages`, {
-        method: "POST",
-        headers: { "Authorization": `Bearer ${accessToken}`, "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-      const waData = await waRes.json();
-      if (waRes.ok && waData?.messages?.[0]?.id) {
-        sent = true;
-        break; // Success — stop trying
-      }
-      const waErr = waData?.error?.message || waData?.error?.error_data?.details || JSON.stringify(waData);
-      const waCode = waData?.error?.code || waData?.error?.error_subcode || 'unknown';
-      console.error(`WhatsApp send attempt failed (code=${waCode}):`, JSON.stringify(waData));
-      lastWaError = { code: waCode, message: waErr, type: waData?.error?.type || null };
-      // Only retry if it's a template structure error (subcode 2012), not auth/account errors
-      const structureError = waCode === 132000 || waCode === 132001 || String(waCode).startsWith('132');
-      if (!structureError) break; // Don't retry for auth/account errors
-    } catch (err) {
-      console.error("WhatsApp API request failed:", err.message);
-      lastWaError = { code: 'network', message: err.message };
-      break;
-    }
-  }
-
-  if (!sent) {
-    const errMsg = lastWaError
-      ? `WhatsApp error (${lastWaError.code}): ${lastWaError.message}`
-      : "Could not send OTP. Please try again.";
-    return jsonResponse({ error: errMsg, wa_error: lastWaError }, 502, allowOrigin);
+  } catch (err) {
+    console.error("WhatsApp API request failed:", err.message);
+    return jsonResponse({ error: "Could not send OTP. Please try again." }, 502, allowOrigin);
   }
 
   try {
@@ -556,26 +420,7 @@ async function handleBookingNotify(request, env, allowOrigin) {
     return jsonResponse({ error: "Missing required booking fields" }, 400, allowOrigin);
   }
 
-  // #16: Validate verifyToken — payment notifications (type==="payment") are
-  // exempt since they're triggered only after server-side Razorpay signature
-  // verification. Booking notifications must carry the OTP-issued token.
-  const isPayment = b.type === "payment";
-  if (!isPayment) {
-    const submittedToken = String(body.verifyToken || "");
-    const rawPhone = String(b.phone || "").replace(/\D/g, "").slice(-10);
-    if (!submittedToken || !rawPhone) {
-      console.warn("[OWB] Booking notify rejected: missing token or phone");
-      return jsonResponse({ error: "Unauthorized" }, 403, allowOrigin);
-    }
-    let storedToken = null;
-    try { storedToken = await env.RATE_LIMIT_KV.get(`verified:${rawPhone}`); } catch (e) { /* KV hiccup */ }
-    if (!storedToken || storedToken !== submittedToken) {
-      console.warn("[OWB] Booking notify rejected: token mismatch for phone", rawPhone);
-      return jsonResponse({ error: "Unauthorized" }, 403, allowOrigin);
-    }
-  }
-
-  const adminNumber  = env.ADMIN_WHATSAPP_NUMBER || "919355757579";
+  const adminNumber  = env.ADMIN_WHATSAPP_NUMBER || "919355757579"; // e.g. 919355757579
   const accessToken  = env.WHATSAPP_ACCESS_TOKEN;
   const phoneNumberId = env.WHATSAPP_PHONE_NUMBER_ID;
 
@@ -586,6 +431,7 @@ async function handleBookingNotify(request, env, allowOrigin) {
   }
 
   // Build the message text
+  const isPayment = b.type === "payment";
   const stops = Array.isArray(b.extraCities) ? b.extraCities.filter(c => c.trim()) : [];
   const stopLine = stops.length ? `\n🛑 Stops: ${stops.join(" → ")}` : "";
 
@@ -645,161 +491,6 @@ async function handleBookingNotify(request, env, allowOrigin) {
 }
 __name(handleBookingNotify, "handleBookingNotify");
 
-// ── Customer confirmation — WhatsApp message to customer after payment ────────
-async function handleCustomerConfirm(request, env, allowOrigin) {
-  if (request.method !== "POST") return jsonResponse({ error: "Method not allowed" }, 405, allowOrigin);
-
-  let body;
-  try { body = await request.json(); } catch {
-    return jsonResponse({ error: "Invalid JSON" }, 400, allowOrigin);
-  }
-
-  const b = body.booking || {};
-  if (!b.id || !b.phone) {
-    return jsonResponse({ error: "Missing required fields" }, 400, allowOrigin);
-  }
-
-  // Validate verifyToken — same logic as booking/notify
-  const submittedToken = String(body.verifyToken || "");
-  const rawPhone = String(b.phone || "").replace(/\D/g, "").slice(-10);
-  if (!submittedToken || !rawPhone) {
-    return jsonResponse({ error: "Unauthorized" }, 403, allowOrigin);
-  }
-  let storedToken = null;
-  try { storedToken = await env.RATE_LIMIT_KV.get(`verified:${rawPhone}`); } catch (e) { /* KV hiccup */ }
-  if (!storedToken || storedToken !== submittedToken) {
-    console.warn("[OWB] Customer confirm rejected: token mismatch for phone", rawPhone);
-    return jsonResponse({ error: "Unauthorized" }, 403, allowOrigin);
-  }
-
-  const accessToken   = env.WHATSAPP_ACCESS_TOKEN;
-  const phoneNumberId = env.WHATSAPP_PHONE_NUMBER_ID;
-  if (!accessToken || !phoneNumberId) {
-    console.warn("WhatsApp not configured — skipping customer confirmation");
-    return jsonResponse({ sent: false, reason: "not_configured" }, 200, allowOrigin);
-  }
-
-  const stops = Array.isArray(b.extraCities) ? b.extraCities.filter(c => c.trim()) : [];
-  const stopLine = stops.length ? `\n🛑 Via: ${stops.join(" → ")}` : "";
-  const remaining = Number(b.fare || 0) - Number(b.payAmt || 0);
-  const e164 = `91${rawPhone}`;
-
-  const msg =
-    `✅ *Booking Confirmed — One-Way Bhaarat*\n\n` +
-    `🔖 Booking ID: ${b.id}\n` +
-    `👤 ${b.name}\n` +
-    `🚗 ${b.vehicle || "—"} · ${b.tripType === "roundtrip" ? "Round Trip" : "One Way"}\n` +
-    `📍 ${b.from || "—"}${stopLine}\n` +
-    `🏁 ${b.to || "—"}\n` +
-    `📅 ${b.date || "—"}${b.time ? " at " + b.time : ""}` +
-    `${b.retdate ? "\n🔄 Return: " + b.retdate : ""}\n` +
-    `📏 ~${b.distKm || "?"} km · ${b.pax || "—"}\n` +
-    `💰 Total Fare: ₹${Number(b.fare || 0).toLocaleString("en-IN")}\n` +
-    `✅ Paid: ₹${Number(b.payAmt || 0).toLocaleString("en-IN")}` +
-    `${remaining > 0 ? ` · Balance ₹${remaining.toLocaleString("en-IN")} to driver` : " (Full paid)"}\n` +
-    `${b.notes ? "📝 " + b.notes + "\n" : ""}` +
-    `\nFor support: +91-93557 57579\nThank you for choosing One-Way Bhaarat! 🙏`;
-
-  try {
-    const waRes = await fetch(
-      `https://graph.facebook.com/${WHATSAPP_API_VERSION}/${phoneNumberId}/messages`,
-      {
-        method: "POST",
-        headers: { "Authorization": `Bearer ${accessToken}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messaging_product: "whatsapp",
-          to: e164,
-          type: "text",
-          text: { body: msg }
-        })
-      }
-    );
-    const waData = await waRes.json();
-    if (!waRes.ok) {
-      console.error("Customer WA confirm failed:", JSON.stringify(waData));
-      return jsonResponse({ sent: false, reason: "upstream_error" }, 200, allowOrigin);
-    }
-    return jsonResponse({ sent: true }, 200, allowOrigin);
-  } catch (err) {
-    console.error("Customer WA confirm exception:", err.message);
-    return jsonResponse({ sent: false, reason: err.message }, 200, allowOrigin);
-  }
-}
-__name(handleCustomerConfirm, "handleCustomerConfirm");
-
-// ── Razorpay: ping / connectivity test ──────────────────────────────────────
-// Visit https://one-waybharat.com/api/payment/ping in a browser to diagnose issues.
-async function handlePaymentPing(request, env, allowOrigin) {
-  const keyId     = env.RAZORPAY_KEY_ID;
-  const keySecret = env.RAZORPAY_KEY_SECRET;
-  const hasKeyId  = !!keyId;
-  const hasSecret = !!keySecret;
-  const keyPrefix = hasKeyId ? keyId.slice(0, 14) + "…" : "NOT SET";
-  const isLive    = hasKeyId && keyId.startsWith("rzp_live_");
-  const isTest    = hasKeyId && keyId.startsWith("rzp_test_");
-
-  let razorpayReachable = false;
-  let razorpayError     = null;
-  let razorpayStatus    = null;
-
-  if (hasKeyId && hasSecret) {
-    try {
-      const basicAuth = btoa(`${keyId}:${keySecret}`);
-      const r = await fetch("https://api.razorpay.com/v1/orders?count=1", {
-        headers: { "Authorization": `Basic ${basicAuth}` }
-      });
-      razorpayStatus    = r.status;
-      razorpayReachable = r.ok;
-      if (!r.ok) {
-        const d = await r.json().catch(() => ({}));
-        razorpayError = d?.error?.description || `HTTP ${r.status}: ${JSON.stringify(d)}`;
-      }
-    } catch (e) {
-      razorpayError = e.message;
-    }
-  }
-
-  return jsonResponse({
-    worker_ok: true,
-    secrets_present: { RAZORPAY_KEY_ID: hasKeyId, RAZORPAY_KEY_SECRET: hasSecret },
-    key_prefix: keyPrefix,
-    key_mode: isLive ? "LIVE" : isTest ? "TEST" : "UNKNOWN_FORMAT",
-    razorpay_http_status: razorpayStatus,
-    razorpay_api_reachable: razorpayReachable,
-    razorpay_error: razorpayError,
-    tip: isTest ? "TEST keys detected — switch to LIVE keys (rzp_live_...) for production payments" : null
-  }, 200, allowOrigin);
-}
-
-// ── Razorpay: test order creation (diagnostic endpoint) ─────────────────────
-// GET https://one-waybharat.com/api/payment/test-order
-// Attempts to create a real ₹1 order and returns the full Razorpay response.
-// DELETE this endpoint once payments are confirmed working.
-async function handleTestOrder(request, env, allowOrigin) {
-  const keyId     = env.RAZORPAY_KEY_ID;
-  const keySecret = env.RAZORPAY_KEY_SECRET;
-  if (!keyId || !keySecret) {
-    return jsonResponse({ error: "Secrets not set" }, 500, allowOrigin);
-  }
-  try {
-    const basicAuth = btoa(`${keyId}:${keySecret}`);
-    const rpRes = await fetch("https://api.razorpay.com/v1/orders", {
-      method: "POST",
-      headers: { "Authorization": `Basic ${basicAuth}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ amount: 100, currency: "INR", receipt: "test_diag_1", notes: { test: "diagnostic" } })
-    });
-    const rpData = await rpRes.json();
-    return jsonResponse({
-      razorpay_http_status: rpRes.status,
-      razorpay_ok: rpRes.ok,
-      razorpay_response: rpData,
-      key_prefix: keyId.slice(0, 14) + "…"
-    }, 200, allowOrigin);
-  } catch (e) {
-    return jsonResponse({ error: e.message }, 500, allowOrigin);
-  }
-}
-
 // ── Razorpay: create order ───────────────────────────────────────────────────
 // Frontend calls this BEFORE opening the Razorpay checkout widget. Creating
 // the order server-side (rather than trusting a client-supplied amount)
@@ -849,15 +540,8 @@ async function handleCreateOrder(request, env, allowOrigin) {
 
     const rpData = await rpRes.json();
     if (!rpRes.ok) {
-      const errCode = rpData?.error?.code || 'unknown';
-      const errDesc = rpData?.error?.description || JSON.stringify(rpData);
-      console.error(`Razorpay order creation failed [${rpRes.status}] code=${errCode}: ${errDesc}`);
-      // Always return the full Razorpay error so the browser UI can display it
-      return jsonResponse({
-        error: `Razorpay ${errCode}: ${errDesc}`,
-        debug_code: errCode,
-        debug_http: rpRes.status
-      }, 502, allowOrigin);
+      console.error("Razorpay order creation failed:", JSON.stringify(rpData));
+      return jsonResponse({ error: "Could not initiate payment. Please try again." }, 502, allowOrigin);
     }
 
     // key_id (the Razorpay "Key ID") is the public half of the pair — safe to
@@ -1003,6 +687,77 @@ async function handlePlaceDetails(request, url, env, allowOrigin) {
   }
 }
 __name(handlePlaceDetails, "handlePlaceDetails");
+
+
+// ── Customer confirmation — WhatsApp message to customer after payment ────────
+async function handleCustomerConfirm(request, env, allowOrigin) {
+  if (request.method !== "POST") return jsonResponse({ error: "Method not allowed" }, 405, allowOrigin);
+
+  let body;
+  try { body = await request.json(); } catch {
+    return jsonResponse({ error: "Invalid JSON" }, 400, allowOrigin);
+  }
+
+  const b = body.booking || {};
+  if (!b.id || !b.name || !b.phone) {
+    return jsonResponse({ error: "Missing required booking fields" }, 400, allowOrigin);
+  }
+
+  const accessToken   = env.WHATSAPP_ACCESS_TOKEN;
+  const phoneNumberId = env.WHATSAPP_PHONE_NUMBER_ID;
+
+  if (!accessToken || !phoneNumberId) {
+    console.warn("WhatsApp not configured — skipping customer confirmation");
+    return jsonResponse({ sent: false, reason: "not_configured" }, 200, allowOrigin);
+  }
+
+  const stops = Array.isArray(b.extraCities) ? b.extraCities.filter(c => c.trim()) : [];
+  const stopLine = stops.length ? `\n🛑 Via: ${stops.join(" → ")}` : "";
+  const customerNumber = `91${b.phone}`;
+
+  const msg =
+    `✅ *Booking Confirmed — One-Way Bhaarat!*\n\n` +
+    `🔖 Booking ID: ${b.id}\n` +
+    `👤 ${b.name}\n` +
+    `🚗 ${b.vehicle || "—"} · ${b.tripType === "roundtrip" ? "Round Trip" : "One Way"}\n` +
+    `📍 ${b.from || "—"}${stopLine}\n` +
+    `🏁 ${b.to || "—"}\n` +
+    `📅 ${b.date || "—"}${b.time ? " at " + b.time : ""}\n` +
+    `📏 ~${b.distKm || "?"} km\n` +
+    `💰 Total Fare: ₹${Number(b.fare || 0).toLocaleString("en-IN")}\n` +
+    `💳 Paid: ₹${Number(b.payAmt || 0).toLocaleString("en-IN")}\n` +
+    `🤝 Balance to driver: ₹${Number((b.fare || 0) - (b.payAmt || 0)).toLocaleString("en-IN")}\n` +
+    `${b.notes ? "📝 " + b.notes + "\n" : ""}` +
+    `\nFor support call: +91-93557 57579\nThank you for choosing One-Way Bhaarat! 🙏`;
+
+  try {
+    const waRes = await fetch(
+      `https://graph.facebook.com/${WHATSAPP_API_VERSION}/${phoneNumberId}/messages`,
+      {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${accessToken}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          messaging_product: "whatsapp",
+          to: customerNumber,
+          type: "text",
+          text: { body: msg }
+        })
+      }
+    );
+    const waData = await waRes.json();
+    if (!waRes.ok) {
+      console.error("Customer WA confirm failed:", JSON.stringify(waData));
+      return jsonResponse({ sent: false, reason: "upstream_error" }, 200, allowOrigin);
+    }
+    return jsonResponse({ sent: true }, 200, allowOrigin);
+  } catch (err) {
+    console.error("Customer WA confirm exception:", err.message);
+    return jsonResponse({ sent: false, reason: err.message }, 200, allowOrigin);
+  }
+}
 
 function jsonResponse(data, status = 200, allowOrigin = null) {
   const headers = {

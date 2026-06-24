@@ -687,6 +687,7 @@ async function _bkmStep3Next(){
       ['bo1','bo2','bo3','bo4','bo5','bo6'].forEach(id=>{const el=document.getElementById(id);if(el){el.value='';el.classList.remove('filled');}});
       _bkmGoStep(4);
       _bkmStartOTPTimer();
+      setTimeout(()=>{ const bo1=document.getElementById('bo1'); if(bo1) bo1.focus(); }, 100);
     } else {
       // Show the actual error from the server (WhatsApp error, rate limit, etc.)
       const errMsg = data.error || 'Please try again';
@@ -892,6 +893,7 @@ async function _bkmVerifyAndConfirm(response,statusEl){
     bkmToast('✅ Payment successful! Booking confirmed.');
     if(statusEl){ statusEl.style.display='block'; statusEl.style.color='var(--gr-300)'; statusEl.textContent='✅ Payment successful! Booking ID: '+BKM.S.bookingId; }
     _bkmNotifyPayment(response.razorpay_payment_id);
+    _bkmGoStep(5);
   }catch(e){
     bkmToast('⚠️ Could not confirm payment status. Please contact us if money was deducted.');
   }
@@ -1099,9 +1101,8 @@ document.addEventListener('DOMContentLoaded', () => {
   if(window.google && google.maps && google.maps.places) initAutocomplete();
   else if(!IS_LOCAL) initAutocomplete();
 
-  // Booking modal: close on overlay click
+  // Booking modal: only close via X button, not overlay click
   const bkModal = document.getElementById('bkModal');
-  if(bkModal) bkModal.addEventListener('click', e => { if(e.target===bkModal) bkmClose(); });
 
   // Modal pickup mirrors to locked drop in round-trip mode
   const bkPu = document.getElementById('bk-pu');
