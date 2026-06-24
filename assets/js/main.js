@@ -688,9 +688,12 @@ async function _bkmStep3Next(){
       _bkmGoStep(4);
       _bkmStartOTPTimer();
     } else {
-      bkmToast('⚠️ Could not send OTP — '+(data.error||'please try again'));
+      // Show the actual error from the server (WhatsApp error, rate limit, etc.)
+      const errMsg = data.error || 'Please try again';
+      bkmToast('⚠️ ' + errMsg);
+      console.error('[OWB OTP] Send failed:', data);
     }
-  } catch(e){ bkmToast('⚠️ Network error sending OTP'); }
+  } catch(e){ bkmToast('⚠️ Network error sending OTP: ' + e.message); console.error('[OWB OTP]', e); }
   if(btn){ btn.disabled=false; } _bkmUpdateBtn();
 }
 

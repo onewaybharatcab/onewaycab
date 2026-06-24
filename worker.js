@@ -90,6 +90,11 @@ var worker_default = {
     }
 
     // 1. OTP endpoints (booking-flow phone verification via WhatsApp)
+    // otp/ping — diagnoses WhatsApp config. GET /api/otp/ping
+    if (url.pathname.includes("otp/ping")) {
+      return addSecurityHeaders(await handleOtpPing(request, env, allowOrigin));
+    }
+
     if (url.pathname.includes("otp/send")) {
       return addSecurityHeaders(await withRateLimit(request, env, ctx, "otp-send", () => handleSendOtp(request, env, allowOrigin), allowOrigin, OTP_SEND_RATE_LIMIT_MAX))
     }
@@ -172,6 +177,79 @@ async function ctx_safe_put(env, key, value, ttl) {
 }
 __name(ctx_safe_put, "ctx_safe_put");
 
+// ── OTP: ping / diagnostic ──────────────────────────────────────────────────
+// GET https://one-waybharat.com/api/otp/ping — checks WhatsApp config + token validity
+async function handleOtpPing(request, env, allowOrigin) {
+  const accessToken   = env.WHATSAPP_ACCESS_TOKEN;
+  const phoneNumberId = env.WHATSAPP_PHONE_NUMBER_ID;
+  const templateName  = env.WHATSAPP_OTP_TEMPLATE_NAME;
+
+  const secrets = {
+    WHATSAPP_ACCESS_TOKEN:    !!accessToken,
+    WHATSAPP_PHONE_NUMBER_ID: !!phoneNumberId,
+    WHATSAPP_OTP_TEMPLATE_NAME: templateName || "NOT SET"
+  };
+
+  if (!accessToken || !phoneNumberId) {
+    return jsonResponse({ secrets, error: "Missing secrets" }, 200, allowOrigin);
+  }
+
+  // Check token validity by fetching the phone number info
+  let tokenOk = false, tokenError = null, phoneInfo = null;
+  try {
+    const r = await fetch(
+      `https://graph.facebook.com/v21.0/${phoneNumberId}?fields=display_phone_number,verified_name,quality_rating,status`,
+      { headers: { "Authorization": `Bearer ${accessToken}` } }
+    );
+    const d = await r.json();
+    if (r.ok) {
+      tokenOk = true;
+      phoneInfo = { display_phone: d.display_phone_number, name: d.verified_name, quality: d.quality_rating, status: d.status };
+    } else {
+      tokenError = d?.error?.message || JSON.stringify(d);
+    }
+  } catch (e) { tokenError = e.message; }
+
+  // Check if the template exists and is approved
+  let templateOk = false, templateError = null, templateInfo = null;
+  if (tokenOk) {
+    try {
+      // Get WABA ID from phone number
+      const r2 = await fetch(
+        `https://graph.facebook.com/v21.0/${phoneNumberId}?fields=whatsapp_business_account`,
+        { headers: { "Authorization": `Bearer ${accessToken}` } }
+      );
+      const d2 = await r2.json();
+      const wabaId = d2?.whatsapp_business_account?.id;
+      if (wabaId) {
+        const r3 = await fetch(
+          `https://graph.facebook.com/v21.0/${wabaId}/message_templates?name=${templateName}&fields=name,status,components`,
+          { headers: { "Authorization": `Bearer ${accessToken}` } }
+        );
+        const d3 = await r3.json();
+        const tmpl = d3?.data?.[0];
+        if (tmpl) {
+          templateOk = tmpl.status === "APPROVED";
+          templateInfo = { name: tmpl.name, status: tmpl.status };
+          if (!templateOk) templateError = `Template status: ${tmpl.status} (must be APPROVED)`;
+        } else {
+          templateError = `Template "${templateName}" not found in WhatsApp Business account`;
+        }
+      }
+    } catch (e) { templateError = e.message; }
+  }
+
+  return jsonResponse({
+    secrets,
+    token_valid: tokenOk,
+    token_error: tokenError,
+    phone_number_info: phoneInfo,
+    template_approved: templateOk,
+    template_error: templateError,
+    template_info: templateInfo
+  }, 200, allowOrigin);
+}
+
 // ── OTP: send via WhatsApp ─────────────────────────────────────────────────
 async function handleSendOtp(request, env, allowOrigin) {
   if (request.method !== "POST") return jsonResponse({ error: "Method not allowed" }, 405, allowOrigin);
@@ -248,12 +326,19 @@ async function handleSendOtp(request, env, allowOrigin) {
 
     const waData = await waRes.json();
     if (!waRes.ok) {
+      const waErr = waData?.error?.message || waData?.error?.error_data?.details || JSON.stringify(waData);
+      const waCode = waData?.error?.code || waData?.error?.error_subcode || 'unknown';
       console.error("WhatsApp send failed:", JSON.stringify(waData));
-      return jsonResponse({ error: "Could not send OTP. Please try again." }, 502, allowOrigin);
+      // Return the actual WhatsApp error so the frontend can display it
+      return jsonResponse({
+        error: `WhatsApp error (${waCode}): ${waErr}`,
+        wa_error_code: waCode,
+        wa_error_type: waData?.error?.type || null
+      }, 502, allowOrigin);
     }
   } catch (err) {
     console.error("WhatsApp API request failed:", err.message);
-    return jsonResponse({ error: "Could not send OTP. Please try again." }, 502, allowOrigin);
+    return jsonResponse({ error: "Network error reaching WhatsApp: " + err.message }, 502, allowOrigin);
   }
 
   try {
