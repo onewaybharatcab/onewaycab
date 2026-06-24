@@ -1007,5 +1007,67 @@
 
 
 <script defer src="./assets/js/main.js"></script>
+
+
+<!-- Android Touch Fix -->
+<script>
+// Force buttons clickable on Android (Vivo, OPPO, Samsung)
+(function() {
+  function makeClickable(selector, handler) {
+    var elements = document.querySelectorAll(selector);
+    elements.forEach(function(el) {
+      el.addEventListener('touchstart', function(e) {
+        e.stopPropagation();
+        if (handler) handler.call(this, e);
+      }, {passive: true});
+
+      el.addEventListener('click', function(e) {
+        e.stopPropagation();
+        if (handler) handler.call(this, e);
+      });
+    });
+  }
+
+  // Make hamburger clickable
+  makeClickable('#hamBtn', function(e) {
+    e.preventDefault();
+    if (typeof toggleMobMenu === 'function') {
+      toggleMobMenu();
+    } else if (typeof openMobMenu === 'function') {
+      openMobMenu();
+    } else {
+      // Fallback: toggle drawer manually
+      var drawer = document.getElementById('mobDrawer');
+      var overlay = document.getElementById('mobOverlay');
+      if (drawer) {
+        drawer.classList.toggle('open');
+        if (overlay) overlay.classList.toggle('open');
+      }
+    }
+  });
+
+  // Make float buttons clickable
+  makeClickable('.float-btn', function(e) {
+    e.preventDefault();
+    var href = this.getAttribute('href');
+    if (href) {
+      window.location.href = href;
+    }
+  });
+
+  // Ensure buttons are visible and clickable
+  document.addEventListener('DOMContentLoaded', function() {
+    var hamBtn = document.getElementById('hamBtn');
+    if (hamBtn) {
+      hamBtn.style.cssText = 'display:flex !important;visibility:visible !important;opacity:1 !important;z-index:999999 !important;position:relative !important;';
+    }
+
+    document.querySelectorAll('.float-btn').forEach(function(btn) {
+      btn.style.cssText = 'display:flex !important;visibility:visible !important;opacity:1 !important;z-index:999999 !important;position:relative !important;';
+    });
+  });
+})();
+</script>
+
 </body>
 </html>
