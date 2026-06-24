@@ -55,13 +55,14 @@
 }
 
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-html { scroll-behavior: smooth; }
+/* overflow-x on html instead of body — body overflow kills position:fixed on iOS/Chrome mobile */
+html { scroll-behavior: smooth; overflow-x: hidden; }
 
 body {
   font-family: 'Nunito', sans-serif;
   background: var(--nv-900);
   color: var(--wh);
-  overflow-x: hidden;
+  /* overflow-x: hidden removed from body — breaks position:fixed on mobile */
   -webkit-font-smoothing: antialiased;
 }
 
@@ -843,24 +844,8 @@ header.scrolled {
   box-shadow: 0 4px 14px rgba(0,0,0,0.25);
 }
 .float-btn:hover .float-label { opacity: 1; transform: translateY(-50%) translateX(-4px); }
-@media (max-width: 768px) {
-  /* On mobile the booking widget sits at the top of the page (.hero { order:1 })
-     and its card extends almost to the right edge of the screen. Centering
-     these buttons vertically (top:50%) put them right on top of the
-     pickup/drop fields. Anchoring to the bottom-right corner instead keeps
-     them clear of the card and matches the usual mobile call/WhatsApp
-     button placement. */
-  .float-actions {
-    top: auto;
-    bottom: max(20px, env(safe-area-inset-bottom, 20px));
-    right: max(16px, env(safe-area-inset-right, 16px));
-    transform: none;
-    gap: 12px;
-  }
-  .float-btn { width: 52px; height: 52px; }
-  .float-btn svg { width: 25px; height: 25px; }
-  .float-label { display: none; }
-}
+
+/* Float buttons handled in FIX 2 block above */
 
 /* ═══════════════════════ SCROLL ANIMATIONS ═══════════════════════ */
 .reveal { opacity: 0; transform: translateY(32px); transition: opacity 0.7s ease, transform 0.7s ease; }
@@ -2006,32 +1991,56 @@ p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
 
 
 /* ══════════════════════════════════════════════════════════════════════
-   FIX 2: CONTENT CUTTING ON MOBILE
-   Root cause: .hero has overflow:hidden which clips child content on
-   narrow viewports. Also hero-inner padding overshoots on 375px screens.
+   FIX 2: CONTENT CUTTING + PADDING ON MOBILE
    ══════════════════════════════════════════════════════════════════════ */
-@media (max-width: 480px) {
+@media (max-width: 960px) {
+  /* Reduce hero top padding on mobile — header is 68px, no extra gap needed */
   .hero {
-    overflow: visible !important;  /* was 'hidden' — this was clipping content */
+    padding-top: 68px !important;
     min-height: unset !important;
     height: auto !important;
+    overflow: visible !important;
   }
   .hero-inner {
-    padding-left: 16px !important;
-    padding-right: 16px !important;
+    padding-top: 8px !important;      /* tight — widget starts just below header */
+    padding-bottom: 24px !important;
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+    gap: 20px !important;
     width: 100% !important;
     box-sizing: border-box !important;
-    overflow: visible !important;
   }
   .booking-widget {
     max-width: 100% !important;
     width: 100% !important;
     box-sizing: border-box !important;
-    overflow: hidden !important;
   }
-  section {
-    overflow-x: hidden !important;
+}
+
+/* Float buttons — right side circles on mobile */
+@media (max-width: 960px) {
+  .float-actions {
+    position: fixed !important;
+    top: 50% !important;
+    bottom: auto !important;
+    right: 14px !important;
+    left: auto !important;
+    transform: translateY(-50%) !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+    z-index: 9999 !important;
+    isolation: isolate !important;
+    background: transparent !important;
   }
+  .float-btn {
+    width: 50px !important;
+    height: 50px !important;
+    border-radius: 50% !important;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4) !important;
+    flex: none !important;
+  }
+  .float-btn svg { width: 24px !important; height: 24px !important; }
+  .float-label { display: none !important; }
 }
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -2095,23 +2104,8 @@ p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
     line-height: 1.5 !important;
   }
 
-  /* 4. Float buttons — visible bottom-right, clear of content */
-  .float-actions {
-    right: 12px !important;
-    bottom: max(20px, env(safe-area-inset-bottom, 20px)) !important;
-    gap: 10px !important;
-    z-index: 400 !important;
-  }
-  .float-btn {
-    width: 48px !important;
-    height: 48px !important;
-    border-radius: 50% !important;   /* full circle — always visible */
-    box-shadow: 0 4px 16px rgba(0,0,0,0.35) !important;
-  }
-  .float-btn svg {
-    width: 24px !important;
-    height: 24px !important;
-  }
+  /* 4. Float buttons handled by @media (max-width: 960px) above */
+
 
   /* 5. Widget footer — needs right clearance for the 44px flush buttons */
   .widget-footer {
@@ -2335,26 +2329,427 @@ p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
   .mob-overlay { display: none !important; }
 }
 
-/* ── Hamburger always visible on any screen — solid orange ── */
+/* ── Hamburger — solid orange, white lines, always on top ── */
 .ham-btn {
   background: #F47B00 !important;
   border: none !important;
+  display: none; /* hidden by default; shown via media query below */
+  flex-shrink: 0 !important;
 }
 .ham-btn span {
-  background: #ffffff !important;  /* white lines on orange bg — visible on ANY header colour */
+  background: #ffffff !important;
   height: 3px !important;
   width: 20px !important;
 }
 
-/* ── Shrink header on small screens so hamburger never gets pushed off ── */
+/* ── Mobile: header layout so logo never pushes ham-btn off screen ── */
+@media (max-width: 960px) {
+  header {
+    padding: 0 14px !important;
+    height: 60px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    overflow: visible !important;
+  }
+  .hero { padding-top: 60px !important; }
+  /* Logo shrinks, never overflows */
+  .logo {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    gap: 8px !important;
+  }
+  .logo-emblem { width: 34px !important; height: 34px !important; font-size: 16px !important; flex-shrink: 0 !important; }
+  .logo-name { font-size: 13px !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
+  .logo-tagline, .logo-subtitle { display: none !important; }
+  /* Ham button: fixed size, never shrinks */
+  .ham-btn {
+    display: flex !important;
+    width: 42px !important;
+    height: 42px !important;
+    min-width: 42px !important;
+    flex-shrink: 0 !important;
+  }
+}
+
+
+
+/* ══════════════════════════════════════════════════════════════════════
+   FIX: HAMBURGER & WHATSAPP BUTTONS — Mobile Visibility Fixes
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* ── FIX 1: HAMBURGER BUTTON — Ensure it ONLY shows on mobile ── */
+/* Remove any conflicting display rules and ensure proper mobile-only visibility */
+
+/* Base: hidden on desktop */
+.ham-btn {
+  display: none !important;
+}
+
+/* Mobile: show hamburger */
+@media (max-width: 960px) {
+  .ham-btn {
+    display: flex !important;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+    border: none;
+    background: #F47B00 !important;
+    border-radius: 10px;
+    cursor: pointer;
+    padding: 0;
+    flex-shrink: 0 !important;
+    transition: background 0.2s, transform 0.2s;
+    position: relative;
+    z-index: 250;
+    box-shadow: 0 4px 16px rgba(244,123,0,0.4);
+    -webkit-tap-highlight-color: transparent;
+  }
+  .ham-btn:hover,
+  .ham-btn:active {
+    background: #D46800 !important;
+    transform: scale(1.05);
+  }
+  .ham-btn span {
+    display: block !important;
+    width: 20px;
+    height: 2.5px;
+    background: #ffffff !important;
+    border-radius: 2px;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    transform-origin: center;
+    opacity: 1 !important;
+  }
+  /* X animation when open */
+  .ham-btn.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+  .ham-btn.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+  .ham-btn.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+}
+
+/* Desktop: force hide hamburger and mobile drawer */
+@media (min-width: 961px) {
+  .ham-btn {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+  .mob-drawer,
+  .mob-overlay {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    transform: translateX(100%) !important;
+  }
+}
+
+/* ── FIX 2: FLOAT BUTTONS (Call + WhatsApp) — Ensure visibility on all mobile sizes ── */
+
+/* Base styles for float buttons */
+.float-actions {
+  position: fixed;
+  top: 50%;
+  right: max(16px, env(safe-area-inset-right, 16px));
+  transform: translateY(-50%);
+  z-index: 9998 !important; /* Below loader (9999) but above everything else */
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  align-items: center;
+  pointer-events: none; /* Let clicks pass through the container */
+}
+
+.float-btn {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  text-decoration: none;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.35);
+  transition: transform 0.2s, box-shadow 0.2s;
+  position: relative;
+  pointer-events: auto; /* Re-enable clicks on buttons */
+  -webkit-tap-highlight-color: transparent;
+}
+
+.float-btn:hover { transform: scale(1.1); }
+
+.float-btn svg {
+  width: 26px;
+  height: 26px;
+  display: block;
+  flex-shrink: 0;
+}
+
+.float-btn.call {
+  background: linear-gradient(135deg, #F47B00, #D46800);
+  box-shadow: 0 6px 24px rgba(244,123,0,0.4);
+  animation: floatPulseCall 2.6s ease-in-out infinite;
+}
+
+.float-btn.whatsapp {
+  background: linear-gradient(135deg, #25D366, #128C7E);
+  box-shadow: 0 6px 24px rgba(37,211,102,0.4);
+  animation: floatPulseWA 2.6s ease-in-out infinite 0.4s;
+}
+
+.float-label {
+  position: absolute;
+  right: 68px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #1A0800;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  padding: 7px 14px;
+  border-radius: 8px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s, transform 0.2s;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+}
+
+.float-btn:hover .float-label {
+  opacity: 1;
+  transform: translateY(-50%) translateX(-4px);
+}
+
+/* Mobile-specific float button fixes */
+@media (max-width: 960px) {
+  .float-actions {
+    position: fixed !important;
+    top: auto !important; /* Don't center vertically */
+    bottom: 24px !important; /* Position at bottom-right */
+    right: 16px !important;
+    left: auto !important;
+    transform: none !important;
+    flex-direction: row !important; /* Side by side on mobile */
+    gap: 12px !important;
+    z-index: 9998 !important;
+    isolation: isolate !important;
+  }
+
+  .float-btn {
+    width: 52px !important;
+    height: 52px !important;
+    min-width: 52px !important;
+    min-height: 52px !important;
+    border-radius: 50% !important;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4) !important;
+    flex: none !important;
+    position: relative !important;
+  }
+
+  .float-btn svg {
+    width: 24px !important;
+    height: 24px !important;
+    display: block !important;
+  }
+
+  .float-label {
+    display: none !important; /* Hide labels on mobile */
+  }
+}
+
+/* Very small screens (375px and below) */
 @media (max-width: 480px) {
+  .float-actions {
+    bottom: 16px !important;
+    right: 12px !important;
+    gap: 10px !important;
+  }
+
+  .float-btn {
+    width: 48px !important;
+    height: 48px !important;
+    min-width: 48px !important;
+    min-height: 48px !important;
+  }
+
+  .float-btn svg {
+    width: 22px !important;
+    height: 22px !important;
+  }
+}
+
+/* Extra small screens (360px and below) */
+@media (max-width: 360px) {
+  .float-actions {
+    bottom: 12px !important;
+    right: 10px !important;
+    gap: 8px !important;
+  }
+
+  .float-btn {
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
+  }
+
+  .float-btn svg {
+    width: 20px !important;
+    height: 20px !important;
+  }
+}
+
+/* Ensure float buttons are never hidden by other elements */
+.float-actions,
+.float-btn {
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* When booking modal is open, hide float buttons to avoid overlap */
+#bkModal.open ~ .float-actions,
+#bkModal.open ~ body .float-actions,
+body:has(#bkModal.open) .float-actions {
+  display: none !important;
+}
+
+/* ── FIX 3: Mobile Drawer — Ensure proper z-index and visibility ── */
+.mob-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(4,12,30,0.7);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 490;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+  display: block !important;
+}
+
+.mob-overlay.open {
+  opacity: 1;
+  visibility: visible;
+}
+
+.mob-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: min(320px, 85vw);
+  height: 100dvh;
+  background: linear-gradient(160deg, #1A0F08, #0D1A2A);
+  border-left: 1px solid rgba(244,123,0,0.25);
+  z-index: 500;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  transition: transform 0.32s cubic-bezier(0.4,0,0.2,1);
+  box-shadow: -8px 0 40px rgba(4,12,30,0.6);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.mob-drawer.open {
+  transform: translateX(0);
+}
+
+/* Ensure drawer is above float buttons when open */
+.mob-drawer.open {
+  z-index: 9997 !important;
+}
+
+.mob-overlay.open {
+  z-index: 9996 !important;
+}
+
+/* When drawer is open, hide float buttons */
+body:has(.mob-drawer.open) .float-actions,
+body.drawer-open .float-actions {
+  display: none !important;
+}
+
+/* ── FIX 4: Header mobile layout — prevent hamburger from being pushed off-screen ── */
+@media (max-width: 960px) {
   header {
     padding: 0 12px !important;
+    height: 56px !important;
+    min-height: 56px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    overflow: visible !important;
+    position: fixed !important;
+    z-index: 200 !important;
   }
-  .logo { gap: 8px !important; }
-  .logo-emblem { width: 36px !important; height: 36px !important; font-size: 18px !important; }
-  .logo-name { font-size: 13px !important; }
-  .logo-tagline { font-size: 7.5px !important; letter-spacing: 1px !important; }
-  .logo-subtitle { font-size: 7px !important; letter-spacing: 1px !important; }
-  .ham-btn { width: 38px !important; height: 38px !important; flex-shrink: 0 !important; }
+
+  .hero {
+    padding-top: 56px !important;
+  }
+
+  .logo {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    gap: 8px !important;
+    display: flex !important;
+    align-items: center !important;
+  }
+
+  .logo-emblem {
+    width: 36px !important;
+    height: 36px !important;
+    font-size: 18px !important;
+    flex-shrink: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  .logo-name {
+    font-size: 14px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    display: block !important;
+    max-width: calc(100vw - 120px) !important;
+  }
+
+  .logo-tagline,
+  .logo-subtitle {
+    display: none !important;
+  }
+}
+
+/* ── FIX 5: Ensure hamburger is always clickable and visible ── */
+.ham-btn {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: manipulation;
+}
+
+/* Prevent any parent from clipping the hamburger */
+header {
+  overflow: visible !important;
+}
+
+/* Ensure the hamburger spans are always visible */
+.ham-btn span {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* ── FIX 6: Safe area handling for notched phones ── */
+@supports (padding: max(0px)) {
+  @media (max-width: 960px) {
+    .float-actions {
+      right: max(16px, env(safe-area-inset-right)) !important;
+      bottom: max(16px, env(safe-area-inset-bottom)) !important;
+    }
+  }
 }
