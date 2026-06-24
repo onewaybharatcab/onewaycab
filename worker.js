@@ -221,19 +221,28 @@ async function handleOtpPing(request, env, allowOrigin) {
       );
       const d2 = await r2.json();
       const wabaId = d2?.whatsapp_business_account?.id;
-      if (wabaId) {
+      if (!wabaId) {
+        templateError = `Could not get WABA ID from phone number. Raw response: ${JSON.stringify(d2).slice(0,300)}`;
+      } else {
         const r3 = await fetch(
-          `https://graph.facebook.com/v21.0/${wabaId}/message_templates?name=${templateName}&fields=name,status,components`,
+          `https://graph.facebook.com/v21.0/${wabaId}/message_templates?name=${templateName}&fields=name,status,components,language`,
           { headers: { "Authorization": `Bearer ${accessToken}` } }
         );
         const d3 = await r3.json();
         const tmpl = d3?.data?.[0];
         if (tmpl) {
           templateOk = tmpl.status === "APPROVED";
-          templateInfo = { name: tmpl.name, status: tmpl.status };
-          if (!templateOk) templateError = `Template status: ${tmpl.status} (must be APPROVED)`;
+          templateInfo = { name: tmpl.name, status: tmpl.status, language: tmpl.language, components: tmpl.components };
+          if (!templateOk) templateError = `Template status is "${tmpl.status}" — must be APPROVED`;
         } else {
-          templateError = `Template "${templateName}" not found in WhatsApp Business account`;
+          // Template not found — list all templates so we can see what exists
+          const r4 = await fetch(
+            `https://graph.facebook.com/v21.0/${wabaId}/message_templates?fields=name,status&limit=20`,
+            { headers: { "Authorization": `Bearer ${accessToken}` } }
+          );
+          const d4 = await r4.json();
+          const allTemplates = (d4?.data || []).map(t => `${t.name}(${t.status})`);
+          templateError = `Template "${templateName}" not found. All templates: [${allTemplates.join(", ")}]`;
         }
       }
     } catch (e) { templateError = e.message; }
@@ -296,49 +305,72 @@ async function handleSendOtp(request, env, allowOrigin) {
   const otp = generateOtp();
   const e164 = `91${rawPhone}`; // India country code, digits only, no leading '+' — required by WhatsApp Cloud API
 
-  try {
-    const waRes = await fetch(`https://graph.facebook.com/${WHATSAPP_API_VERSION}/${phoneNumberId}/messages`, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${accessToken}`,
-        "Content-Type": "application/json"
-      },
-      // NOTE: the "components" structure below assumes an Authentication-category
-      // template with a one-time-passcode "Copy Code" button, which is what Meta
-      // recommends for OTP. When you create this template in WhatsApp Manager,
-      // Meta shows you the exact sample request for YOUR template — match that
-      // exactly, since the button parameter shape varies by button type
-      // (copy_code vs one-tap autofill vs url).
-      body: JSON.stringify({
-        messaging_product: "whatsapp",
-        to: e164,
-        type: "template",
-        template: {
-          name: templateName,
-          language: { code: "en" },
-          components: [
-            { type: "body", parameters: [{ type: "text", text: otp }] },
-            { type: "button", sub_type: "copy_code", index: "0", parameters: [{ type: "coupon_code", coupon_code: otp }] }
-          ]
-        }
-      })
-    });
+  // Try two template structures:
+  // Attempt 1: Authentication template with Copy Code button (Meta recommended for OTP)
+  // Attempt 2: Simple utility template with body-only (no button) — fallback
+  const templatePayloads = [
+    {
+      // Authentication / utility template WITH Copy Code button
+      messaging_product: "whatsapp", to: e164, type: "template",
+      template: {
+        name: templateName, language: { code: "en" },
+        components: [
+          { type: "body", parameters: [{ type: "text", text: otp }] },
+          { type: "button", sub_type: "copy_code", index: "0", parameters: [{ type: "coupon_code", coupon_code: otp }] }
+        ]
+      }
+    },
+    {
+      // Simple template with body only (no button) — works for utility/marketing templates
+      messaging_product: "whatsapp", to: e164, type: "template",
+      template: {
+        name: templateName, language: { code: "en" },
+        components: [
+          { type: "body", parameters: [{ type: "text", text: otp }] }
+        ]
+      }
+    },
+    {
+      // Minimal — no components at all (works if template has no variables)
+      messaging_product: "whatsapp", to: e164, type: "template",
+      template: { name: templateName, language: { code: "en" } }
+    }
+  ];
 
-    const waData = await waRes.json();
-    if (!waRes.ok) {
+  let lastWaError = null;
+  let sent = false;
+
+  for (const payload of templatePayloads) {
+    try {
+      const waRes = await fetch(`https://graph.facebook.com/${WHATSAPP_API_VERSION}/${phoneNumberId}/messages`, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${accessToken}`, "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const waData = await waRes.json();
+      if (waRes.ok && waData?.messages?.[0]?.id) {
+        sent = true;
+        break; // Success — stop trying
+      }
       const waErr = waData?.error?.message || waData?.error?.error_data?.details || JSON.stringify(waData);
       const waCode = waData?.error?.code || waData?.error?.error_subcode || 'unknown';
-      console.error("WhatsApp send failed:", JSON.stringify(waData));
-      // Return the actual WhatsApp error so the frontend can display it
-      return jsonResponse({
-        error: `WhatsApp error (${waCode}): ${waErr}`,
-        wa_error_code: waCode,
-        wa_error_type: waData?.error?.type || null
-      }, 502, allowOrigin);
+      console.error(`WhatsApp send attempt failed (code=${waCode}):`, JSON.stringify(waData));
+      lastWaError = { code: waCode, message: waErr, type: waData?.error?.type || null };
+      // Only retry if it's a template structure error (subcode 2012), not auth/account errors
+      const structureError = waCode === 132000 || waCode === 132001 || String(waCode).startsWith('132');
+      if (!structureError) break; // Don't retry for auth/account errors
+    } catch (err) {
+      console.error("WhatsApp API request failed:", err.message);
+      lastWaError = { code: 'network', message: err.message };
+      break;
     }
-  } catch (err) {
-    console.error("WhatsApp API request failed:", err.message);
-    return jsonResponse({ error: "Network error reaching WhatsApp: " + err.message }, 502, allowOrigin);
+  }
+
+  if (!sent) {
+    const errMsg = lastWaError
+      ? `WhatsApp error (${lastWaError.code}): ${lastWaError.message}`
+      : "Could not send OTP. Please try again.";
+    return jsonResponse({ error: errMsg, wa_error: lastWaError }, 502, allowOrigin);
   }
 
   try {
