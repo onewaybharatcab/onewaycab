@@ -1,0 +1,40 @@
+name                   = "oneway-bhaarat"
+main                   = "worker.js"
+compatibility_date     = "2024-01-01"
+
+[[rules]]
+type        = "Text"
+globs       = ["**/*.html"]
+fallthrough = true
+
+[vars]
+SITE_ENV                   = "production"
+SITE_NAME                  = "One-Way Bhaarat"
+SITE_URL                   = "https://one-waybharat.com"
+WHATSAPP_OTP_TEMPLATE_NAME = "oneway_otp"
+
+# KV namespace used for API rate limiting AND OTP storage in worker.js.
+# Create it with: npx wrangler kv namespace create RATE_LIMIT_KV
+# then paste the returned id below (replace REPLACE_WITH_KV_NAMESPACE_ID).
+[[kv_namespaces]]
+binding = "RATE_LIMIT_KV"
+id      = "a01b1526f880448f957dc69b78078ee0"
+
+# ── Routes — intercept /api/* on the main domain ─────────────────────────────
+[[routes]]
+pattern  = "one-waybharat.com/api/*"
+zone_name = "one-waybharat.com"
+
+# SECRETS — add via CLI or Dashboard, never here:
+#   npx wrangler secret put GOOGLE_PLACES_API_KEY
+#   npx wrangler secret put WHATSAPP_ACCESS_TOKEN
+#   npx wrangler secret put WHATSAPP_PHONE_NUMBER_ID
+#   npx wrangler secret put ADMIN_WHATSAPP_NUMBER
+#   npx wrangler secret put RAZORPAY_KEY_ID
+#   npx wrangler secret put RAZORPAY_KEY_SECRET
+# (ADMIN_WHATSAPP_NUMBER format: 919355757579 — country code + number, no + sign)
+# (RAZORPAY_KEY_ID / RAZORPAY_KEY_SECRET — from Razorpay Dashboard > Settings >
+#  API Keys. Use the LIVE pair for production, TEST pair while developing.
+#  Both live as Worker secrets only — worker.js reads them via env.RAZORPAY_KEY_ID
+#  and env.RAZORPAY_KEY_SECRET and hands the public key_id back to the browser
+#  per-order; the secret itself never leaves the server.)
