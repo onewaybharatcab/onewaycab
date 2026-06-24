@@ -200,8 +200,8 @@ header.scrolled {
   position: relative; z-index: 2;
   max-width: 1240px; margin: 0 auto;
   padding: 32px 5% 80px;
-  display: grid; grid-template-columns: 0.9fr 1.1fr;
-  gap: 64px; align-items: center;
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 48px; align-items: center;
   width: 100%;
 }
 
@@ -211,6 +211,7 @@ header.scrolled {
 }
 .hero-inner > .booking-widget {
   order: 1;
+  width: 100%;
 }
 
 /* LEFT: Copy */
@@ -343,13 +344,13 @@ header.scrolled {
   margin-bottom: 22px;
 }
 .trip-tab {
-  flex: 1; padding: 9px 8px;
+  flex: 1; padding: 11px 12px;
   border: none; background: none;
   border-radius: var(--r-sm); cursor: pointer;
-  font-size: 12px; font-weight: 700;
+  font-size: 13px; font-weight: 700;
   color: rgba(255,255,255,0.72);
   transition: all 0.25s; font-family: 'Nunito', sans-serif;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.3px; white-space: nowrap;
 }
 .trip-tab.active {
   background: linear-gradient(135deg, var(--sf-500), var(--sf-700));
@@ -801,8 +802,11 @@ header.scrolled {
 
 /* ═══════════════════════ FLOATING CALL + WHATSAPP ═══════════════════════ */
 .float-actions {
-  position: fixed; top: 50%; right: max(28px, env(safe-area-inset-right, 28px)); transform: translateY(-50%); z-index: 300;
-  display: flex; flex-direction: column; gap: 14px;
+  position: fixed;
+  bottom: max(20px, env(safe-area-inset-bottom, 20px));
+  right: 14px;
+  z-index: 300;
+  display: flex; flex-direction: column; gap: 12px;
   align-items: center;
 }
 .float-btn {
@@ -1871,7 +1875,7 @@ p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
   .wf-item { font-size: 10px; }
 
   /* Trip tabs — slightly smaller text */
-  .trip-tab { font-size: 11px; padding: 8px 4px; }
+  .trip-tab { font-size: 13px; padding: 11px 12px; }
 
   /* Date + time row stacks on very small screens */
   .row-2 { grid-template-columns: 1fr 1fr; gap: 8px; }
@@ -1903,7 +1907,7 @@ p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
 @media (max-width: 360px) {
   .widget-body  { padding: 12px 10px; }
   .widget-top-bar { padding: 12px 12px; }
-  .trip-tab { font-size: 10px; padding: 7px 3px; letter-spacing: 0; }
+  .trip-tab { font-size: 12px; padding: 10px 8px; }
   .wf-item  { font-size: 9px; }
   .row-2    { grid-template-columns: 1fr; gap: 8px; }
 }
@@ -2002,10 +2006,10 @@ p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
     overflow: visible !important;
   }
   .hero-inner {
-    padding-top: 8px !important;      /* tight — widget starts just below header */
+    padding-top: 8px !important;
     padding-bottom: 24px !important;
-    padding-left: 12px !important;
-    padding-right: 12px !important;
+    padding-left: 16px !important;
+    padding-right: 16px !important;
     gap: 20px !important;
     width: 100% !important;
     box-sizing: border-box !important;
@@ -2376,452 +2380,129 @@ p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
 
 
 
-/* ─── HAMBURGER: Orange button with white lines ─── */
+/* ═══════════════════════════════════════════════════════════
+   HAMBURGER + FLOAT BUTTONS — Single authoritative block
+   (All previous conflicting overrides removed)
+═══════════════════════════════════════════════════════════ */
+
+/* ── Hamburger: lives INSIDE header, no position:fixed ── */
 #hamBtn {
-  background: #F47B00 !important;
-  display: flex !important;
-  width: 44px !important;
-  height: 44px !important;
-  border-radius: 10px !important;
-  border: none !important;
-  align-items: center !important;
-  justify-content: center !important;
-  flex-direction: column !important;
-  gap: 5px !important;
-  cursor: pointer !important;
-  padding: 0 !important;
-  flex-shrink: 0 !important;
-  box-shadow: 0 4px 12px rgba(244,123,0,0.4) !important;
+  display: none;
+  width: 44px;
+  height: 44px;
+  background: #F47B00;
+  border: none;
+  border-radius: 10px;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 5px;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(244,123,0,0.4);
+  -webkit-tap-highlight-color: rgba(0,0,0,0);
+  touch-action: manipulation;
+  z-index: 201; /* above header z-index:200 */
+  position: relative;
 }
-
 #hamBtn span {
-  display: block !important;
-  width: 20px !important;
-  height: 2.5px !important;
-  background: #ffffff !important;
-  border-radius: 2px !important;
+  display: block;
+  width: 20px;
+  height: 2.5px;
+  background: #fff;
+  border-radius: 2px;
+  pointer-events: none;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+#hamBtn.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+#hamBtn.open span:nth-child(2) { opacity: 0; }
+#hamBtn.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+@media (max-width: 960px) {
+  #hamBtn { display: flex; }
+  .ham-btn { display: flex !important; }
+}
+@media (min-width: 961px) {
+  #hamBtn { display: none !important; }
+  .ham-btn { display: none !important; }
 }
 
-/* X when open */
-#hamBtn.open span:nth-child(1) { transform: translateY(7px) rotate(45deg) !important; }
-#hamBtn.open span:nth-child(2) { opacity: 0 !important; }
-#hamBtn.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg) !important; }
-
-/* ─── FLOAT BUTTONS: Bottom-right on mobile ─── */
+/* ── Float buttons: fixed bottom-right, with safe-area padding ── */
 .float-actions {
-  position: fixed !important;
-  bottom: 0 !important; !important;
-  right: 0 !important; !important;
-  z-index: 9999 !important;
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 12px !important;
+  position: fixed;
+  bottom: max(16px, env(safe-area-inset-bottom, 16px));
+  right: 12px;
+  z-index: 9000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: auto;
 }
 
 .float-btn {
-  width: 52px !important;
-  height: 52px !important;
-  border-radius: 50% !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.3) !important;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  -webkit-tap-highlight-color: rgba(0,0,0,0);
+  touch-action: manipulation;
+  position: relative;
+  z-index: 9000;
+  flex-shrink: 0;
 }
-
-.float-btn.call {
-  background: linear-gradient(135deg, #F47B00, #D46800) !important;
-  animation: pulseCall 2.5s infinite !important;
-}
-
-.float-btn.whatsapp {
-  background: linear-gradient(135deg, #25D366, #128C7E) !important;
-  animation: pulseWA 2.5s infinite 0.3s !important;
-}
-
-.float-btn svg {
-  width: 24px !important;
-  height: 24px !important;
-}
-
-.float-label { display: none !important; }
+.float-btn.call    { background: linear-gradient(135deg,#F47B00,#D46800); animation: pulseCall 2.5s infinite; }
+.float-btn.whatsapp{ background: linear-gradient(135deg,#25D366,#128C7E); animation: pulseWA  2.5s infinite 0.3s; }
+.float-btn svg     { width: 24px; height: 24px; pointer-events: none; }
+.float-label       { display: none; }
 
 @keyframes pulseCall {
   0%,100% { box-shadow: 0 0 0 0 rgba(244,123,0,0.5); }
-  50% { box-shadow: 0 0 0 10px rgba(244,123,0,0); }
+  50%      { box-shadow: 0 0 0 10px rgba(244,123,0,0); }
 }
-
 @keyframes pulseWA {
   0%,100% { box-shadow: 0 0 0 0 rgba(37,211,102,0.5); }
-  50% { box-shadow: 0 0 0 10px rgba(37,211,102,0); }
+  50%      { box-shadow: 0 0 0 10px rgba(37,211,102,0); }
 }
 
-/* Hide float buttons when drawer/modal is open */
+@media (max-width: 480px) {
+  .float-btn { width: 48px; height: 48px; }
+  .float-btn svg { width: 22px; height: 22px; }
+}
+@media (max-width: 360px) {
+  .float-btn { width: 44px; height: 44px; }
+}
+
+/* Hide float buttons when drawer or modal is open */
 body:has(.mob-drawer.open) .float-actions,
-body:has(#bkModal.open) .float-actions {
-  display: none !important;
-}
+body:has(#bkModal.open) .float-actions { display: none; }
 
-/* ─── Mobile header fix ─── */
+/* ── Header mobile layout ── */
 @media (max-width: 960px) {
   header {
     padding: 0 12px !important;
     height: 56px !important;
     justify-content: space-between !important;
   }
+  .logo-tagline, .logo-subtitle { display: none !important; }
   .logo-name {
     font-size: 14px !important;
-    max-width: calc(100vw - 100px) !important;
-  }
-  .logo-tagline, .logo-subtitle { display: none !important; }
-}
-
-/* ─── Small screen adjustments ─── */
-@media (max-width: 480px) {
-  .float-actions { right: 0 !important; !important; bottom: 0 !important; !important; gap: 10px !important; }
-  .float-btn { width: 48px !important; height: 48px !important; }
-  .float-btn svg { width: 22px !important; height: 22px !important; }
-}
-
-@media (max-width: 360px) {
-  .float-actions { right: 0 !important; !important; bottom: 0 !important; !important; gap: 8px !important; }
-  .float-btn { width: 44px !important; height: 44px !important; }
-  .float-btn svg { width: 20px !important; height: 20px !important; }
-}
-
-
-
-/* ══════════════════════════════════════════════════════════════════════
-   MOBILE DRAWER — Peach Theme Fix
-   Changes the dark drawer to match the website's warm peach theme.
-   ══════════════════════════════════════════════════════════════════════ */
-
-/* ─── Drawer Background — Peach instead of dark ─── */
-.mob-drawer {
-  background: linear-gradient(160deg, #FFF5EE, #FFE8DC) !important;
-  border-left: 1px solid rgba(244,123,0,0.25) !important;
-  box-shadow: -8px 0 40px rgba(180,90,30,0.2) !important;
-}
-
-/* ─── Drawer Header — Peach gradient ─── */
-.mob-drawer-head {
-  background: linear-gradient(135deg, rgba(244,123,0,0.12), rgba(255,240,232,0.9)) !important;
-  border-bottom: 1px solid rgba(244,123,0,0.2) !important;
-}
-
-/* ─── Logo name in header — Dark text on peach ─── */
-.mob-logo-name {
-  background: linear-gradient(135deg, #F47B00, #E8BD3A) !important;
-  -webkit-background-clip: text !important;
-  -webkit-text-fill-color: transparent !important;
-  background-clip: text !important;
-}
-
-/* ─── Close button — Dark style for light background ─── */
-.mob-close {
-  background: rgba(60,25,5,0.08) !important;
-  color: rgba(60,25,5,0.6) !important;
-}
-
-.mob-close:hover {
-  background: rgba(244,123,0,0.2) !important;
-  color: #F47B00 !important;
-}
-
-/* ─── Navigation Links — Dark text on peach ─── */
-.mob-link {
-  color: rgba(60,25,5,0.85) !important;
-  border-bottom: 1px solid rgba(60,25,5,0.08) !important;
-}
-
-.mob-link:hover, .mob-link:active {
-  background: rgba(244,123,0,0.1) !important;
-  color: #F47B00 !important;
-}
-
-/* ─── Bottom Actions Area — Peach background ─── */
-.mob-actions {
-  border-top: 1px solid rgba(244,123,0,0.2) !important;
-  background: rgba(255,255,255,0.5) !important;
-}
-
-/* ─── Book Now Button — Keep orange gradient (already matches) ─── */
-.mob-book-btn {
-  background: linear-gradient(135deg, #F47B00, #A85200) !important;
-  color: #fff !important;
-  box-shadow: 0 6px 24px rgba(244,123,0,0.35) !important;
-}
-
-/* ─── Call Button — Dark style for light background ─── */
-.mob-call-btn {
-  background: rgba(60,25,5,0.07) !important;
-  border: 1px solid rgba(60,25,5,0.15) !important;
-  color: rgba(60,25,5,0.75) !important;
-}
-
-.mob-call-btn:hover {
-  background: rgba(244,123,0,0.12) !important;
-  border-color: rgba(244,123,0,0.35) !important;
-  color: #F47B00 !important;
-}
-
-/* ─── Overlay — Lighter for peach theme ─── */
-.mob-overlay {
-  background: rgba(60,25,5,0.4) !important;
-  backdrop-filter: blur(6px) !important;
-  -webkit-backdrop-filter: blur(6px) !important;
-}
-
-/* ─── Tricolor stripe — Keep as is (Indian flag colors) ─── */
-.mob-tricolor span:nth-child(1) { background: #FF9933 !important; }
-.mob-tricolor span:nth-child(2) { background: #ffffff !important; }
-.mob-tricolor span:nth-child(3) { background: #138808 !important; }
-
-
-
-
-
-/* ─── Force hamburger above all content ─── */
-#hamBtn {
-  position: relative !important;
-  z-index: 99999 !important;
-  pointer-events: auto !important;
-  touch-action: manipulation !important;
-  -webkit-touch-callout: none !important;
-  -webkit-user-select: none !important;
-  user-select: none !important;
-}
-
-/* ─── Force float buttons above all content ─── */
-.float-actions {
-  position: fixed !important;
-  z-index: 99999 !important;
-  pointer-events: auto !important;
-}
-
-.float-btn {
-  position: relative !important;
-  z-index: 99999 !important;
-  pointer-events: auto !important;
-  touch-action: manipulation !important;
-  -webkit-touch-callout: none !important;
-  -webkit-user-select: none !important;
-  user-select: none !important;
-}
-
-/* ─── Ensure header doesn't block hamburger clicks ─── */
-header {
-  pointer-events: none !important;
-}
-
-header > * {
-  pointer-events: auto !important;
-}
-
-/* ─── Ensure booking widget doesn't block float buttons ─── */
-.booking-widget {
-  pointer-events: auto !important;
-}
-
-/* ─── Hero section should not block clicks ─── */
-.hero-inner {
-  pointer-events: none !important;
-}
-
-.hero-inner > * {
-  pointer-events: auto !important;
-}
-
-/* ─── Specifically allow clicks on hamburger and float buttons ─── */
-#hamBtn,
-.float-btn,
-.float-actions {
-  pointer-events: auto !important;
-}
-
-/* ─── Android Chrome specific fix ─── */
-@supports (-webkit-touch-callout: none) {
-  #hamBtn,
-  .float-btn {
-    transform: translateZ(0) !important;
-    will-change: transform !important;
+    max-width: calc(100vw - 80px) !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
   }
 }
 
-/* ─── Ensure no parent is blocking events ─── */
-header,
-.hero,
-.hero-inner,
-.booking-widget,
-.widget-body,
-.widget-top-bar {
-  position: relative !important;
+/* ── Prevent horizontal scroll ── */
+html {
+  max-width: 100%;
+  overflow-x: hidden;
 }
-
-/* ─── Fix for Vivo/OPPO Android browsers ─── */
-@media (max-width: 960px) {
-  #hamBtn {
-    position: relative !important;
-    z-index: 2147483647 !important; /* Max z-index */
-  }
-
-  .float-actions {
-    position: fixed !important;
-    z-index: 2147483647 !important; /* Max z-index */
-  }
-
-  .float-btn {
-    position: relative !important;
-    z-index: 2147483647 !important; /* Max z-index */
-  }
-}
-
-
-
-/* ══════════════════════════════════════════════════════════════════════
-   ANDROID FIX v2: Ensure buttons are clickable
-   ══════════════════════════════════════════════════════════════════════ */
-
-/* ─── NEVER use pointer-events: none on header ─── */
-/* This breaks Android touch handling */
-
-/* ─── Hamburger: High z-index, clickable ─── */
-#hamBtn {
-  position: relative !important;
-  z-index: 999999 !important;
-  display: flex !important;
-  width: 44px !important;
-  height: 44px !important;
-  background: #F47B00 !important;
-  border: none !important;
-  border-radius: 10px !important;
-  align-items: center !important;
-  justify-content: center !important;
-  flex-direction: column !important;
-  gap: 5px !important;
-  cursor: pointer !important;
-  padding: 0 !important;
-  flex-shrink: 0 !important;
-  box-shadow: 0 4px 12px rgba(244,123,0,0.4) !important;
-  /* Android specific */
-  -webkit-tap-highlight-color: rgba(0,0,0,0) !important;
-  touch-action: manipulation !important;
-  -webkit-touch-callout: none !important;
-  -webkit-user-select: none !important;
-  user-select: none !important;
-}
-
-#hamBtn span {
-  display: block !important;
-  width: 20px !important;
-  height: 2.5px !important;
-  background: #ffffff !important;
-  border-radius: 2px !important;
-  pointer-events: none !important; /* Let clicks pass through to button */
-}
-
-/* ─── Float buttons: Fixed at bottom-right, always clickable ─── */
-.float-actions {
-  position: fixed !important;
-  bottom: 0 !important; !important;
-  right: 0 !important; !important;
-  z-index: 999999 !important;
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 12px !important;
-  /* Android specific */
-  -webkit-tap-highlight-color: rgba(0,0,0,0) !important;
-}
-
-.float-btn {
-  width: 52px !important;
-  height: 52px !important;
-  border-radius: 50% !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  cursor: pointer !important;
-  text-decoration: none !important;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.3) !important;
-  /* Android specific */
-  -webkit-tap-highlight-color: rgba(0,0,0,0) !important;
-  touch-action: manipulation !important;
-  -webkit-touch-callout: none !important;
-  -webkit-user-select: none !important;
-  user-select: none !important;
-  position: relative !important;
-  z-index: 999999 !important;
-}
-
-.float-btn svg {
-  width: 24px !important;
-  height: 24px !important;
-  pointer-events: none !important; /* Let clicks pass through to button */
-}
-
-.float-btn.call {
-  background: linear-gradient(135deg, #F47B00, #D46800) !important;
-  animation: pulseCall 2.5s infinite !important;
-}
-
-.float-btn.whatsapp {
-  background: linear-gradient(135deg, #25D366, #128C7E) !important;
-  animation: pulseWA 2.5s infinite 0.3s !important;
-}
-
-.float-label { display: none !important; }
-
-@keyframes pulseCall {
-  0%,100% { box-shadow: 0 0 0 0 rgba(244,123,0,0.5); }
-  50% { box-shadow: 0 0 0 10px rgba(244,123,0,0); }
-}
-
-@keyframes pulseWA {
-  0%,100% { box-shadow: 0 0 0 0 rgba(37,211,102,0.5); }
-  50% { box-shadow: 0 0 0 10px rgba(37,211,102,0); }
-}
-
-/* ─── Small screen adjustments ─── */
-@media (max-width: 480px) {
-  .float-actions { right: 0 !important; !important; bottom: 0 !important; !important; gap: 10px !important; }
-  .float-btn { width: 48px !important; height: 48px !important; }
-  .float-btn svg { width: 22px !important; height: 22px !important; }
-}
-
-@media (max-width: 360px) {
-  .float-actions { right: 0 !important; !important; bottom: 0 !important; !important; gap: 8px !important; }
-  .float-btn { width: 44px !important; height: 44px !important; }
-  .float-btn svg { width: 20px !important; height: 20px !important; }
-}
-
-/* ─── Ensure header doesn't block clicks ─── */
-/* DON'T use pointer-events: none on header - it breaks Android */
-header {
-  position: fixed !important;
-  z-index: 200 !important;
-}
-
-/* ─── Ensure booking widget doesn't block float buttons ─── */
-.booking-widget {
-  position: relative !important;
-  z-index: 1 !important;
-}
-
-/* ─── Hide float buttons when drawer/modal is open ─── */
-body:has(.mob-drawer.open) .float-actions,
-body:has(#bkModal.open) .float-actions {
-  display: none !important;
-}
-
-/* ─── Mobile header layout ─── */
-@media (max-width: 960px) {
-  header {
-    padding: 0 12px !important;
-    height: 56px !important;
-    justify-content: space-between !important;
-  }
-  .logo-name {
-    font-size: 14px !important;
-    max-width: calc(100vw - 100px) !important;
-  }
-  .logo-tagline, .logo-subtitle { display: none !important; }
-}
+/* Clip blobs so they never extend page width */
+.hero { overflow: hidden; }
+.hero-bg { overflow: hidden; }
