@@ -5,21 +5,17 @@
         http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
 
   <!-- Core Pages -->
-  <url><loc>https://one-waybharat.com/</loc><lastmod>2026-06-21</lastmod><changefreq>daily</changefreq><priority>1.0</priority></url>
-  <url><loc>https://one-waybharat.com/booking.html</loc><lastmod>2026-06-21</lastmod><changefreq>daily</changefreq><priority>0.9</priority></url>
-  <url><loc>https://one-waybharat.com/routes.html</loc><lastmod>2026-06-21</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
-  <url><loc>https://one-waybharat.com/fleet.html</loc><lastmod>2026-06-21</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://one-waybharat.com/about.html</loc><lastmod>2026-06-21</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://one-waybharat.com/contact.html</loc><lastmod>2026-06-21</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://one-waybharat.com/faq.html</loc><lastmod>2026-06-21</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://one-waybharat.com/blog.html</loc><lastmod>2026-06-21</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://one-waybharat.com/policies.html</loc><lastmod>2026-06-21</lastmod><changefreq>yearly</changefreq><priority>0.4</priority></url>
+  <url><loc>https://one-waybharat.com/</loc><lastmod>2026-06-24</lastmod><changefreq>daily</changefreq><priority>1.0</priority></url>
+  <url><loc>https://one-waybharat.com/routes.html</loc><lastmod>2026-06-24</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://one-waybharat.com/fleet.html</loc><lastmod>2026-06-24</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://one-waybharat.com/about.html</loc><lastmod>2026-06-24</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://one-waybharat.com/contact.html</loc><lastmod>2026-06-24</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://one-waybharat.com/faq.html</loc><lastmod>2026-06-24</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://one-waybharat.com/policies.html</loc><lastmod>2026-06-24</lastmod><changefreq>yearly</changefreq><priority>0.4</priority></url>
 
   <!--
-    Route landing pages (/routes/*.html) and individual blog posts (/blog/*.html)
-    were removed from this sitemap: those pages don't exist yet on the site,
-    and submitting non-existent URLs to Google generates crawl errors.
-    Once those pages are actually built, add their url entries back here.
+    blog.html excluded: no published articles yet. Add back once content is live.
+    Route landing pages and individual blog post URLs: add when those pages exist.
   -->
 
 </urlset>

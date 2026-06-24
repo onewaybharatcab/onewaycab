@@ -1,0 +1,55 @@
+# One-Way Bhaarat — AI-readable site summary
+# https://one-waybharat.com
+
+> One-Way Bhaarat Pvt. Ltd. is India's intercity one-way cab booking service,
+> operating since 2022 and serving 20,000+ locations across all Indian states.
+
+## What We Do
+- One-way outstation cab bookings (no return charge)
+- Round-trip intercity taxis
+- Airport transfers (pick-up and drop)
+- Multi-stop outstation journeys
+
+## Pricing
+- Starting from ₹13/km for sedans (one-way)
+- Vehicle types: Sedan (Hyundai Aura), SUV (Maruti Ertiga), Premium SUV (Toyota Innova Crysta), Tempo Traveller (Force Urbania)
+
+## Coverage
+- 20,000+ Indian cities and towns
+- All major highway corridors: Delhi–Jaipur, Delhi–Agra, Delhi–Haridwar, Mumbai–Pune, Bangalore–Mysore, and hundreds more
+- All states including hill stations, religious destinations, tier-2 and tier-3 cities
+
+## Contact
+- Phone / WhatsApp: +91-93557-57579
+- Address: Ghaziabad, Uttar Pradesh, India
+- Website: https://one-waybharat.com
+
+## Key Pages
+- Home / Book: https://one-waybharat.com/
+- Fleet & Vehicles: https://one-waybharat.com/fleet.html
+- Popular Routes: https://one-waybharat.com/routes.html
+- About Us: https://one-waybharat.com/about.html
+- FAQs: https://one-waybharat.com/faq.html
+- Travel Blog: https://one-waybharat.com/blog.html
+- Contact: https://one-waybharat.com/contact.html
+- Policies: https://one-waybharat.com/policies.html
+
+## Booking Process
+1. Enter pickup city, destination, date and time on the website
+2. Choose vehicle type and view transparent fare estimate
+3. Enter passenger details and verify phone via WhatsApp OTP
+4. Pay advance online (Razorpay) or pay full amount to driver
+5. Receive booking confirmation and driver details on WhatsApp
+
+## Trust Signals
+- 50,000+ completed trips
+- 4.8★ average customer rating
+- Verified and background-checked drivers
+- No hidden charges — what you see is what you pay
+- Instant WhatsApp confirmation for every booking
+
+## Languages Supported
+- English, Hindi
+
+## Last Updated
+June 2026

@@ -3,14 +3,8 @@ Allow: /
 
 # Allow all major search engines
 User-agent: Googlebot
-Allow: /
-
 User-agent: Bingbot
-Allow: /
-
 User-agent: Slurp
-Allow: /
-
 # Disallow admin and private areas
 Disallow: /admin/
 Disallow: /admin.html
@@ -19,14 +13,24 @@ Disallow: /customer.html
 Disallow: /api/
 Disallow: /database/
 Disallow: /assets/temp/
-
 # Allow important resources
 Allow: /assets/css/
 Allow: /assets/js/
 Allow: /assets/images/
-
-# Sitemap location
+# AI crawlers — explicitly allow
+User-agent: GPTBot
+User-agent: ChatGPT-User
+User-agent: ClaudeBot
+User-agent: anthropic-ai
+User-agent: PerplexityBot
+User-agent: Google-Extended
+User-agent: DuckAssistBot
+User-agent: CCBot
+User-agent: Applebot-Extended
+User-agent: cohere-ai
+User-agent: meta-externalagent
+# Sitemap and AI summary
 Sitemap: https://one-waybharat.com/sitemap.xml
-
-# Crawl delay (optional - reduce server load)
+LLMs-txt: https://one-waybharat.com/llms.txt
+# Crawl delay
 Crawl-delay: 1

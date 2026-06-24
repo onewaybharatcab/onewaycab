@@ -20,6 +20,42 @@ const OTP_VERIFY_RATE_LIMIT_MAX = 10;
 // current stable version: https://developers.facebook.com/docs/graph-api/changelog
 const WHATSAPP_API_VERSION = "v21.0";
 
+
+// ── Security headers — added to every response ───────────────────────────────
+function addSecurityHeaders(response) {
+  const h = new Headers(response.headers);
+  h.set("X-Content-Type-Options",  "nosniff");
+  h.set("X-Frame-Options",         "DENY");
+  h.set("Referrer-Policy",         "strict-origin-when-cross-origin");
+  h.set("Permissions-Policy",      "camera=(), microphone=(), geolocation=()");
+  h.set("Strict-Transport-Security","max-age=31536000; includeSubDomains; preload");
+  h.set(
+    "Content-Security-Policy",
+    "default-src 'self'; " +
+    "script-src 'self' https://checkout.razorpay.com https://maps.googleapis.com https://fonts.googleapis.com; " +
+    "style-src 'self' https://fonts.googleapis.com; " +
+    "font-src https://fonts.gstatic.com; " +
+    "img-src 'self' data: https:; " +
+    "connect-src 'self' https://maps.googleapis.com https://graph.facebook.com https://api.razorpay.com; " +
+    "frame-src https://api.razorpay.com; " +
+    "object-src 'none'; " +
+    "base-uri 'self';"
+  );
+  return new Response(response.body, { status: response.status, statusText: response.statusText, headers: h });
+}
+
+// ── Input sanitiser — strips HTML/script tags from string inputs ─────────────
+function sanitizeString(str, maxLen = 500) {
+  if (typeof str !== "string") return "";
+  return str.replace(/<[^>]*>/g, "").replace(/[<>"'`;]/g, "").trim().slice(0, maxLen);
+}
+
+// ── Phone number server-side validation ──────────────────────────────────────
+function validatePhone(raw) {
+  const digits = String(raw || "").replace(/\D/g, "");
+  return digits.length === 10 ? digits : null;
+}
+
 var worker_default = {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
@@ -28,42 +64,42 @@ var worker_default = {
 
     // 0. Razorpay endpoints (order creation + payment signature verification)
     if (url.pathname.includes("payment/create-order")) {
-      return withRateLimit(request, env, ctx, "payment-create", () => handleCreateOrder(request, env, allowOrigin), allowOrigin, 10);
+      return addSecurityHeaders(await withRateLimit(request, env, ctx, "payment-create", () => handleCreateOrder(request, env, allowOrigin), allowOrigin, 10))
     }
     if (url.pathname.includes("payment/verify")) {
-      return withRateLimit(request, env, ctx, "payment-verify", () => handleVerifyPayment(request, env, allowOrigin), allowOrigin, 10);
+      return addSecurityHeaders(await withRateLimit(request, env, ctx, "payment-verify", () => handleVerifyPayment(request, env, allowOrigin), allowOrigin, 10))
     }
 
     // 1. OTP endpoints (booking-flow phone verification via WhatsApp)
     if (url.pathname.includes("otp/send")) {
-      return withRateLimit(request, env, ctx, "otp-send", () => handleSendOtp(request, env, allowOrigin), allowOrigin, OTP_SEND_RATE_LIMIT_MAX);
+      return addSecurityHeaders(await withRateLimit(request, env, ctx, "otp-send", () => handleSendOtp(request, env, allowOrigin), allowOrigin, OTP_SEND_RATE_LIMIT_MAX))
     }
     if (url.pathname.includes("otp/verify")) {
-      return withRateLimit(request, env, ctx, "otp-verify", () => handleVerifyOtp(request, env, allowOrigin), allowOrigin, OTP_VERIFY_RATE_LIMIT_MAX);
+      return addSecurityHeaders(await withRateLimit(request, env, ctx, "otp-verify", () => handleVerifyOtp(request, env, allowOrigin), allowOrigin, OTP_VERIFY_RATE_LIMIT_MAX))
     }
 
     // 2. Booking notification (admin WhatsApp alert when booking confirmed)
     if (url.pathname.includes("booking/notify")) {
-      return withRateLimit(request, env, ctx, "notify", () => handleBookingNotify(request, env, allowOrigin), allowOrigin);
+      return addSecurityHeaders(await withRateLimit(request, env, ctx, "notify", () => handleBookingNotify(request, env, allowOrigin), allowOrigin))
     }
 
     // 2. Distance Matrix endpoint — used by booking modal to get road distance + ETA
     if (url.pathname.includes("distance")) {
-      return withRateLimit(request, env, ctx, "distance", () => handleDistance(request, url, env, allowOrigin), allowOrigin);
+      return addSecurityHeaders(await withRateLimit(request, env, ctx, "distance", () => handleDistance(request, url, env, allowOrigin), allowOrigin))
     }
 
     // 3. Details endpoint logic (Matches detail, details, or place_id queries)
     if (url.pathname.includes("detail") || url.searchParams.has("place_id")) {
-      return withRateLimit(request, env, ctx, "details", () => handlePlaceDetails(request, url, env, allowOrigin), allowOrigin);
+      return addSecurityHeaders(await withRateLimit(request, env, ctx, "details", () => handlePlaceDetails(request, url, env, allowOrigin), allowOrigin))
     }
 
     // 4. Broad Autocomplete logic (Matches /api/places, /api/place, /api/autocomplete)
     if (url.pathname.includes("place") || url.pathname.includes("autocomplete")) {
-      return withRateLimit(request, env, ctx, "places", () => handlePlacesProxy(request, url, env, allowOrigin), allowOrigin);
+      return addSecurityHeaders(await withRateLimit(request, env, ctx, "places", () => handlePlacesProxy(request, url, env, allowOrigin), allowOrigin))
     }
 
     // Fallback response if asset router runs out of scope
-    return new Response("Asset mapping requires direct static build configuration or asset binding.", { status: 404 });
+    return addSecurityHeaders(new Response("Not found.", { status: 404 }));
   }
 };
 
@@ -123,8 +159,8 @@ async function handleSendOtp(request, env, allowOrigin) {
     return jsonResponse({ error: "Invalid request body" }, 400, allowOrigin);
   }
 
-  const rawPhone = String(body.phone || "").replace(/\D/g, "");
-  if (rawPhone.length !== 10) {
+  const rawPhone = validatePhone(body.phone);
+  if (!rawPhone) {
     return jsonResponse({ error: "Enter a valid 10-digit mobile number" }, 400, allowOrigin);
   }
 
@@ -221,9 +257,9 @@ async function handleVerifyOtp(request, env, allowOrigin) {
     return jsonResponse({ error: "Invalid request body" }, 400, allowOrigin);
   }
 
-  const rawPhone = String(body.phone || "").replace(/\D/g, "");
+  const rawPhone = validatePhone(body.phone);
   const code = String(body.code || "").replace(/\D/g, "");
-  if (rawPhone.length !== 10 || code.length !== 6) {
+  if (!rawPhone || code.length !== 6) {
     return jsonResponse({ error: "Invalid phone number or code" }, 400, allowOrigin);
   }
 
