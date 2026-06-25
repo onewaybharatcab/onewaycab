@@ -57,7 +57,7 @@ nav a:hover{color:var(--wh);background:rgba(244,123,0,0.1)}
 .fspec{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:var(--r12);padding:10px 12px}
 .fsl{font-size:9px;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:.5px}
 .fsv{font-size:13px;font-weight:700;color:var(--wh);margin-top:3px}
-.frates{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px}
+.frates{display:none} /* rate + One Way/Round Trip labels hidden */
 .frate{border-radius:var(--r12);padding:14px;text-align:center}
 .frate-ow{background:rgba(244,123,0,0.09);border:1px solid rgba(244,123,0,0.18)}
 .frate-rt{background:rgba(180,90,30,0.25);border:1px solid rgba(180,90,30,0.4)}
