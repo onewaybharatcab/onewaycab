@@ -1,7 +1,7 @@
-:root{--sf:#F47B00;--sf2:#FF9D2F;--sf3:#A85200;--sfg:rgba(244,123,0,0.28);--gd:#E8BD3A;--gd2:#F5D060;--gr:#1DAD10;--nv:#040C1E;--nv2:#061428;--nv3:#0B1F3A;--nv4:#1C3E6A;--wh:#fff;--mu:rgba(255,255,255,0.5);--fa:rgba(255,255,255,0.07);--r6:6px;--r12:12px;--r20:20px;--r28:28px;--rp:100px;--sh:0 4px 24px rgba(4,12,30,0.5)}
+:root{--sf:#F47B00;--sf2:#FF9D2F;--sf3:#A85200;--sfg:rgba(244,123,0,0.28);--gd:#E8BD3A;--gd2:#F5D060;--gr:#1DAD10;--nv:#040C1E;--nv2:#061428;--nv3:#0B1F3A;--nv4:#1C3E6A;--wh:#fff;--mu:rgba(255,255,255,0.5);--fa:rgba(255,255,255,0.07);--r6:6px;--r12:12px;--r20:20px;--r28:28px;--rp:100px;--sh:0 4px 24px rgba(26,8,0,0.5)}
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Nunito',sans-serif;background:var(--nv);color:var(--wh);-webkit-font-smoothing:antialiased}
-header{background:rgba(4,12,30,0.95);-webkit-backdrop-filter: blur(20px);
+header{background:rgba(26,8,0,0.95);-webkit-backdrop-filter: blur(20px);
 backdrop-filter: blur(20px);border-bottom:1px solid rgba(244,123,0,0.15);padding:0 5%;display:flex;align-items:center;justify-content:space-between;height:64px;position:sticky;top:0;z-index:100}
 .logo{display:flex;align-items:center;gap:10px;text-decoration:none}
 .lem{width:38px;height:38px;background:linear-gradient(135deg,var(--sf),var(--sf3));border-radius:var(--r12);display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 4px 16px var(--sfg)}
@@ -41,7 +41,7 @@ nav a:hover{color:var(--wh);background:rgba(244,123,0,0.1)}
 /* Fleet Detail Cards */
 .fleet-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:56px}
 .fcard{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:var(--r28);overflow:hidden;transition:all .35s;position:relative}
-.fcard:hover{border-color:rgba(244,123,0,0.35);transform:translateY(-8px);box-shadow:0 24px 64px rgba(4,12,30,0.6),0 0 0 1px rgba(244,123,0,0.12)}
+.fcard:hover{border-color:rgba(244,123,0,0.35);transform:translateY(-8px);box-shadow:0 24px 64px rgba(26,8,0,0.6),0 0 0 1px rgba(244,123,0,0.12)}
 .fbadge{position:absolute;top:14px;right:14px;z-index:2;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:4px 11px;border-radius:var(--rp)}
 .b-pop{background:rgba(232,189,58,0.92);color:#3A2C00;border:1px solid rgba(232,189,58,0.25)}
 .b-fam{background:rgba(29,173,16,0.92);color:#fff;border:1px solid rgba(29,173,16,0.22)}
@@ -60,7 +60,7 @@ nav a:hover{color:var(--wh);background:rgba(244,123,0,0.1)}
 .frates{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px}
 .frate{border-radius:var(--r12);padding:14px;text-align:center}
 .frate-ow{background:rgba(244,123,0,0.09);border:1px solid rgba(244,123,0,0.18)}
-.frate-rt{background:rgba(28,62,106,0.25);border:1px solid rgba(28,62,106,0.4)}
+.frate-rt{background:rgba(180,90,30,0.25);border:1px solid rgba(180,90,30,0.4)}
 .frl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
 .frate-ow .frl{color:var(--sf2)}
 .frate-rt .frl{color:rgba(255,255,255,0.4)}
@@ -103,14 +103,13 @@ footer a:hover{color:var(--gd)}
    /* ═══════════════════ WARM PEACH THEME — Token Override
 ═══════════════════════════════════════════════ */
 :root {
-  /* Swap navy backgrounds → warm peach family */
-  --nv-900: #FFF0E8;   /* page base — warm peach */
-  --nv-800: #FFE8DC;   /* alt sections */
-  --nv-700: #FFD9C8;   /* deeper peach */
-  --nv-600: #F5C4AC;   /* borders */
-  --nv-400: #D4956A;   /* muted accent */
-  --nv-200: #A86840;   /* sub-text */
-  --nv-100: #7A4420;   /* dark-on-light */
+  --pc-900: #FFF0E8;   /* page base — warm peach */
+  --pc-800: #FFE8DC;   /* alt sections */
+  --pc-700: #FFD9C8;   /* deeper peach */
+  --pc-600: #F5C4AC;   /* borders */
+  --pc-400: #D4956A;   /* muted accent */
+  --pc-200: #A86840;   /* sub-text */
+  --pc-100: #7A4420;   /* dark-on-light */
 
   /* Flip text to dark */
   --wh:     #1A0800;
@@ -645,7 +644,7 @@ p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
 }
 .float-label {
   position: absolute; right: 70px; top: 50%; transform: translateY(-50%);
-  background: var(--nv-900); color: var(--wh);
+  background: var(--pc-900); color: var(--wh);
   font-size: 12.5px; font-weight: 600; white-space: nowrap;
   padding: 7px 14px; border-radius: 8px;
   opacity: 0; pointer-events: none;

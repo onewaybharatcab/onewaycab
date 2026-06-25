@@ -1,4 +1,4 @@
-:root{--sf:#F47B00;--sf2:#FF9D2F;--sf3:#A85200;--sfg:rgba(244,123,0,0.28);--gd:#E8BD3A;--gd2:#F5D060;--gr:#1DAD10;--gr3:#49CF3E;--rd:#DC2626;--nv:#040C1E;--nv2:#061428;--nv3:#0B1F3A;--nv4:#1C3E6A;--wh:#fff;--fa:rgba(255,255,255,0.06);--r6:6px;--r12:12px;--r20:20px;--r28:28px;--sh:0 4px 24px rgba(4,12,30,0.55)}
+:root{--sf:#F47B00;--sf2:#FF9D2F;--sf3:#A85200;--sfg:rgba(244,123,0,0.28);--gd:#E8BD3A;--gd2:#F5D060;--gr:#1DAD10;--gr3:#49CF3E;--rd:#DC2626;--nv:#040C1E;--nv2:#061428;--nv3:#0B1F3A;--nv4:#1C3E6A;--wh:#fff;--fa:rgba(255,255,255,0.06);--r6:6px;--r12:12px;--r20:20px;--r28:28px;--sh:0 4px 24px rgba(26,8,0,0.55)}
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Nunito',sans-serif;background:var(--nv);color:var(--wh);display:flex;min-height:100vh;-webkit-font-smoothing:antialiased}
 /* SIDEBAR */
@@ -35,7 +35,7 @@ body{font-family:'Nunito',sans-serif;background:var(--nv);color:var(--wh);displa
 .sc-icon{width:42px;height:42px;border-radius:var(--r12);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
 .ic-o{background:rgba(244,123,0,0.12);border:1px solid rgba(244,123,0,0.2)}
 .ic-g{background:rgba(29,173,16,0.1);border:1px solid rgba(29,173,16,0.2)}
-.ic-b{background:rgba(28,62,106,0.3);border:1px solid rgba(28,62,106,0.5)}
+.ic-b{background:rgba(180,90,30,0.3);border:1px solid rgba(180,90,30,0.5)}
 .ic-gd{background:rgba(232,189,58,0.1);border:1px solid rgba(232,189,58,0.2)}
 .sc-lbl{font-size:11px;color:rgba(255,255,255,0.4);font-weight:600;letter-spacing:.3px}
 .sc-val{font-family:'Cinzel',serif;font-size:24px;font-weight:700;color:var(--wh)}
@@ -85,7 +85,7 @@ tr:hover td{background:rgba(244,123,0,0.03)}
 .sb-inact{background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.4)}
 .action-row{display:flex;gap:5px}
 .ab{padding:4px 10px;border-radius:var(--r6);font-size:11px;font-weight:700;cursor:pointer;border:none;font-family:'Nunito',sans-serif}
-.ab-v{background:rgba(28,62,106,0.3);color:#93c5fd}
+.ab-v{background:rgba(180,90,30,0.3);color:#93c5fd}
 .ab-e{background:rgba(232,189,58,0.1);color:var(--gd)}
 .ab-d{background:rgba(220,38,38,0.1);color:#f87171}
 /* PRICING PANEL */
@@ -193,12 +193,12 @@ tr:hover td{background:rgba(244,123,0,0.03)}
 .loader-tagline {
   font-family: 'Nunito', sans-serif;
   font-size: 13px; font-weight: 500;
-  color: rgba(4,12,30,0.52); line-height: 1.65; margin-bottom: 16px;
+  color: rgba(26,8,0,0.52); line-height: 1.65; margin-bottom: 16px;
 }
 .ld-badge {
   width: 72px; height: 72px; border-radius: 50%;
   overflow: hidden; margin: 0 auto;
-  box-shadow: 0 2px 14px rgba(4,12,30,0.14),
+  box-shadow: 0 2px 14px rgba(26,8,0,0.14),
               0 0 0 2px rgba(201,162,39,0.45);
   animation: ldBadgePop 0.6s 1.2s cubic-bezier(0.34,1.4,0.64,1) both;
 }
@@ -209,7 +209,7 @@ tr:hover td{background:rgba(244,123,0,0.03)}
 .ld-badge img { width:100%; height:100%; object-fit:cover; }
 .loader-bar {
   width: 180px; height: 2px;
-  background: rgba(4,12,30,0.08);
+  background: rgba(26,8,0,0.08);
   border-radius: 2px; margin: 14px auto 0; overflow: hidden;
 }
 .loader-bar-fill {
@@ -223,14 +223,13 @@ tr:hover td{background:rgba(244,123,0,0.03)}
    WARM PEACH THEME — Token Override
 ═══════════════════════════════════════════════ */
 :root {
-  /* Swap navy backgrounds → warm peach family */
-  --nv-900: #FFF0E8;   /* page base — warm peach */
-  --nv-800: #FFE8DC;   /* alt sections */
-  --nv-700: #FFD9C8;   /* deeper peach */
-  --nv-600: #F5C4AC;   /* borders */
-  --nv-400: #D4956A;   /* muted accent */
-  --nv-200: #A86840;   /* sub-text */
-  --nv-100: #7A4420;   /* dark-on-light */
+  --pc-900: #FFF0E8;   /* page base — warm peach */
+  --pc-800: #FFE8DC;   /* alt sections */
+  --pc-700: #FFD9C8;   /* deeper peach */
+  --pc-600: #F5C4AC;   /* borders */
+  --pc-400: #D4956A;   /* muted accent */
+  --pc-200: #A86840;   /* sub-text */
+  --pc-100: #7A4420;   /* dark-on-light */
 
   /* Flip text to dark */
   --wh:     #1A0800;
@@ -548,7 +547,7 @@ th { background: rgba(60,25,5,0.05) !important; color: rgba(60,25,5,0.50) !impor
 td { border-bottom-color: rgba(60,25,5,0.06) !important; color: rgba(60,25,5,0.62) !important; }
 tr:hover td { background: rgba(244,123,0,0.05) !important; }
 .sb-inact { background: rgba(60,25,5,0.07) !important; color: rgba(60,25,5,0.45) !important; }
-.ab-v { background: rgba(28,62,106,0.12) !important; color: #2E5C96 !important; }
+.ab-v { background: rgba(180,90,30,0.12) !important; color: #2E5C96 !important; }
 .ab-e { background: rgba(232,189,58,0.15) !important; color: #A8861E !important; }
 .ab-d { background: rgba(220,38,38,0.10) !important; color: #C2410C !important; }
 
