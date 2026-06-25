@@ -135,8 +135,8 @@ function searchCabs() {
 
 // ── Fare Calc ──────────────────────────────────────────
 const RATES = {
-  sedan_ow:11,ertiga_ow:21,innova_ow:30,tempo_ow:42,
-  sedan_rt:12,ertiga_rt:15,innova_rt:20,tempo_rt:35
+  sedan_ow:16,ertiga_ow:21,innova_ow:30,tempo_ow:42,
+  sedan_rt:11,ertiga_rt:15,innova_rt:20,tempo_rt:35
 };
 function calcDistInput(input) {
   const errEl = document.getElementById('calcDistError');
@@ -342,7 +342,7 @@ function initAutocomplete() {
 const ADMIN_WA = '919355757579';
 
 const BKM_VEHICLES = [
-  {key:'sedan',  name:'Sedan',           sub:'Swift Dzire / Honda Amaze / Aspire', icon:'🚗', seats:4,  badge:'Popular',  ow:11, rt:12, minFare:1500},
+  {key:'sedan',  name:'Sedan',           sub:'Swift Dzire / Honda Amaze / Aspire', icon:'🚗', seats:4,  badge:'Popular',  ow:16, rt:11, minFare:1500},
   {key:'ertiga', name:'Ertiga',          sub:'Maruti Ertiga / XL6 (6-Seater)',     icon:'🚐', seats:6,  badge:'Family',   ow:21, rt:15, minFare:1700},
   {key:'innova', name:'Innova Crysta',   sub:'Toyota Innova Crysta',               icon:'🚙', seats:7,  badge:'Premium',  ow:30, rt:20, minFare:2000},
   {key:'tempo',  name:'Tempo Traveller', sub:'12-Seater Force / Mahindra',         icon:'🚌', seats:12, badge:'Group',    ow:42, rt:35, minFare:4000},
@@ -507,6 +507,11 @@ function _bkmSyncRTDrop(t){
     drEl.readOnly = true;
     drEl.classList.add('u-drop-locked');
     if(drLabel) drLabel.innerHTML = '🔄 Return To <span style="font-size:.62rem;color:var(--sf-400);font-weight:700">(same as pickup)</span>';
+    BKM.S.distKm = 0; BKM._preDistKm = 0;
+    const distEl = document.getElementById('bkm-dist');
+    if(distEl) distEl.classList.remove('show');
+    const lf = document.getElementById('bkmLiveFares');
+    if(lf) lf.classList.remove('show');
   } else {
     drEl.readOnly = false;
     drEl.classList.remove('u-drop-locked');
@@ -702,7 +707,6 @@ function _bkmBuildCabs(){
           <div class="bkm-cab-specs">
             <span class="bkm-cab-spec">👥 ${v.seats} Seats</span>
             <span class="bkm-cab-spec">❄️ AC</span>
-            <span class="bkm-cab-spec">${isMin?'Min fare':'₹'+rate+'/km'}</span>
             ${isRound?`<span class="bkm-cab-spec">🔄 ${days} day${days>1?'s':''}</span>`:''}
           </div>
         </div>
@@ -718,9 +722,9 @@ function _bkmBuildCabs(){
           ? `Actual ${km} km < min ${packageKm.toLocaleString('en-IN')} km (${days}×250) → billing ${packageKm.toLocaleString('en-IN')} km`
           : `Route ${km} km · billing ${billedKm.toLocaleString('en-IN')} km`
         }</span>
-        <span>₹${rate}/km × ${billedKm.toLocaleString('en-IN')} km = ₹${Math.ceil(billedKm*rate).toLocaleString('en-IN')}</span>
+        <span>${billedKm.toLocaleString('en-IN')} km billed = ₹${Math.ceil(billedKm*rate).toLocaleString('en-IN')}</span>
         <span>🧑 Driver allowance: +₹${driverAllow.toLocaleString('en-IN')}</span>
-        ${extraKm>0?`<span style="color:#c85a00;font-weight:800">⚠️ Route >1000 km: ${extraKm.toLocaleString('en-IN')} extra km × ₹${rate} already included</span>`:''}
+        ${extraKm>0?`<span style="color:#c85a00;font-weight:800">⚠️ Route >1000 km: ${extraKm.toLocaleString('en-IN')} extra km already included</span>`:''}
       </div>`:''}
     </div>`;
   }).join('');
