@@ -565,10 +565,7 @@ section { padding: 88px 0; }
 .fleet-models { font-size: 12px; color: #D46800; font-weight: 600; margin-bottom: 12px; }
 .fleet-specs { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
 .fleet-spec { font-size: 12px; font-weight: 600; color: rgba(60,25,5,0.62); display: inline-flex; align-items: center; gap: 4px; }
-.fleet-price-row { margin-bottom: 14px; }
-.fp-rate { font-family: 'Cinzel', serif; font-size: 24px; font-weight: 700; color: var(--sf-600); }
-.fp-unit { font-size: 12px; color: rgba(60,25,5,0.40); font-weight: 600; }
-.fp-type { font-size: 11px; color: rgba(60,25,5,0.40); font-weight: 600; margin-top: 1px; }
+.fleet-price-row { display: none; } /* rate + One Way label hidden */
 .fleet-book {
   width: 100%; padding: 12px; border-radius: var(--r-md);
   background: #1A0F08; border: none;
