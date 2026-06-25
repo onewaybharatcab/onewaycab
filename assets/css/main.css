@@ -1497,6 +1497,15 @@ input:-webkit-autofill:focus {
 
 /* ── ≤480px : booking widget + hero density ── */
 @media (max-width: 480px) {
+  .routes-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .route-card { flex-direction: column; align-items: flex-start; gap: 6px; padding: 12px 10px; }
+  .route-price-col { text-align: left; }
+  .route-emoji { font-size: 20px; }
+  .route-name { font-size: 12.5px; white-space: normal; }
+  .route-meta { font-size: 9.5px; }
+  .route-price { font-size: 14px; }
+  .route-dist { display: none; }
+
   .widget-top-bar { padding: 14px 16px; flex-wrap: nowrap; overflow: hidden; }
   .widget-body    { padding: 16px 14px; }
   .widget-footer  { padding: 10px 14px 10px; gap: 8px; flex-wrap: wrap; justify-content: flex-start; padding-right: 16px; }
