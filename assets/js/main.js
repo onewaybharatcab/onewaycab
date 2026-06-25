@@ -1179,6 +1179,12 @@ function _bkmShowPortal(preds,cb,inp){
   });
   const rect=inp.getBoundingClientRect();
   portal.className='u-portal';
+  // BUG FIX: #owb-ac-portal{display:none} is an ID rule (specificity 100) which
+  // always beats .u-portal{display:block} (specificity 10). Also _bkmHidePortal
+  // sets an inline display:none which overrides everything. Setting inline
+  // display:block here forces the portal visible regardless of stylesheet or
+  // prior inline values.
+  portal.style.display='block';
   portal.style.top=`${rect.bottom+4}px`;
   portal.style.left=`${rect.left}px`;
   portal.style.width=`${rect.width}px`;
@@ -1299,6 +1305,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const lf=document.getElementById('bkmLiveFares'); if(lf) lf.classList.remove('show');
     _bkmMaybeLiveDist();
   });
+
+  // BUG FIX: distance only cleared on autocomplete *selection* above, not on
+  // *typing*. So old distance stays on screen while the user edits. Clear it
+  // immediately the moment either field is modified so stale data never shows.
+  function _clearDist(){
+    BKM.S.distKm=0; BKM._preDistKm=0;
+    const distEl=document.getElementById('bkm-dist'); if(distEl) distEl.classList.remove('show');
+    const lf=document.getElementById('bkmLiveFares'); if(lf) lf.classList.remove('show');
+  }
+  if(bkPuEl) bkPuEl.addEventListener('input', _clearDist);
+  if(bkDrEl) bkDrEl.addEventListener('input', _clearDist);
 
   // Portal close on outside click + Escape
   document.addEventListener('click', e=>{
