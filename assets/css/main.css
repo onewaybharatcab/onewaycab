@@ -1488,9 +1488,20 @@ input:-webkit-autofill:focus {
     aspect-ratio: 479 / 488; /* true source image ratio */
   }
   .map-area img { width: 100%; height: 100%; object-fit: contain; display: block; }
-  .chakra-wrap { position: absolute; top: 33.61%; left: 24.64%; width: 30.48%; height: 30.48%; animation: chakraGlow 3s ease-in-out infinite; }
+  /* BUG FIX (mobile): chakra-wrap must be square.
+     height:30.48% references map-area HEIGHT (taller due to 479/488 ratio),
+     while width:30.48% references map-area WIDTH — so they differ.
+     Fix: use aspect-ratio:1 so the element is always square based on its width. */
+  .chakra-wrap { position: absolute; top: 33.61%; left: 24.64%; width: 30.48%; height: auto; aspect-ratio: 1 / 1; animation: chakraGlow 3s ease-in-out infinite; }
+  /* BUG FIX (mobile): chakra-spin fills the wrapper but the inner SVG had
+     hardcoded width="146" height="146" attrs, overriding CSS and staying 146px
+     inside a ~109px box. The rotate() pivot was the CSS center (54px) not the
+     visual SVG center (73px) — causing the chakra to orbit instead of spin.
+     Fix: force the SVG to fill the container so both centers align. */
   .chakra-spin { width: 100%; height: 100%; }
-  .chakra-logo { width: 51%; height: 51%; }
+  .chakra-spin svg { width: 100%; height: 100%; display: block; }
+  /* BUG FIX (mobile): same non-square issue as chakra-wrap — use aspect-ratio. */
+  .chakra-logo { width: 51%; height: auto; aspect-ratio: 1 / 1; }
   .dot  { width: 10px; height: 10px; }
   .dot1 { top: 12.30%; left: 41.75%; width: 12px; height: 12px; }
   .dot2 { top: 24.59%; left: 62.00%; width: 10px; height: 10px; }
