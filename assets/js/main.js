@@ -390,8 +390,16 @@ function bkmOpen(opts={}){
     if(dtEl && BKM.S.date) dtEl.value = BKM.S.date;
     if(tmEl && BKM.S.time) tmEl.value = BKM.S.time;
     if(retEl && BKM.S.retdate) retEl.value = BKM.S.retdate;
+    // BUG FIX: bkmSetTrip → _bkmSyncRTDrop unconditionally wipes drEl.value
+    // and BKM.S.dr for one-way trips, erasing any prefilled drop location.
+    // Save dr first, then restore it after bkmSetTrip if trip is not round-trip.
+    const _prefillDr = BKM.S.dr;
     // Sync modal trip buttons to match hero widget selection
     if(BKM.S.trip) bkmSetTrip(BKM.S.trip);
+    if(_prefillDr && BKM.S.trip !== 'roundtrip') {
+      BKM.S.dr = _prefillDr;
+      if(drEl) drEl.value = _prefillDr;
+    }
     BKM.S.distKm = 0;
     const distEl = document.getElementById('bkm-dist');
     if(distEl) distEl.classList.remove('show');
