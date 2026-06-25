@@ -13,14 +13,13 @@
   --sf-700: #A85200;
   --sf-glow: rgba(244,123,0,0.35);
 
-  /* Page base — warm peach (was navy in earlier version) */
-  --nv-900: #FFF0E8;   /* page base */
-  --nv-800: #FFE8DC;   /* alt sections */
-  --nv-700: #FFD9C8;   /* deeper peach */
-  --nv-600: #F5C4AC;   /* borders */
-  --nv-400: #D4956A;   /* muted accent */
-  --nv-200: #A86840;   /* sub-text */
-  --nv-100: #7A4420;   /* dark-on-light */
+  --pc-900: #FFF0E8;   /* page base */
+  --pc-800: #FFE8DC;   /* alt sections */
+  --pc-700: #FFD9C8;   /* deeper peach */
+  --pc-600: #F5C4AC;   /* borders */
+  --pc-400: #D4956A;   /* muted accent */
+  --pc-200: #A86840;   /* sub-text */
+  --pc-100: #7A4420;   /* dark-on-light */
 
   /* Ashoka Chakra Gold */
   --gd-500: #C9A227;
@@ -67,7 +66,7 @@ html { scroll-behavior: smooth; overflow-x: hidden; max-width: 100%; }
 
 body {
   font-family: 'Nunito', sans-serif;
-  background: var(--nv-900);
+  background: var(--pc-900);
   color: var(--wh);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -169,7 +168,7 @@ header.scrolled {
   position: relative; overflow: hidden;
   display: flex; align-items: center;
   padding-top: 68px;        /* matches header height exactly — no extra gap */
-  background: var(--nv-900);
+  background: var(--pc-900);
 }
 
 /* Layered background */
@@ -423,7 +422,7 @@ input[type="number"].field-input:not(:placeholder-shown) {
 .location-connector { position: relative; margin-bottom: 14px; z-index: 10; }
 .connector-line {
   position: absolute; left: 21px; top: -6px; bottom: -6px;
-  width: 1px; background: linear-gradient(to bottom, var(--sf-500), var(--nv-600));
+  width: 1px; background: linear-gradient(to bottom, var(--sf-500), var(--pc-600));
   z-index: 0;
 }
 .swap-btn {
@@ -488,7 +487,7 @@ input[type="number"].field-input:not(:placeholder-shown) {
 
 /* ═══════════════════════ TRUST BAR ═══════════════════════ */
 .trust-bar {
-  background: var(--nv-800);
+  background: var(--pc-800);
   border-top: 1px solid rgba(60,25,5,0.06);
   border-bottom: 1px solid rgba(60,25,5,0.04);
   padding: 18px var(--edge-pad);
@@ -536,7 +535,7 @@ section { padding: 88px 0; }
 .sec-center .sec-sub { margin: 0 auto; }
 
 /* ═══════════════════════ FLEET SECTION ═══════════════════════ */
-.fleet-section { background: var(--nv-800); }
+.fleet-section { background: var(--pc-800); }
 .fleet-card {
   position: relative; border-radius: var(--r-xl); overflow: hidden;
   border: 1px solid rgba(60,25,5,0.10);
@@ -580,7 +579,7 @@ section { padding: 88px 0; }
 .fleet-book:hover { background: linear-gradient(135deg, var(--sf-500), var(--sf-700)); color: #fff; border-color: transparent; box-shadow: 0 8px 24px var(--sf-glow); }
 
 /* ═══════════════════════ FARE CALCULATOR ═══════════════════════ */
-.calc-section { background: var(--nv-900); }
+.calc-section { background: var(--pc-900); }
 .calc-glass {
   background: rgba(255,255,255,0.88);
   border: 1px solid rgba(60,25,5,0.10);
@@ -634,7 +633,7 @@ section { padding: 88px 0; }
 .crs-balance .crs-amount { color: var(--wh); }
 
 /* ═══════════════════════ ROUTES ═══════════════════════ */
-.routes-section { background: var(--nv-800); }
+.routes-section { background: var(--pc-800); }
 .routes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px,1fr)); gap: 12px; margin-top: 52px; }
 .route-card {
   display: flex; align-items: center; gap: 14px;
@@ -653,7 +652,7 @@ section { padding: 88px 0; }
 .routes-cta { text-align: center; margin-top: 36px; }
 
 /* ═══════════════════════ WHY US ═══════════════════════ */
-.why-section { background: var(--nv-900); }
+.why-section { background: var(--pc-900); }
 .why-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px,1fr)); gap: 18px; margin-top: 52px; }
 .why-card {
   background: rgba(255,255,255,0.65); border: 1px solid rgba(60,25,5,0.09);
@@ -675,7 +674,7 @@ section { padding: 88px 0; }
 .why-text { font-size: 14px; color: rgba(60,25,5,0.58); line-height: 1.85; }
 
 /* ═══════════════════════ TESTIMONIALS ═══════════════════════ */
-.testi-section { background: var(--nv-800); }
+.testi-section { background: var(--pc-800); }
 .testi-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px,1fr)); gap: 20px; margin-top: 52px; }
 .testi-card {
   background: rgba(255,255,255,0.65); border: 1px solid rgba(60,25,5,0.09);
@@ -700,7 +699,7 @@ section { padding: 88px 0; }
 .testi-route { font-size: 11px; color: rgba(60,25,5,0.40); margin-top: 2px; }
 
 /* ═══════════════════════ CTA SECTION ═══════════════════════ */
-.cta-section { background: var(--nv-900); padding: 88px var(--edge-pad); position: relative; overflow: hidden; }
+.cta-section { background: var(--pc-900); padding: 88px var(--edge-pad); position: relative; overflow: hidden; }
 .cta-section::before {
   content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
   width: 800px; height: 400px; background: radial-gradient(ellipse, rgba(244,123,0,0.08), transparent 70%);
@@ -937,7 +936,8 @@ body:has(#bkModal.open) .float-actions { display: none; }
   box-shadow: 0 16px 48px rgba(180,90,30,0.18);
   max-height: 260px; overflow-y: auto; z-index: 40;
 }
-.autocomplete-list.show { display: block; }
+.autocomplete-list.show,
+.autocomplete-list:not(:empty) { display: block; }
 .autocomplete-item { padding: 10px 14px; cursor: pointer; font-size: 13.5px; color: #1A0800; }
 .autocomplete-item:hover { background: rgba(244,123,0,0.09); }
 .autocomplete-item .ac-sub { color: rgba(60,25,5,0.42); font-size: 11.5px; margin-top: 2px; }
@@ -981,7 +981,7 @@ input:-webkit-autofill:focus {
 @keyframes counter    { from{transform:translate(-50%,-50%) rotate(0deg)}   to{transform:translate(-50%,-50%) rotate(-360deg)} }
 @keyframes blink      { 0%,80%,100%{opacity:0} 40%{opacity:1} }
 @keyframes fadeUp     { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
-@keyframes mapPulse   { 0%,100%{filter:drop-shadow(0 0 0px rgba(13,26,92,0))} 50%{filter:drop-shadow(0 0 18px rgba(13,26,92,0.22))} }
+@keyframes mapPulse   { 0%,100%{filter:drop-shadow(0 0 0px rgba(244,123,0,0))} 50%{filter:drop-shadow(0 0 18px rgba(244,123,0,0.22))} }
 @keyframes progressFill { from{width:0%} to{width:100%} }
 @keyframes float1     { 0%,100%{transform:translateY(0) scale(1); opacity:0.7} 50%{transform:translateY(-14px) scale(1.1); opacity:1} }
 @keyframes float2     { 0%,100%{transform:translateY(0) scale(1); opacity:0.5} 50%{transform:translateY(-10px) scale(0.95); opacity:0.8} }
@@ -1032,7 +1032,7 @@ input:-webkit-autofill:focus {
 }
 
 .progress-wrap { margin-top:16px; width:260px; animation: fadeUp 1.2s ease 0.5s both; }
-.progress-track { height:5px; border-radius:3px; background: rgba(13,26,92,0.12); overflow:hidden; position: relative; }
+.progress-track { height:5px; border-radius:3px; background: rgba(180,90,30,0.12); overflow:hidden; position: relative; }
 .progress-fill {
   height:100%; width: 0%; border-radius:3px;
   background: linear-gradient(90deg, #FF9933 0%, #FF9933 33.33%, #ffffff 33.33%, #ffffff 66.66%, #138808 66.66%, #138808 100%);
@@ -1043,7 +1043,7 @@ input:-webkit-autofill:focus {
 .divider { display:flex; align-items:center; gap:8px; margin-top:14px; animation: fadeUp 1.3s ease 0.7s both; }
 .divider-line { width:60px; height:2px; background: linear-gradient(90deg, transparent, #FF9933); }
 .divider-line.right { background: linear-gradient(90deg, #138808, transparent); }
-.divider-icon { font-size:13px; color:#0d1a5c; opacity:0.7; }
+.divider-icon { font-size:13px; color:#7A4420; opacity:0.7; }
 /* ══════════════════════════════════════════════
    BOOKING MODAL — 5-Step BRG-style flow
    Light peach theme (matches OWB brand)
@@ -1246,7 +1246,7 @@ input:-webkit-autofill:focus {
 /* ── JS-toggled utility classes (replaces .style.cssText in main.js) ── */
 .u-error-msg{color:#fc8181;font-size:12px;text-align:center;margin-top:8px;font-weight:600}
 .u-drop-locked{background:rgba(244,123,0,.07)!important;color:rgba(255,255,255,.4)!important;cursor:not-allowed!important;border-color:rgba(244,123,0,.25)!important}
-.u-portal{position:fixed;z-index:9999;display:block;background:var(--nv-700);border:1px solid rgba(244,123,0,.25);border-radius:var(--r-md);box-shadow:0 16px 48px rgba(4,12,30,.7);max-height:260px;overflow-y:auto;font-family:'Nunito',sans-serif}
+.u-portal{position:fixed;z-index:9999;display:block;background:var(--pc-700);border:1px solid rgba(244,123,0,.25);border-radius:var(--r-md);box-shadow:0 16px 48px rgba(120,50,0,.7);max-height:260px;overflow-y:auto;font-family:'Nunito',sans-serif}
 
 /* WhatsApp button pulse when payment fails */
 @keyframes waPulse {
