@@ -51,7 +51,9 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ── Trip type (hero widget) ─────────────────────────────────────────────────
+let _heroTripType = 'oneway'; // tracks hero widget trip selection
 function setTrip(el, type) {
+  _heroTripType = type;
   document.querySelectorAll('.trip-tab').forEach(t => {
     t.classList.remove('active');
     t.setAttribute('aria-pressed', 'false');
@@ -117,10 +119,14 @@ function searchCabs() {
     }
   }
 
-  BKM.S.pu   = p;
-  BKM.S.dr   = d;
-  BKM.S.date = pickupDate;
-  BKM.S.time = pickupTime;
+  const retDateEl = document.getElementById('rdate');
+  const retDate = retDateEl ? retDateEl.value : '';
+  BKM.S.pu      = p;
+  BKM.S.dr      = d;
+  BKM.S.date    = pickupDate;
+  BKM.S.time    = pickupTime;
+  BKM.S.retdate = retDate;
+  BKM.S.trip    = _heroTripType; // carry trip type from hero widget into modal
   if (pickupPlaceData && pickupPlaceData.lat) BKM._puData = pickupPlaceData;
   if (dropPlaceData   && dropPlaceData.lat)   BKM._drData = dropPlaceData;
   BKM._preDistKm = 0;
@@ -130,7 +136,7 @@ function searchCabs() {
 // ── Fare Calc ──────────────────────────────────────────
 const RATES = {
   sedan_ow:16,ertiga_ow:21,innova_ow:30,tempo_ow:42,
-  sedan_rt:11,ertiga_rt:15,innova_rt:20,tempo_rt:35
+  sedan_rt:12,ertiga_rt:15,innova_rt:20,tempo_rt:35
 };
 function calcDistInput(input) {
   const errEl = document.getElementById('calcDistError');
@@ -336,7 +342,7 @@ function initAutocomplete() {
 const ADMIN_WA = '919355757579';
 
 const BKM_VEHICLES = [
-  {key:'sedan',  name:'Sedan',           sub:'Swift Dzire / Honda Amaze / Aspire', icon:'🚗', seats:4,  badge:'Popular',  ow:16, rt:11, minFare:1500},
+  {key:'sedan',  name:'Sedan',           sub:'Swift Dzire / Honda Amaze / Aspire', icon:'🚗', seats:4,  badge:'Popular',  ow:16, rt:12, minFare:1500},
   {key:'ertiga', name:'Ertiga',          sub:'Maruti Ertiga / XL6 (6-Seater)',     icon:'🚐', seats:6,  badge:'Family',   ow:21, rt:15, minFare:1700},
   {key:'innova', name:'Innova Crysta',   sub:'Toyota Innova Crysta',               icon:'🚙', seats:7,  badge:'Premium',  ow:30, rt:20, minFare:2000},
   {key:'tempo',  name:'Tempo Traveller', sub:'12-Seater Force / Mahindra',         icon:'🚌', seats:12, badge:'Group',    ow:42, rt:35, minFare:4000},
@@ -378,10 +384,14 @@ function bkmOpen(opts={}){
     const drEl = document.getElementById('bk-dr');
     const dtEl = document.getElementById('bk-dt');
     const tmEl = document.getElementById('bk-tm');
+    const retEl = document.getElementById('bk-ret');
     if(puEl && BKM.S.pu) puEl.value = BKM.S.pu;
     if(drEl && BKM.S.dr) drEl.value = BKM.S.dr;
     if(dtEl && BKM.S.date) dtEl.value = BKM.S.date;
     if(tmEl && BKM.S.time) tmEl.value = BKM.S.time;
+    if(retEl && BKM.S.retdate) retEl.value = BKM.S.retdate;
+    // Sync modal trip buttons to match hero widget selection
+    if(BKM.S.trip) bkmSetTrip(BKM.S.trip);
     BKM.S.distKm = 0;
     const distEl = document.getElementById('bkm-dist');
     if(distEl) distEl.classList.remove('show');
@@ -522,12 +532,14 @@ function _bkmRenderLiveFares(){
     let fare;
     if(isRound){
       const days = _bkmCalcDays();
-      const billedKm = Math.max(km, 250 * days);
+      const packageKm = 250 * days;
+      const billedKm = Math.max(km, packageKm);
       fare = Math.ceil(billedKm * v.rt) + (days * 300);
     } else {
       const perKm = Math.ceil(km * v.ow);
       fare = km < 100 ? Math.max(perKm, v.minFare) : perKm;
     }
+    const hasExtra = isRound && Math.max(km, 250*_bkmCalcDays()) > 1000;
     return `<div class="bkm-lf-row" onclick="_bkmPreSelectVehicle('${v.key}')">
       <div class="bkm-lf-left">
         <span class="bkm-lf-icon">${v.icon}</span>
@@ -536,7 +548,7 @@ function _bkmRenderLiveFares(){
           <div class="bkm-lf-sub">${v.sub}</div>
         </div>
       </div>
-      <div class="bkm-lf-price">₹${fare.toLocaleString('en-IN')}</div>
+      <div class="bkm-lf-price">₹${fare.toLocaleString('en-IN')}${hasExtra?'<span style="font-size:.6rem;color:#c85a00;display:block">⚠️ >1000 km</span>':''}</div>
     </div>`;
   }).join('');
   panel.classList.add('show');
@@ -586,7 +598,12 @@ async function _bkmFetchDistMultiStop(waypoints){
       else throw new Error('leg '+i+' failed');
     }
     BKM.S.distKm = total;
-    _bkmShowDist(`~${total} km via ${waypoints.length-2} stop(s)`);
+    const isRt = BKM.S.trip === 'roundtrip';
+    const numStops = isRt ? waypoints.length - 3 : waypoints.length - 2; // exclude pu at end for RT
+    const label = isRt
+      ? (numStops > 0 ? `~${total} km · round trip via ${numStops} stop${numStops>1?'s':''}` : `~${total} km · full round trip`)
+      : `~${total} km via ${waypoints.length-2} stop(s)`;
+    _bkmShowDist(label);
   } catch(e){ _bkmDistFallback(); }
 }
 
@@ -612,8 +629,10 @@ async function _bkmStep1Next(){
   BKM.S.rettime = document.getElementById('bk-ret-tm')?.value || '';
   BKM.S.pax = (document.getElementById('bk-pax')||{}).value || '3–4 Passengers';
   if(!BKM.S.distKm || BKM.S.distKm === 0){
+    const isRound = BKM.S.trip === 'roundtrip';
     const stops = (BKM.S.extraCities||[]).filter(c=>c.trim());
-    const waypoints = [pu, ...stops, dr];
+    // Round trip: append pickup at end so return leg is included in total distance
+    const waypoints = isRound ? [pu, ...stops, dr, pu] : [pu, ...stops, dr];
     if(waypoints.length > 2){ await _bkmFetchDistMultiStop(waypoints); }
     else { await _bkmFetchDist(pu, dr); }
   }
@@ -635,39 +654,66 @@ function _bkmBuildCabs(){
   set('bkrs-date', S.date + (S.time ? ' at '+_bkmFmtTime(S.time) : ''));
   set('bkrs-type', isRound ? 'Round Trip' : 'One Way');
   let kmLabel = `~${km} km`;
-  if(isRound){ const days=_bkmCalcDays(); kmLabel=`~${km} km · ${days} day${days>1?'s':''} · +₹${days*300} driver allowance`; }
+  if(isRound){
+    const days=_bkmCalcDays();
+    const packageKm=250*days;
+    const billedKm=Math.max(km,packageKm);
+    const extraKm=billedKm>1000?billedKm-1000:0;
+    kmLabel=`~${km} km actual · ${billedKm>km?`Min ${packageKm} km billed (${days}×250)`:`${billedKm} km billed`} · +₹${days*300} driver allowance`
+           +(extraKm>0?` · ⚠️ ${extraKm} km >1000 km`:'');
+  }
   set('bkrs-km', kmLabel);
   const cabList = document.getElementById('bkmCabList');
   if(cabList) cabList.innerHTML = BKM_VEHICLES.map((v,i) => {
-    let fare;
+    const days=_bkmCalcDays();
+    let fare, billedKm, isMin=false, extraKm=0;
     if(isRound){
-      const days=_bkmCalcDays(); const minKm=250*days; const billedKm=Math.max(km,minKm);
-      fare=Math.ceil(billedKm*v.rt)+(days*300);
+      const packageKm = 250 * days;          // minimum guaranteed km
+      billedKm = Math.max(km, packageKm);    // always bill at least packageKm
+      const driverAllow = days * 300;
+      fare = Math.ceil(billedKm * v.rt) + driverAllow;
+      // Extra km surcharge: if actual route > 1000 km, note it (already included in billedKm fare)
+      if(billedKm > 1000) extraKm = billedKm - 1000;
     } else {
       const perKm=Math.ceil(km*v.ow); const base=km<100?Math.max(perKm,v.minFare):perKm;
       const stops=(S.extraCities||[]).filter(c=>c.trim()).length;
       fare=stops?Math.ceil(base*(1+0.15*stops)):base;
+      billedKm=km;
+      isMin=km<100&&fare===v.minFare;
     }
     const adv=Math.ceil(fare*0.10/10)*10; const rate=isRound?v.rt:v.ow;
-    const isMin=!isRound&&km<100&&fare===v.minFare;
-    return `<div class="bkm-cab" id="bkc-${v.key}" onclick="_bkmSelectCab('${v.key}','${v.name.replace(/'/g,"\\'")}',${rate},${fare},${adv})" style="animation:bkmIn .3s ${i*.07}s ease both">
-      <div class="bkm-cab-icon">${v.icon}</div>
-      <div class="bkm-cab-info">
-        <div class="bkm-cab-name">${v.name}<span class="bkm-cab-badge">${v.badge}</span></div>
-        <div class="bkm-cab-sub">${v.sub}</div>
-        <div class="bkm-cab-specs">
-          <span class="bkm-cab-spec">👥 ${v.seats} Seats</span>
-          <span class="bkm-cab-spec">❄️ AC</span>
-          <span class="bkm-cab-spec">${isMin?'Min fare':'₹'+rate+'/km'}</span>
-          ${isRound?`<span class="bkm-cab-spec">🔄 ${_bkmCalcDays()} day(s)</span>`:''}
+    const driverAllow=isRound?(days*300):0;
+    const packageKm=isRound?250*days:0;
+    const usingMin=isRound&&km<packageKm; // actual route < minimum, so minimum applies
+    return `<div class="bkm-cab ${isRound?'bkm-cab-rt':''}" id="bkc-${v.key}" onclick="_bkmSelectCab('${v.key}','${v.name.replace(/'/g,"\\'")}',${rate},${fare},${adv})" style="animation:bkmIn .3s ${i*.07}s ease both">
+      <div class="bkm-cab-top">
+        <div class="bkm-cab-icon">${v.icon}</div>
+        <div class="bkm-cab-info">
+          <div class="bkm-cab-name">${v.name}<span class="bkm-cab-badge">${v.badge}</span></div>
+          <div class="bkm-cab-sub">${v.sub}</div>
+          <div class="bkm-cab-specs">
+            <span class="bkm-cab-spec">👥 ${v.seats} Seats</span>
+            <span class="bkm-cab-spec">❄️ AC</span>
+            <span class="bkm-cab-spec">${isMin?'Min fare':'₹'+rate+'/km'}</span>
+            ${isRound?`<span class="bkm-cab-spec">🔄 ${days} day${days>1?'s':''}</span>`:''}
+          </div>
+        </div>
+        <div class="bkm-cab-fare">
+          <div class="bkm-cab-total">₹${fare.toLocaleString('en-IN')}</div>
+          <div class="bkm-cab-rate">${isMin?'Minimum fare':extraKm>0?'⚠️ Extra km applies':'Est. total'}</div>
+          <div class="bkm-cab-adv">10% adv: ₹${adv}</div>
+          <button type="button" class="bkm-cab-selbtn">SELECT</button>
         </div>
       </div>
-      <div class="bkm-cab-fare">
-        <div class="bkm-cab-total">₹${fare.toLocaleString('en-IN')}</div>
-        <div class="bkm-cab-rate">${isMin?'Minimum fare':'Est. total'}</div>
-        <div class="bkm-cab-adv">10% advance: ₹${adv}</div>
-        <button type="button" class="bkm-cab-selbtn">SELECT</button>
-      </div>
+      ${isRound?`<div class="bkm-rt-breakdown">
+        <span>📏 ${usingMin
+          ? `Actual ${km} km < min ${packageKm.toLocaleString('en-IN')} km (${days}×250) → billing ${packageKm.toLocaleString('en-IN')} km`
+          : `Route ${km} km · billing ${billedKm.toLocaleString('en-IN')} km`
+        }</span>
+        <span>₹${rate}/km × ${billedKm.toLocaleString('en-IN')} km = ₹${Math.ceil(billedKm*rate).toLocaleString('en-IN')}</span>
+        <span>🧑 Driver allowance: +₹${driverAllow.toLocaleString('en-IN')}</span>
+        ${extraKm>0?`<span style="color:#c85a00;font-weight:800">⚠️ Route >1000 km: ${extraKm.toLocaleString('en-IN')} extra km × ₹${rate} already included</span>`:''}
+      </div>`:''}
     </div>`;
   }).join('');
   if(BKM._preSelectedVehicle){
@@ -826,7 +872,7 @@ function bkmSelectPayOpt(mode){
     if(summary) summary.textContent=`Pay ₹${BKM.S.advAmt.toLocaleString('en-IN')} now. Remaining ₹${(BKM.S.totalFare-BKM.S.advAmt).toLocaleString('en-IN')} to driver.`;
   } else if(mode==='custom'){
     document.getElementById('ppOptCustom')?.classList.add('on');
-    if(customRow) customRow.style.display='';
+    if(customRow){ customRow.style.display='block'; const ci=document.getElementById('bkmCustomAmt'); if(ci){ ci.focus(); } }
     if(summary) summary.textContent='Enter any amount ≥ 10% advance.';
   } else {
     document.getElementById('ppOptFull')?.classList.add('on');
@@ -1140,9 +1186,11 @@ function _bkmHidePortal(){
 function _bkmMaybeLiveDist(){
   const pu=(BKM.S.pu||(document.getElementById('bk-pu')||{}).value||'').trim();
   const dr=(BKM.S.dr||(document.getElementById('bk-dr')||{}).value||'').trim();
-  if(!pu||!dr||pu===dr) return;
+  if(!pu||!dr) return;
+  const isRound=BKM.S.trip==='roundtrip';
   const stops=(BKM.S.extraCities||[]).filter(c=>c.trim());
-  const waypoints=[pu,...stops,dr];
+  // Round trip: close the loop — end back at pickup
+  const waypoints=isRound?[pu,...stops,dr,pu]:[pu,...stops,dr];
   _bkmShowDist('Calculating…');
   if(waypoints.length>2){ _bkmFetchDistMultiStop(waypoints); }
   else { _bkmFetchDist(pu,dr); }
