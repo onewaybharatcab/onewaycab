@@ -8,7 +8,22 @@
 <link rel="stylesheet" href="./assets/css/admin.css">
 </head>
 <body>
-<aside class="sidebar">
+
+<!-- LOGIN SCREEN -->
+<div id="loginScreen" style="position:fixed;inset:0;z-index:200;background:var(--nv);display:flex;align-items:center;justify-content:center;font-family:'Nunito',sans-serif">
+  <form id="loginForm" style="background:var(--nv3);border:1px solid rgba(255,255,255,0.08);border-radius:var(--r20);padding:36px 32px;width:320px;text-align:center">
+    <div style="font-size:38px;margin-bottom:6px">🚕</div>
+    <div style="font-family:'Cinzel',serif;font-weight:700;font-size:18px;color:#fff;margin-bottom:2px">One-Way Bhaarat</div>
+    <div style="font-size:12px;color:rgba(255,255,255,0.45);margin-bottom:22px">Admin Panel Login</div>
+    <input id="loginUser" type="text" placeholder="Username" autocomplete="username" required style="width:100%;box-sizing:border-box;padding:11px 14px;border-radius:var(--r6);border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:#fff;font-size:14px;margin-bottom:10px;font-family:'Nunito',sans-serif">
+    <input id="loginPass" type="password" placeholder="Password" autocomplete="current-password" required style="width:100%;box-sizing:border-box;padding:11px 14px;border-radius:var(--r6);border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:#fff;font-size:14px;margin-bottom:14px;font-family:'Nunito',sans-serif">
+    <button type="submit" class="btn-sm btn-sf" style="width:100%;padding:11px;font-size:13px;justify-content:center">Log In</button>
+    <div id="loginError" style="color:#f87171;font-size:12px;margin-top:12px;display:none"></div>
+  </form>
+</div>
+
+<div id="appShell" style="display:none">
+
   <div class="sb-logo">
     <div class="sb-em">🚕</div>
     <div><span class="sb-ln">One-Way Bhaarat</span><span class="sb-ls">Admin Panel</span></div>
@@ -16,7 +31,7 @@
   <nav class="sb-nav">
     <div class="nav-sec">Main</div>
     <div class="ni act" onclick="showPanel('dashboard',this)"><span class="ni-ic">📊</span> Dashboard</div>
-    <div class="ni" onclick="showPanel('bookings',this)"><span class="ni-ic">🗓️</span> Bookings <span class="ni-badge">12</span></div>
+    <div class="ni" onclick="showPanel('bookings',this)"><span class="ni-ic">🗓️</span> Bookings <span class="ni-badge" id="navBookingBadge">0</span></div>
     <div class="nav-sec">Management</div>
     <div class="ni" onclick="showPanel('customers',this)"><span class="ni-ic">👤</span> Customers</div>
     <div class="ni" onclick="showPanel('drivers',this)"><span class="ni-ic">🚗</span> Drivers</div>
@@ -33,8 +48,9 @@
     <div class="ni" onclick="window.location='index.html'"><span class="ni-ic">🌐</span> View Website</div>
   </nav>
   <div class="sb-user">
-    <div class="sb-av">A</div>
-    <div><div class="sb-un">Admin User</div><div class="sb-ur">Super Admin</div></div>
+    <div class="sb-av" id="sbAvatar">A</div>
+    <div><div class="sb-un" id="sbUserName">Admin User</div><div class="sb-ur">Super Admin</div></div>
+    <button onclick="logout()" title="Log out" style="margin-left:auto;background:none;border:none;color:rgba(255,255,255,0.4);cursor:pointer;font-size:16px">⏻</button>
   </div>
 </aside>
 <div class="main">
@@ -88,27 +104,76 @@
 
     <!-- BOOKINGS -->
     <div class="panel" id="pn-bookings">
-      <div class="sec-hdr"><div class="sec-title">All Bookings</div><button class="btn-sm btn-sf">+ New Booking</button></div>
+      <div class="sec-hdr"><div class="sec-title">All Bookings (Duties)</div><button class="btn-sm btn-sf" onclick="openNewDutyModal()">+ New Duty</button></div>
       <div class="tbl-wrap">
         <div class="tbl-filter">
-          <input class="tbl-input" placeholder="🔍 Search booking ID, name..." style="width:220px">
-          <select class="tbl-input"><option>All Status</option><option>Confirmed</option><option>Pending</option><option>Completed</option><option>Cancelled</option></select>
-          <select class="tbl-input"><option>All Vehicles</option><option>Sedan</option><option>Ertiga</option><option>Innova Crysta</option><option>Tempo Traveller</option></select>
-          <button class="btn-sm btn-ol">⬇ Export CSV</button>
+          <input class="tbl-input" id="searchBookings" placeholder="🔍 Search booking ID, name..." style="width:220px" oninput="renderAllBookings()">
+          <select class="tbl-input" id="filterStatus" onchange="renderAllBookings()"><option value="">All Status</option><option value="new">New</option><option value="assigned">Assigned</option><option value="ongoing">Ongoing</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option></select>
+          <button class="btn-sm btn-ol" onclick="loadDuties()">⟳ Refresh</button>
         </div>
-        <div id="allTbl"></div>
+        <div id="allTbl">Loading…</div>
+      </div>
+    </div>
+
+    <!-- ASSIGN DUTY MODAL -->
+    <div id="assignModal" class="modal-bg" style="display:none">
+      <div class="modal-card">
+        <div class="modal-hdr">Assign Driver & Vehicle <span class="modal-x" onclick="closeAssignModal()">×</span></div>
+        <div id="assignDutySummary" style="font-size:13px;color:rgba(255,255,255,0.7);margin-bottom:16px"></div>
+        <label class="field-label">Select Driver</label>
+        <select id="assignDriverSelect" class="finput" style="width:100%;margin-bottom:12px"></select>
+        <label class="field-label">Vehicle Number (auto-filled from driver, editable)</label>
+        <input id="assignVehicleNumber" class="finput" style="width:100%;box-sizing:border-box;margin-bottom:18px" placeholder="e.g. DL-01-AB-1234">
+        <div id="assignError" style="color:#f87171;font-size:12px;margin-bottom:10px;display:none"></div>
+        <button class="btn-sm btn-sf" style="width:100%;justify-content:center;padding:11px" onclick="confirmAssign()">✅ Assign & Notify (Driver, Customer, Admin)</button>
+      </div>
+    </div>
+
+    <!-- NEW DUTY MODAL -->
+    <div id="newDutyModal" class="modal-bg" style="display:none">
+      <div class="modal-card">
+        <div class="modal-hdr">Add New Duty <span class="modal-x" onclick="closeNewDutyModal()">×</span></div>
+        <div class="modal-grid">
+          <div><label class="field-label">Customer Name</label><input id="ndName" class="finput" style="width:100%;box-sizing:border-box"></div>
+          <div><label class="field-label">Phone (10 digits)</label><input id="ndPhone" class="finput" style="width:100%;box-sizing:border-box" maxlength="10"></div>
+          <div><label class="field-label">Pickup (From)</label><input id="ndFrom" class="finput" style="width:100%;box-sizing:border-box"></div>
+          <div><label class="field-label">Drop (To)</label><input id="ndTo" class="finput" style="width:100%;box-sizing:border-box"></div>
+          <div><label class="field-label">Date</label><input id="ndDate" type="date" class="finput" style="width:100%;box-sizing:border-box"></div>
+          <div><label class="field-label">Time</label><input id="ndTime" type="time" class="finput" style="width:100%;box-sizing:border-box"></div>
+          <div><label class="field-label">Vehicle Type</label><input id="ndVehType" class="finput" style="width:100%;box-sizing:border-box" placeholder="Sedan / Ertiga / Innova..."></div>
+          <div><label class="field-label">Fare (₹)</label><input id="ndFare" type="number" class="finput" style="width:100%;box-sizing:border-box"></div>
+        </div>
+        <div id="ndError" style="color:#f87171;font-size:12px;margin:10px 0;display:none"></div>
+        <button class="btn-sm btn-sf" style="width:100%;justify-content:center;padding:11px;margin-top:8px" onclick="submitNewDuty()">+ Add Duty</button>
       </div>
     </div>
 
     <!-- DRIVERS -->
     <div class="panel" id="pn-drivers">
-      <div class="sec-hdr"><div class="sec-title">Driver Management</div><button class="btn-sm btn-sf">+ Add Driver</button></div>
+      <div class="sec-hdr"><div class="sec-title">Driver Management</div><button class="btn-sm btn-sf" onclick="openNewDriverModal()">+ Add Driver</button></div>
       <div class="tbl-wrap">
         <div class="tbl-filter">
-          <input class="tbl-input" placeholder="🔍 Search driver..." style="width:200px">
-          <select class="tbl-input"><option>All Status</option><option>Active</option><option>Inactive</option><option>Pending KYC</option></select>
+          <input class="tbl-input" id="searchDrivers" placeholder="🔍 Search driver..." style="width:200px" oninput="renderDrivers()">
+          <select class="tbl-input" id="filterDriverStatus" onchange="renderDrivers()"><option value="">All Status</option><option value="active">Active</option><option value="inactive">Inactive</option></select>
         </div>
-        <div id="driversTbl"></div>
+        <div id="driversTbl">Loading…</div>
+      </div>
+    </div>
+
+    <!-- NEW / EDIT DRIVER MODAL -->
+    <div id="driverModal" class="modal-bg" style="display:none">
+      <div class="modal-card">
+        <div class="modal-hdr"><span id="driverModalTitle">Add Driver</span> <span class="modal-x" onclick="closeDriverModal()">×</span></div>
+        <div class="modal-grid">
+          <div><label class="field-label">Full Name</label><input id="drvName" class="finput" style="width:100%;box-sizing:border-box"></div>
+          <div><label class="field-label">Phone (10 digits, used for login)</label><input id="drvPhone" class="finput" style="width:100%;box-sizing:border-box" maxlength="10"></div>
+          <div><label class="field-label">Vehicle Type</label><input id="drvVehType" class="finput" style="width:100%;box-sizing:border-box" placeholder="Sedan / Ertiga / Innova..."></div>
+          <div><label class="field-label">Vehicle Number</label><input id="drvVehNum" class="finput" style="width:100%;box-sizing:border-box" placeholder="DL-01-AB-1234"></div>
+          <div><label class="field-label" id="drvPassLabel">Set Password (6+ chars)</label><input id="drvPassword" type="text" class="finput" style="width:100%;box-sizing:border-box"></div>
+          <div><label class="field-label">Active</label><select id="drvActive" class="finput" style="width:100%;box-sizing:border-box"><option value="true">Active</option><option value="false">Inactive</option></select></div>
+        </div>
+        <div id="drvError" style="color:#f87171;font-size:12px;margin:10px 0;display:none"></div>
+        <button class="btn-sm btn-sf" id="drvSubmitBtn" style="width:100%;justify-content:center;padding:11px;margin-top:8px" onclick="submitDriver()">+ Add Driver</button>
       </div>
     </div>
 
@@ -163,21 +228,332 @@
 
   </div>
 </div>
+</div>
 <script>
 document.getElementById('tbDate').textContent=new Date().toLocaleDateString('en-IN',{weekday:'short',year:'numeric',month:'short',day:'numeric'});
-const bookings=[
-  {id:'OWB-2024-A1B2C',cust:'Rahul Kapoor',mob:'9876543210',route:'Delhi → Jaipur',veh:'Sedan',date:'2024-01-15',fare:'₹4,896',adv:'₹490',status:'Confirmed',driver:'Ravi Kumar'},
-  {id:'OWB-2024-D3E4F',cust:'Priya Sharma',mob:'9988776655',route:'Mumbai → Pune',veh:'Ertiga',date:'2024-01-14',fare:'₹3,200',adv:'₹320',status:'Completed',driver:'Suresh Yadav'},
-  {id:'OWB-2024-G5H6I',cust:'Anand Venkat',mob:'8877665544',route:'Bangalore → Mysore',veh:'Innova',date:'2024-01-14',fare:'₹5,100',adv:'₹510',status:'Confirmed',driver:'Mohan Reddy'},
-  {id:'OWB-2024-J7K8L',cust:'Sunita Devi',mob:'7766554433',route:'Delhi → Agra',veh:'Sedan',date:'2024-01-13',fare:'₹3,900',adv:'₹390',status:'Pending',driver:'Assigned'},
-  {id:'OWB-2024-M9N0O',cust:'Arun Mishra',mob:'6655443322',route:'Chennai → Pondicherry',veh:'Sedan',date:'2024-01-12',fare:'₹2,600',adv:'₹260',status:'Cancelled',driver:'N/A'},
-];
-const drivers=[
-  {id:'DRV-001',name:'Ravi Kumar',mob:'9876512345',veh:'Sedan (DL-01-AB-1234)',trips:148,rating:'4.9',kyc:'Verified',status:'Active'},
-  {id:'DRV-002',name:'Suresh Yadav',mob:'8765423456',veh:'Ertiga (UP-14-CD-5678)',trips:89,rating:'4.7',kyc:'Verified',status:'Active'},
-  {id:'DRV-003',name:'Mohan Reddy',mob:'7654334567',veh:'Innova (KA-01-EF-9012)',trips:203,rating:'4.8',kyc:'Verified',status:'Active'},
-  {id:'DRV-004',name:'Ajay Sharma',mob:'6543245678',veh:'Sedan (DL-01-GH-3456)',trips:67,rating:'4.6',kyc:'Pending',status:'Inactive'},
-];
+
+// ── API base + auth helpers ──────────────────────────────────────────────
+const API_BASE = '/api';
+let authToken = sessionStorage.getItem('owb_admin_token') || '';
+let authName  = sessionStorage.getItem('owb_admin_name') || '';
+
+async function api(path, opts={}){
+  const headers = Object.assign({'Content-Type':'application/json'}, opts.headers||{});
+  if(authToken) headers['Authorization'] = 'Bearer ' + authToken;
+  const res = await fetch(API_BASE + path, Object.assign({}, opts, {headers}));
+  let data = {};
+  try { data = await res.json(); } catch {}
+  if(res.status === 401){ doLogout(); throw new Error('Session expired — please log in again'); }
+  if(!res.ok) throw new Error(data.error || ('Request failed (' + res.status + ')'));
+  return data;
+}
+
+function showToast(msg, isErr){
+  const t = document.createElement('div');
+  t.className = 'toast' + (isErr ? ' toast-err' : '');
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(), 4500);
+}
+
+// ── Login / logout ───────────────────────────────────────────────────────
+document.getElementById('loginForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const errEl = document.getElementById('loginError');
+  errEl.style.display='none';
+  const username = document.getElementById('loginUser').value.trim();
+  const password = document.getElementById('loginPass').value;
+  try{
+    const data = await api('/auth/admin-login', {method:'POST', body: JSON.stringify({username, password})});
+    authToken = data.token; authName = data.name || username;
+    sessionStorage.setItem('owb_admin_token', authToken);
+    sessionStorage.setItem('owb_admin_name', authName);
+    enterApp();
+  }catch(err){
+    errEl.textContent = err.message;
+    errEl.style.display='block';
+  }
+});
+
+function enterApp(){
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('appShell').style.display='block';
+  document.getElementById('sbUserName').textContent = authName;
+  document.getElementById('sbAvatar').textContent = (authName[0]||'A').toUpperCase();
+  initChart();
+  loadDuties();
+  loadDrivers();
+}
+
+function doLogout(){
+  authToken=''; authName='';
+  sessionStorage.removeItem('owb_admin_token');
+  sessionStorage.removeItem('owb_admin_name');
+  document.getElementById('appShell').style.display='none';
+  document.getElementById('loginScreen').style.display='flex';
+}
+function logout(){
+  api('/auth/logout', {method:'POST'}).catch(()=>{});
+  doLogout();
+}
+
+// ── Duties (bookings) — real data from the CRM ───────────────────────────
+let allDuties = [];
+let allDrivers = [];
+
+async function loadDuties(){
+  try{
+    const data = await api('/duty/list');
+    allDuties = data.duties || [];
+    document.getElementById('navBookingBadge').textContent = allDuties.filter(d=>d.status==='new').length;
+    renderAllBookings();
+    renderRecentBookings();
+    renderDashboardStats();
+  }catch(err){
+    document.getElementById('allTbl').innerHTML = '<div class="empty-state"><div class="es-ic">⚠️</div><div class="es-tx">'+err.message+'</div></div>';
+  }
+}
+
+function statusBadge(status){
+  const m = {new:'sb-pend', assigned:'sb-asg', ongoing:'sb-conf', completed:'sb-comp', cancelled:'sb-canc'};
+  const label = {new:'New', assigned:'Assigned', ongoing:'Ongoing', completed:'Completed', cancelled:'Cancelled'}[status]||status;
+  return '<span class="sbadge '+(m[status]||'')+'">'+label+'</span>';
+}
+
+function dutyRoute(d){
+  const stops = (d.extraCities||[]).filter(Boolean);
+  return d.from + (stops.length? ' → '+stops.join(' → ') : '') + ' → ' + d.to;
+}
+
+function renderAllBookings(){
+  const search = (document.getElementById('searchBookings')?.value||'').toLowerCase();
+  const statusF = document.getElementById('filterStatus')?.value||'';
+  let items = allDuties.filter(d=>{
+    if(statusF && d.status!==statusF) return false;
+    if(search && !((d.id||'').toLowerCase().includes(search) || (d.name||'').toLowerCase().includes(search) || (d.phone||'').includes(search))) return false;
+    return true;
+  });
+  const el = document.getElementById('allTbl');
+  if(!items.length){ el.innerHTML = '<div class="empty-state"><div class="es-ic">🗓️</div><div class="es-tx">No duties found</div></div>'; return; }
+  el.innerHTML = '<table><thead><tr><th>Booking ID</th><th>Customer</th><th>Route</th><th>Date/Time</th><th>Fare</th><th>Driver</th><th>Status</th><th>Actions</th></tr></thead><tbody>' +
+    items.map(d=>`<tr>
+      <td><span style="font-size:11px;font-family:monospace;color:#93c5fd">${d.id}</span></td>
+      <td><div style="font-weight:700">${escapeHtml(d.name)}</div><div style="font-size:11px;color:rgba(255,255,255,0.6)">${d.phone}</div></td>
+      <td style="font-weight:600;font-size:12px">${escapeHtml(dutyRoute(d))}</td>
+      <td style="font-size:12px;color:rgba(255,255,255,0.72)">${escapeHtml(d.date||'')} ${escapeHtml(d.time||'')}</td>
+      <td><div style="font-weight:700">₹${Number(d.fare||0).toLocaleString('en-IN')}</div></td>
+      <td style="font-size:12px">${d.driverName ? escapeHtml(d.driverName)+'<br><span style=\"color:rgba(255,255,255,0.5)\">'+escapeHtml(d.vehicleNumber||'')+'</span>' : '<span style=\"color:rgba(255,255,255,0.35)\">Unassigned</span>'}</td>
+      <td>${statusBadge(d.status)}</td>
+      <td><div class="action-row">
+        ${(d.status==='new'||d.status==='assigned') ? `<button class="ab ab-v" onclick="openAssignModal('${d.id}')">${d.status==='new'?'Assign':'Reassign'}</button>` : ''}
+        ${d.status!=='cancelled' && d.status!=='completed' ? `<button class="ab ab-d" onclick="cancelDuty('${d.id}')">Cancel</button>` : ''}
+      </div></td>
+    </tr>`).join('') + '</tbody></table>';
+}
+
+function renderRecentBookings(){
+  const recent = allDuties.slice(0,4);
+  const el = document.getElementById('recentTbl');
+  if(!recent.length){ el.innerHTML = '<div class="empty-state"><div class="es-ic">🗓️</div><div class="es-tx">No bookings yet</div></div>'; return; }
+  el.innerHTML = '<table><thead><tr><th>Booking ID</th><th>Customer</th><th>Route</th><th>Date</th><th>Fare</th><th>Status</th></tr></thead><tbody>' +
+    recent.map(d=>`<tr>
+      <td><span style="font-size:11px;font-family:monospace;color:#93c5fd">${d.id}</span></td>
+      <td><div style="font-weight:700">${escapeHtml(d.name)}</div><div style="font-size:11px;color:rgba(255,255,255,0.80)">${d.phone}</div></td>
+      <td style="font-weight:600;font-size:12px">${escapeHtml(dutyRoute(d))}</td>
+      <td style="font-size:12px;color:rgba(255,255,255,0.72)">${escapeHtml(d.date||'')}</td>
+      <td style="font-weight:700">₹${Number(d.fare||0).toLocaleString('en-IN')}</td>
+      <td>${statusBadge(d.status)}</td>
+    </tr>`).join('') + '</tbody></table>';
+}
+
+function renderDashboardStats(){
+  const total = allDuties.length;
+  const totalFare = allDuties.reduce((s,d)=>s+Number(d.fare||0),0);
+  const activeDrivers = allDrivers.filter(d=>d.active).length;
+  const vals = document.querySelectorAll('.sc-val');
+  if(vals[0]) vals[0].textContent = total.toLocaleString('en-IN');
+  if(vals[1]) vals[1].textContent = totalFare>=100000 ? '₹'+(totalFare/100000).toFixed(1)+'L' : '₹'+totalFare.toLocaleString('en-IN');
+  if(vals[2]) vals[2].textContent = activeDrivers.toLocaleString('en-IN');
+}
+
+function escapeHtml(s){ return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+async function cancelDuty(dutyId){
+  if(!confirm('Cancel this duty? This cannot be undone.')) return;
+  try{
+    await api('/duty/status', {method:'POST', body: JSON.stringify({dutyId, status:'cancelled'})});
+    showToast('Duty cancelled');
+    loadDuties();
+  }catch(err){ showToast(err.message, true); }
+}
+
+// ── New Duty modal ────────────────────────────────────────────────────────
+function openNewDutyModal(){
+  ['ndName','ndPhone','ndFrom','ndTo','ndDate','ndTime','ndVehType','ndFare'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('ndError').style.display='none';
+  document.getElementById('newDutyModal').style.display='flex';
+}
+function closeNewDutyModal(){ document.getElementById('newDutyModal').style.display='none'; }
+async function submitNewDuty(){
+  const errEl = document.getElementById('ndError');
+  const payload = {
+    name: document.getElementById('ndName').value.trim(),
+    phone: document.getElementById('ndPhone').value.trim(),
+    from: document.getElementById('ndFrom').value.trim(),
+    to: document.getElementById('ndTo').value.trim(),
+    date: document.getElementById('ndDate').value,
+    time: document.getElementById('ndTime').value,
+    vehicleType: document.getElementById('ndVehType').value.trim(),
+    fare: document.getElementById('ndFare').value
+  };
+  try{
+    await api('/duty/create', {method:'POST', body: JSON.stringify(payload)});
+    closeNewDutyModal();
+    showToast('Duty added');
+    loadDuties();
+  }catch(err){
+    errEl.textContent = err.message; errEl.style.display='block';
+  }
+}
+
+// ── Assign Duty modal ────────────────────────────────────────────────────
+let assignDutyId = null;
+function openAssignModal(dutyId){
+  const duty = allDuties.find(d=>d.id===dutyId);
+  if(!duty) return;
+  assignDutyId = dutyId;
+  document.getElementById('assignError').style.display='none';
+  document.getElementById('assignDutySummary').innerHTML =
+    `<b>${escapeHtml(duty.name)}</b> (${duty.phone})<br>${escapeHtml(dutyRoute(duty))}<br>${escapeHtml(duty.date||'')} ${escapeHtml(duty.time||'')} · ₹${Number(duty.fare||0).toLocaleString('en-IN')}`;
+  const select = document.getElementById('assignDriverSelect');
+  const activeDrivers = allDrivers.filter(d=>d.active);
+  if(!activeDrivers.length){
+    select.innerHTML = '<option value="">No active drivers — add one first</option>';
+  } else {
+    select.innerHTML = activeDrivers.map(d=>`<option value="${d.phone}" data-veh="${escapeHtml(d.vehicleNumber||'')}">${escapeHtml(d.name)} — ${d.phone} (${escapeHtml(d.vehicleType||'')})</option>`).join('');
+  }
+  select.onchange = ()=>{
+    const opt = select.options[select.selectedIndex];
+    document.getElementById('assignVehicleNumber').value = opt ? (opt.getAttribute('data-veh')||'') : '';
+  };
+  select.onchange();
+  document.getElementById('assignModal').style.display='flex';
+}
+function closeAssignModal(){ document.getElementById('assignModal').style.display='none'; assignDutyId=null; }
+
+async function confirmAssign(){
+  const errEl = document.getElementById('assignError');
+  const driverId = document.getElementById('assignDriverSelect').value;
+  const vehicleNumber = document.getElementById('assignVehicleNumber').value.trim();
+  if(!driverId){ errEl.textContent='Select a driver'; errEl.style.display='block'; return; }
+  try{
+    const data = await api('/duty/assign', {method:'POST', body: JSON.stringify({dutyId: assignDutyId, driverId, vehicleNumber})});
+    closeAssignModal();
+    const n = data.notifications || {};
+    const sent = ['driver','customer','admin'].filter(k=>n[k]);
+    const failed = ['driver','customer','admin'].filter(k=>!n[k]);
+    let msg = '✅ Assigned successfully.';
+    if(sent.length) msg += ' Notified: ' + sent.join(', ') + '.';
+    if(failed.length) msg += ' ⚠️ Could not WhatsApp: ' + failed.join(', ') + ' (check templates/config).';
+    showToast(msg, failed.length>0 && sent.length===0);
+    loadDuties();
+  }catch(err){
+    errEl.textContent = err.message; errEl.style.display='block';
+  }
+}
+
+// ── Drivers — real data from the CRM ─────────────────────────────────────
+async function loadDrivers(){
+  try{
+    const data = await api('/driver/list');
+    allDrivers = data.drivers || [];
+    renderDrivers();
+    renderDashboardStats();
+  }catch(err){
+    document.getElementById('driversTbl').innerHTML = '<div class="empty-state"><div class="es-ic">⚠️</div><div class="es-tx">'+err.message+'</div></div>';
+  }
+}
+
+function renderDrivers(){
+  const search = (document.getElementById('searchDrivers')?.value||'').toLowerCase();
+  const statusF = document.getElementById('filterDriverStatus')?.value||'';
+  let items = allDrivers.filter(d=>{
+    if(statusF==='active' && !d.active) return false;
+    if(statusF==='inactive' && d.active) return false;
+    if(search && !((d.name||'').toLowerCase().includes(search) || (d.phone||'').includes(search))) return false;
+    return true;
+  });
+  const el = document.getElementById('driversTbl');
+  if(!items.length){ el.innerHTML = '<div class="empty-state"><div class="es-ic">🚗</div><div class="es-tx">No drivers yet — click "+ Add Driver" to get started</div></div>'; return; }
+  el.innerHTML = '<table><thead><tr><th>Phone (Login)</th><th>Name</th><th>Vehicle</th><th>Status</th><th>Actions</th></tr></thead><tbody>' +
+    items.map(d=>`<tr>
+      <td style="font-size:12px;font-family:monospace;color:#93c5fd">${d.phone}</td>
+      <td style="font-weight:700">${escapeHtml(d.name)}</td>
+      <td style="font-size:12px">${escapeHtml(d.vehicleType||'—')} ${d.vehicleNumber? '· '+escapeHtml(d.vehicleNumber):''}</td>
+      <td>${d.active ? '<span class="sbadge sb-act">Active</span>' : '<span class="sbadge sb-inact">Inactive</span>'}</td>
+      <td><div class="action-row"><button class="ab ab-e" onclick="openEditDriverModal('${d.phone}')">Edit</button></div></td>
+    </tr>`).join('') + '</tbody></table>';
+}
+
+// ── Add / Edit Driver modal ───────────────────────────────────────────────
+let editingDriverPhone = null;
+function openNewDriverModal(){
+  editingDriverPhone = null;
+  document.getElementById('driverModalTitle').textContent='Add Driver';
+  document.getElementById('drvSubmitBtn').textContent='+ Add Driver';
+  document.getElementById('drvPassLabel').textContent='Set Password (6+ chars)';
+  ['drvName','drvPhone','drvVehType','drvVehNum','drvPassword'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('drvPhone').disabled=false;
+  document.getElementById('drvActive').value='true';
+  document.getElementById('drvError').style.display='none';
+  document.getElementById('driverModal').style.display='flex';
+}
+function openEditDriverModal(phone){
+  const d = allDrivers.find(x=>x.phone===phone);
+  if(!d) return;
+  editingDriverPhone = phone;
+  document.getElementById('driverModalTitle').textContent='Edit Driver';
+  document.getElementById('drvSubmitBtn').textContent='💾 Save Changes';
+  document.getElementById('drvPassLabel').textContent='Reset Password (leave blank to keep current)';
+  document.getElementById('drvName').value = d.name||'';
+  document.getElementById('drvPhone').value = d.phone||'';
+  document.getElementById('drvPhone').disabled = true;
+  document.getElementById('drvVehType').value = d.vehicleType||'';
+  document.getElementById('drvVehNum').value = d.vehicleNumber||'';
+  document.getElementById('drvPassword').value='';
+  document.getElementById('drvActive').value = d.active ? 'true' : 'false';
+  document.getElementById('drvError').style.display='none';
+  document.getElementById('driverModal').style.display='flex';
+}
+function closeDriverModal(){ document.getElementById('driverModal').style.display='none'; }
+
+async function submitDriver(){
+  const errEl = document.getElementById('drvError');
+  const name = document.getElementById('drvName').value.trim();
+  const phone = document.getElementById('drvPhone').value.trim();
+  const vehicleType = document.getElementById('drvVehType').value.trim();
+  const vehicleNumber = document.getElementById('drvVehNum').value.trim();
+  const password = document.getElementById('drvPassword').value;
+  const active = document.getElementById('drvActive').value === 'true';
+  try{
+    if(editingDriverPhone){
+      const payload = {phone, name, vehicleType, vehicleNumber, active};
+      if(password) payload.password = password;
+      await api('/driver/update', {method:'POST', body: JSON.stringify(payload)});
+      showToast('Driver updated');
+    } else {
+      if(!password || password.length<6){ throw new Error('Password must be 6+ characters'); }
+      await api('/driver/create', {method:'POST', body: JSON.stringify({name, phone, vehicleType, vehicleNumber, password})});
+      showToast('Driver added');
+    }
+    closeDriverModal();
+    loadDrivers();
+  }catch(err){
+    errEl.textContent = err.message; errEl.style.display='block';
+  }
+}
+
+// ── Static mock data (customers/payments — not part of this build yet) ──
 const customers=[
   {id:'CUS-001',name:'Rahul Kapoor',mob:'9876543210',email:'rahul@email.com',trips:5,spent:'₹22,400',joined:'Dec 2023',status:'Active'},
   {id:'CUS-002',name:'Priya Sharma',mob:'9988776655',email:'priya@email.com',trips:3,spent:'₹11,800',joined:'Nov 2023',status:'Active'},
@@ -188,26 +564,31 @@ const payments=[
   {id:'PAY-002',bid:'OWB-2024-D3E4F',cust:'Priya Sharma',amt:'₹320',method:'PhonePe',date:'2024-01-14',status:'Success'},
   {id:'PAY-003',bid:'OWB-2024-M9N0O',cust:'Arun Mishra',amt:'₹260',method:'Razorpay/Card',date:'2024-01-12',status:'Refunded'},
 ];
-function badge(s){const m={Confirmed:'sb-conf',Completed:'sb-comp',Pending:'sb-pend',Cancelled:'sb-canc',Active:'sb-act',Inactive:'sb-inact',Verified:'sb-act',Pending:'sb-pend',Success:'sb-conf',Refunded:'sb-pend'};return`<span class="sbadge ${m[s]||''}">${s}</span>`;}
-function renderBookings(data,id,lim){const items=lim?data.slice(0,lim):data;document.getElementById(id).innerHTML=`<table><thead><tr><th>Booking ID</th><th>Customer</th><th>Route</th><th>Vehicle</th><th>Date</th><th>Fare</th><th>Status</th><th>Actions</th></tr></thead><tbody>${items.map(b=>`<tr><td><span style="font-size:11px;font-family:monospace;color:#93c5fd">${b.id}</span></td><td><div style="font-weight:700">${b.cust}</div><div style="font-size:11px;color:rgba(255,255,255,0.80)">${b.mob}</div></td><td style="font-weight:600">${b.route}</td><td>${b.veh}</td><td style="font-size:12px;color:rgba(255,255,255,0.72)">${b.date}</td><td><div style="font-weight:700">${b.fare}</div><div style="font-size:11px;color:rgba(255,255,255,0.80)">Adv: ${b.adv}</div></td><td>${badge(b.status)}</td><td><div class="action-row"><button class="ab ab-v">View</button><button class="ab ab-e">Edit</button><button class="ab ab-d">×</button></div></td></tr>`).join('')}</tbody></table>`;}
-function renderDrivers(){document.getElementById('driversTbl').innerHTML=`<table><thead><tr><th>Driver ID</th><th>Name</th><th>Vehicle</th><th>Trips</th><th>Rating</th><th>KYC</th><th>Status</th><th>Actions</th></tr></thead><tbody>${drivers.map(d=>`<tr><td style="font-size:11px;font-family:monospace;color:#93c5fd">${d.id}</td><td><div style="font-weight:700">${d.name}</div><div style="font-size:11px;color:rgba(255,255,255,.35)">${d.mob}</div></td><td style="font-size:12px">${d.veh}</td><td style="font-weight:700">${d.trips}</td><td style="color:#E8BD3A;font-weight:700">★ ${d.rating}</td><td>${badge(d.kyc)}</td><td>${badge(d.status)}</td><td><div class="action-row"><button class="ab ab-v">View</button><button class="ab ab-e">Edit</button></div></td></tr>`).join('')}</tbody></table>`;}
+function badge(s){const m={Confirmed:'sb-conf',Completed:'sb-comp',Pending:'sb-pend',Cancelled:'sb-canc',Active:'sb-act',Inactive:'sb-inact',Verified:'sb-act',Success:'sb-conf',Refunded:'sb-pend'};return`<span class="sbadge ${m[s]||''}">${s}</span>`;}
 function renderCustomers(){document.getElementById('custTbl').innerHTML=`<table><thead><tr><th>ID</th><th>Name</th><th>Mobile</th><th>Trips</th><th>Spent</th><th>Joined</th><th>Status</th></tr></thead><tbody>${customers.map(c=>`<tr><td style="font-size:11px;font-family:monospace;color:#93c5fd">${c.id}</td><td style="font-weight:700">${c.name}</td><td>${c.mob}</td><td style="font-weight:700;text-align:center">${c.trips}</td><td style="font-weight:700;color:var(--gr3)">${c.spent}</td><td style="font-size:12px;color:rgba(255,255,255,.4)">${c.joined}</td><td>${badge(c.status)}</td></tr>`).join('')}</tbody></table>`;}
 function renderPayments(){document.getElementById('payTbl').innerHTML=`<table><thead><tr><th>Pay ID</th><th>Booking ID</th><th>Customer</th><th>Amount</th><th>Method</th><th>Date</th><th>Status</th></tr></thead><tbody>${payments.map(p=>`<tr><td style="font-size:11px;font-weight:700">${p.id}</td><td style="font-size:11px;font-family:monospace;color:#93c5fd">${p.bid}</td><td style="font-weight:600">${p.cust}</td><td style="font-weight:700;color:var(--gr3)">${p.amt}</td><td>${p.method}</td><td style="font-size:12px;color:rgba(255,255,255,.4)">${p.date}</td><td>${badge(p.status)}</td></tr>`).join('')}</tbody></table>`;}
+
 function initChart(){const data=[{m:'Aug',v:68},{m:'Sep',v:82},{m:'Oct',v:95},{m:'Nov',v:110},{m:'Dec',v:125},{m:'Jan',v:148}];const max=Math.max(...data.map(d=>d.v));document.getElementById('barChart').innerHTML=data.map((d,i)=>`<div class="bar-wrap"><div class="bar-fill ${i===5?'sf':''}" style="height:${Math.round(d.v/max*110)}px" title="₹${(d.v*2200).toLocaleString('en-IN')}"></div><div class="bar-lbl">${d.m}</div></div>`).join('');}
+
 function showPanel(name,navEl){
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('act'));
   document.getElementById('pn-'+name).classList.add('act');
   if(navEl){document.querySelectorAll('.ni').forEach(n=>n.classList.remove('act'));navEl.classList.add('act');}
   const titles={dashboard:'Dashboard',bookings:'Bookings',customers:'Customers',drivers:'Drivers',vehicles:'Vehicles',routes:'Routes',payments:'Payments',refunds:'Refunds',gst:'GST Reports',coupons:'Coupons',pricing:'Pricing',analytics:'Analytics'};
   document.getElementById('tbTitle').textContent=titles[name]||name;
-  if(name==='bookings'){renderBookings(bookings,'allTbl');}
+  if(name==='bookings'){renderAllBookings();}
   if(name==='drivers'){renderDrivers();}
   if(name==='customers'){renderCustomers();}
   if(name==='payments'){renderPayments();}
 }
 function savePricing(){alert('✅ Pricing updated successfully!\nChanges will reflect on the website immediately.');}
-initChart();
-renderBookings(bookings,'recentTbl',4);
+
+// ── Boot ──────────────────────────────────────────────────────────────────
+if(authToken){
+  api('/auth/me').then(()=>enterApp()).catch(()=>doLogout());
+} else {
+  doLogout();
+}
 </script>
 </body>
 </html>

@@ -9,21 +9,30 @@
 </head>
 <body>
 
+<!-- LOGIN SCREEN -->
+<div id="loginScreen" style="position:fixed;inset:0;z-index:200;background:var(--nv);display:flex;align-items:center;justify-content:center;font-family:'Nunito',sans-serif">
+  <form id="loginForm" style="background:var(--nv3);border:1px solid rgba(255,255,255,0.08);border-radius:var(--r20);padding:36px 32px;width:320px;text-align:center">
+    <div style="font-size:38px;margin-bottom:6px">🚕</div>
+    <div style="font-family:'Cinzel',serif;font-weight:700;font-size:18px;color:#fff;margin-bottom:2px">One-Way Bhaarat</div>
+    <div style="font-size:12px;color:rgba(255,255,255,0.45);margin-bottom:22px">Driver Panel Login</div>
+    <input id="loginPhone" type="tel" placeholder="10-digit Phone Number" maxlength="10" autocomplete="username" required style="width:100%;box-sizing:border-box;padding:11px 14px;border-radius:var(--r6);border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:#fff;font-size:14px;margin-bottom:10px;font-family:'Nunito',sans-serif">
+    <input id="loginPass" type="password" placeholder="Password" autocomplete="current-password" required style="width:100%;box-sizing:border-box;padding:11px 14px;border-radius:var(--r6);border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:#fff;font-size:14px;margin-bottom:14px;font-family:'Nunito',sans-serif">
+    <button type="submit" class="btn-sm btn-sf" style="width:100%;padding:11px;font-size:13px;justify-content:center">Log In</button>
+    <div id="loginError" style="color:#f87171;font-size:12px;margin-top:12px;display:none"></div>
+  </form>
+</div>
+
+<div id="appShell" style="display:none">
 <aside class="sidebar">
   <div class="sb-top">
-    <div class="sb-av">RK</div>
-    <div class="sb-name">Ravi Kumar</div>
-    <div class="sb-vehicle">Sedan · DL-01-AB-1234</div>
-    <div class="sb-rating">★ 4.9 <span style="font-size:10px;color:rgba(255,255,255,0.3);font-weight:400">(148 trips)</span></div>
-    <div class="online-wrap">
-      <span class="online-lbl">Status:</span>
-      <button class="toggle" id="onlineToggle" onclick="toggleOnline()"></button>
-      <span class="online-status" id="onlineStatus">Online</span>
-    </div>
+    <div class="sb-av" id="sbAvatar">D</div>
+    <div class="sb-name" id="sbName">Driver</div>
+    <div class="sb-vehicle" id="sbVehicle">—</div>
+    <button onclick="logout()" style="margin-top:10px;background:none;border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.6);border-radius:var(--r6);padding:5px 12px;font-size:11px;cursor:pointer">⏻ Log Out</button>
   </div>
   <nav class="sb-nav">
     <div class="ni act" onclick="showPanel('dashboard',this)"><span class="ni-ic">📊</span> Dashboard</div>
-    <div class="ni" onclick="showPanel('trips',this)"><span class="ni-ic">🗓️</span> My Trips <span class="ni-badge">3</span></div>
+    <div class="ni" onclick="showPanel('trips',this)"><span class="ni-ic">🗓️</span> My Trips <span class="ni-badge" id="navTripsBadge">0</span></div>
     <div class="ni" onclick="showPanel('earnings',this)"><span class="ni-ic">💰</span> Earnings</div>
     <div class="ni" onclick="showPanel('navigation',this)"><span class="ni-ic">🗺️</span> Navigation</div>
     <div class="ni" onclick="showPanel('kyc',this)"><span class="ni-ic">📄</span> KYC Documents</div>
@@ -43,51 +52,23 @@
     <!-- DASHBOARD -->
     <div class="panel act" id="pn-dashboard">
       <div class="stats-row">
-        <div class="sc"><div class="sc-icon ic-o">🗓️</div><div><div class="sc-lbl">Today's Trips</div><div class="sc-val">2</div></div></div>
-        <div class="sc"><div class="sc-icon ic-g">💰</div><div><div class="sc-lbl">Today's Earnings</div><div class="sc-val">₹2,400</div></div></div>
-        <div class="sc"><div class="sc-icon ic-b">📍</div><div><div class="sc-lbl">km Driven Today</div><div class="sc-val">281</div></div></div>
-        <div class="sc"><div class="sc-icon ic-gd">⭐</div><div><div class="sc-lbl">My Rating</div><div class="sc-val">4.9</div></div></div>
+        <div class="sc"><div class="sc-icon ic-o">🗓️</div><div><div class="sc-lbl">Active Duties</div><div class="sc-val" id="statActive">0</div></div></div>
+        <div class="sc"><div class="sc-icon ic-g">💰</div><div><div class="sc-lbl">Assigned Earnings</div><div class="sc-val" id="statEarnings">₹0</div></div></div>
+        <div class="sc"><div class="sc-icon ic-b">✓</div><div><div class="sc-lbl">Completed (Total)</div><div class="sc-val" id="statCompleted">0</div></div></div>
+        <div class="sc"><div class="sc-icon ic-gd">🗓️</div><div><div class="sc-lbl">Total Duties</div><div class="sc-val" id="statTotal">0</div></div></div>
       </div>
 
-      <!-- Current Trip Card -->
-      <div class="current-trip">
-        <div class="ct-hdr">
-          <div class="ct-title">🚕 Current Trip</div>
-          <div class="ct-badge">● IN PROGRESS</div>
-        </div>
-        <div class="ct-route">
-          <div class="ct-city">Delhi</div>
-          <div class="ct-arrow">→</div>
-          <div class="ct-city">Jaipur</div>
-        </div>
-        <div class="ct-meta">
-          <div class="ctm"><div class="ctm-lbl">Passenger</div><div class="ctm-val">Rahul Kapoor</div></div>
-          <div class="ctm"><div class="ctm-lbl">Distance</div><div class="ctm-val">281 km</div></div>
-          <div class="ctm"><div class="ctm-lbl">Fare</div><div class="ctm-val">₹4,896</div></div>
-          <div class="ctm"><div class="ctm-lbl">Pickup Time</div><div class="ctm-val">10:00 AM</div></div>
-        </div>
-        <div class="ct-actions">
-          <button class="ct-btn cb-nav" onclick="alert('Opening Google Maps navigation to Jaipur...')">🗺️ Navigate</button>
-          <button class="ct-btn cb-call" onclick="alert('Calling +91-98765 43210 (Rahul Kapoor)...')">📞 Call Passenger</button>
-          <button class="ct-btn cb-done" onclick="alert('Trip completed! Please collect ₹4,406 from the passenger.')">✓ Complete Trip</button>
-          <button class="ct-btn cb-sos" onclick="alert('🚨 SOS alert sent to control room with your GPS coordinates!')">🚨 SOS</button>
-        </div>
-      </div>
+      <!-- Current Trip Card (rendered from real assigned/ongoing duty if one exists) -->
+      <div id="currentTripWrap"></div>
 
       <!-- Upcoming -->
-      <div class="sec-hdr"><div class="sec-title">📅 Upcoming Trip</div></div>
-      <div class="blist">
-        <div class="tcard">
-          <div class="tc-top"><div class="tc-id">OWB-2024-D3E4F</div><div class="tc-date">Today at 6:00 PM</div><span class="sbadge sb-up">Upcoming</span></div>
-          <div class="tc-route"><div class="tc-city">Delhi</div><div class="tc-arr">→</div><div class="tc-city">Chandigarh</div></div>
-          <div class="tc-meta"><span>👤 Priya Sharma</span><span>📏 248 km</span><span>💰 ₹4,200</span><span>🚗 Sedan</span></div>
-        </div>
-      </div>
+      <div class="sec-hdr"><div class="sec-title">📅 Other Duties</div></div>
+      <div id="upcomingListEl"><div class="empty-state"><div class="es-ic">🗓️</div><div class="es-tx">No duties assigned yet</div></div></div>
     </div>
 
     <!-- TRIPS -->
     <div class="panel" id="pn-trips">
-      <div class="sec-hdr"><div class="sec-title">All My Trips</div><span style="font-size:12px;color:rgba(255,255,255,.35)">This month: 24 trips</span></div>
+      <div class="sec-hdr"><div class="sec-title">All My Duties</div><span style="font-size:12px;color:rgba(255,255,255,.35)" id="tripsCountLbl"></span></div>
       <div id="tripsListEl"></div>
     </div>
 
@@ -177,14 +158,12 @@
       <div class="sec-hdr"><div class="sec-title">👤 Driver Profile</div></div>
       <div style="background:var(--nv3);border:1px solid rgba(255,255,255,0.06);border-radius:var(--r28);padding:24px">
         <div class="pform">
-          <div class="field"><label>Full Name</label><input class="finput" type="text" value="Ravi Kumar"></div>
-          <div class="field"><label>Mobile</label><input class="finput" type="tel" value="+91-98765 12345" readonly style="opacity:.5;cursor:not-allowed"></div>
-          <div class="field"><label>Vehicle Type</label><input class="finput" type="text" value="Sedan"></div>
-          <div class="field"><label>Vehicle Number</label><input class="finput" type="text" value="DL-01-AB-1234"></div>
-          <div class="field"><label>Home City</label><input class="finput" type="text" value="New Delhi"></div>
-          <div class="field"><label>Bank Account</label><input class="finput" type="text" value="XXXX XXXX 4321" readonly style="opacity:.5;cursor:not-allowed"></div>
+          <div class="field"><label>Full Name</label><input class="finput" id="profName" type="text" readonly style="opacity:.7;cursor:not-allowed"></div>
+          <div class="field"><label>Mobile (Login)</label><input class="finput" id="profPhone" type="tel" readonly style="opacity:.7;cursor:not-allowed"></div>
+          <div class="field"><label>Vehicle Type</label><input class="finput" id="profVehType" type="text" readonly style="opacity:.7;cursor:not-allowed"></div>
+          <div class="field"><label>Vehicle Number</label><input class="finput" id="profVehNum" type="text" readonly style="opacity:.7;cursor:not-allowed"></div>
         </div>
-        <button class="btn-sm btn-sf" style="margin-top:18px;padding:10px 22px" onclick="alert('Profile saved!')">💾 Save Changes</button>
+        <div style="margin-top:14px;font-size:12px;color:rgba(255,255,255,0.4)">To update your details or vehicle, please contact the office — your admin can edit these from the admin panel.</div>
       </div>
     </div>
 
@@ -192,44 +171,170 @@
 </div>
 
 <script>
-const trips=[
-  {id:'OWB-2024-A1B2C',from:'Delhi',to:'Jaipur',d:281,pax:'Rahul Kapoor',date:'Today, 10:00 AM',fare:'₹4,896',status:'active'},
-  {id:'OWB-2024-D3E4F',from:'Delhi',to:'Chandigarh',d:248,pax:'Priya Sharma',date:'Today, 6:00 PM',fare:'₹4,200',status:'upcoming'},
-  {id:'OWB-2024-G5H6I',from:'Delhi',to:'Agra',d:233,pax:'Sunita Devi',date:'Jan 14, 8:00 AM',fare:'₹3,900',status:'done'},
-  {id:'OWB-2024-J7K8L',from:'Delhi',to:'Haridwar',d:214,pax:'Arun Mishra',date:'Jan 13, 7:00 AM',fare:'₹3,700',status:'done'},
-  {id:'OWB-2024-M9N0O',from:'Delhi',to:'Mathura',d:160,pax:'Deepa Singh',date:'Jan 12, 9:00 AM',fare:'₹2,800',status:'done'},
-];
-const sm={active:'sb-act',upcoming:'sb-up',done:'sb-done'};
-const sl={active:'● Active',upcoming:'Upcoming',done:'✓ Completed'};
+const API_BASE = '/api';
+let authToken = sessionStorage.getItem('owb_driver_token') || '';
+let driverName = sessionStorage.getItem('owb_driver_name') || '';
+let driverPhone = sessionStorage.getItem('owb_driver_phone') || '';
+let myDuties = [];
+
+async function api(path, opts={}){
+  const headers = Object.assign({'Content-Type':'application/json'}, opts.headers||{});
+  if(authToken) headers['Authorization'] = 'Bearer ' + authToken;
+  const res = await fetch(API_BASE + path, Object.assign({}, opts, {headers}));
+  let data = {};
+  try { data = await res.json(); } catch {}
+  if(res.status === 401){ doLogout(); throw new Error('Session expired — please log in again'); }
+  if(!res.ok) throw new Error(data.error || ('Request failed (' + res.status + ')'));
+  return data;
+}
+
+document.getElementById('loginForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const errEl = document.getElementById('loginError');
+  errEl.style.display='none';
+  const phone = document.getElementById('loginPhone').value.trim();
+  const password = document.getElementById('loginPass').value;
+  try{
+    const data = await api('/auth/driver-login', {method:'POST', body: JSON.stringify({phone, password})});
+    authToken = data.token; driverName = data.name; driverPhone = data.phone;
+    sessionStorage.setItem('owb_driver_token', authToken);
+    sessionStorage.setItem('owb_driver_name', driverName);
+    sessionStorage.setItem('owb_driver_phone', driverPhone);
+    enterApp();
+  }catch(err){
+    errEl.textContent = err.message;
+    errEl.style.display='block';
+  }
+});
+
+function enterApp(){
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('appShell').style.display='block';
+  document.getElementById('sbName').textContent = driverName;
+  document.getElementById('sbAvatar').textContent = (driverName[0]||'D').toUpperCase();
+  loadMyDuties();
+}
+
+function doLogout(){
+  authToken=''; driverName=''; driverPhone='';
+  sessionStorage.removeItem('owb_driver_token');
+  sessionStorage.removeItem('owb_driver_name');
+  sessionStorage.removeItem('owb_driver_phone');
+  document.getElementById('appShell').style.display='none';
+  document.getElementById('loginScreen').style.display='flex';
+}
+function logout(){
+  api('/auth/logout', {method:'POST'}).catch(()=>{});
+  doLogout();
+}
+
+function escapeHtml(s){ return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function dutyRoute(d){ const stops=(d.extraCities||[]).filter(Boolean); return d.from+(stops.length?' → '+stops.join(' → '):'')+' → '+d.to; }
+
+async function loadMyDuties(){
+  try{
+    const data = await api('/duty/list');
+    myDuties = data.duties || [];
+    document.getElementById('sbVehicle').textContent = myDuties[0] ? [myDuties[0].vehicleType, myDuties[0].vehicleNumber].filter(Boolean).join(' · ') : '—';
+    renderDashboard();
+    renderTrips();
+    fillProfile();
+  }catch(err){
+    document.getElementById('upcomingListEl').innerHTML = '<div class="empty-state"><div class="es-ic">⚠️</div><div class="es-tx">'+err.message+'</div></div>';
+  }
+}
+
+function fillProfile(){
+  document.getElementById('profName').value = driverName;
+  document.getElementById('profPhone').value = '+91 ' + driverPhone;
+  const ref = myDuties[0];
+  document.getElementById('profVehType').value = ref ? (ref.vehicleType||'—') : '—';
+  document.getElementById('profVehNum').value = ref ? (ref.vehicleNumber||'—') : '—';
+}
+
+function renderDashboard(){
+  const active = myDuties.filter(d=>d.status==='assigned'||d.status==='ongoing');
+  const completed = myDuties.filter(d=>d.status==='completed');
+  document.getElementById('statActive').textContent = active.length;
+  document.getElementById('statCompleted').textContent = completed.length;
+  document.getElementById('statTotal').textContent = myDuties.length;
+  const earnings = active.reduce((s,d)=>s+Number(d.fare||0),0);
+  document.getElementById('statEarnings').textContent = '₹'+earnings.toLocaleString('en-IN');
+  document.getElementById('navTripsBadge').textContent = active.length;
+
+  // "Current trip" = the first ongoing one, else first assigned one
+  const current = myDuties.find(d=>d.status==='ongoing') || myDuties.find(d=>d.status==='assigned');
+  const wrap = document.getElementById('currentTripWrap');
+  if(!current){
+    wrap.innerHTML='';
+  } else {
+    const isOngoing = current.status==='ongoing';
+    wrap.innerHTML = `
+    <div class="current-trip">
+      <div class="ct-hdr">
+        <div class="ct-title">🚕 ${isOngoing?'Current Trip':'Next Duty'}</div>
+        <div class="ct-badge">${isOngoing?'● IN PROGRESS':'ASSIGNED'}</div>
+      </div>
+      <div class="ct-route">
+        <div class="ct-city">${escapeHtml(current.from)}</div>
+        <div class="ct-arrow">→</div>
+        <div class="ct-city">${escapeHtml(current.to)}</div>
+      </div>
+      <div class="ct-meta">
+        <div class="ctm"><div class="ctm-lbl">Passenger</div><div class="ctm-val">${escapeHtml(current.name)}</div></div>
+        <div class="ctm"><div class="ctm-lbl">Phone</div><div class="ctm-val">+91 ${current.phone}</div></div>
+        <div class="ctm"><div class="ctm-lbl">Fare</div><div class="ctm-val">₹${Number(current.fare||0).toLocaleString('en-IN')}</div></div>
+        <div class="ctm"><div class="ctm-lbl">Pickup Time</div><div class="ctm-val">${escapeHtml(current.date||'')} ${escapeHtml(current.time||'')}</div></div>
+      </div>
+      <div class="ct-actions">
+        <button class="ct-btn cb-call" onclick="window.location.href='tel:+91${current.phone}'">📞 Call Passenger</button>
+        ${!isOngoing ? `<button class="ct-btn cb-nav" onclick="startTrip('${current.id}')">▶ Start Trip</button>` : `<button class="ct-btn cb-done" onclick="completeTrip('${current.id}')">✓ Complete Trip</button>`}
+      </div>
+    </div>`;
+  }
+
+  // Other duties (everything except the one shown above)
+  const others = myDuties.filter(d=>d.id !== (current && current.id) && (d.status==='assigned'||d.status==='ongoing'));
+  const upEl = document.getElementById('upcomingListEl');
+  if(!others.length){
+    upEl.innerHTML = '<div class="empty-state"><div class="es-ic">🗓️</div><div class="es-tx">No other duties right now</div></div>';
+  } else {
+    upEl.innerHTML = '<div class="blist">' + others.map(d=>`
+      <div class="tcard">
+        <div class="tc-top"><div class="tc-id">${d.id}</div><div class="tc-date">${escapeHtml(d.date||'')} ${escapeHtml(d.time||'')}</div><span class="sbadge sb-up">${d.status==='ongoing'?'Ongoing':'Upcoming'}</span></div>
+        <div class="tc-route"><div class="tc-city">${escapeHtml(d.from)}</div><div class="tc-arr">→</div><div class="tc-city">${escapeHtml(d.to)}</div></div>
+        <div class="tc-meta"><span>👤 ${escapeHtml(d.name)}</span><span>💰 ₹${Number(d.fare||0).toLocaleString('en-IN')}</span><span>🚗 ${escapeHtml(d.vehicleType||'')}</span></div>
+      </div>`).join('') + '</div>';
+  }
+}
 
 function renderTrips(){
-  document.getElementById('tripsListEl').innerHTML=`<div class="blist">${trips.map(t=>`
+  document.getElementById('tripsCountLbl').textContent = myDuties.length + ' total';
+  if(!myDuties.length){
+    document.getElementById('tripsListEl').innerHTML = '<div class="empty-state"><div class="es-ic">🗓️</div><div class="es-tx">No duties assigned to you yet</div></div>';
+    return;
+  }
+  const sm={assigned:'sb-up',ongoing:'sb-act',completed:'sb-done',cancelled:'sb-canc'};
+  const sl={assigned:'Assigned',ongoing:'● Ongoing',completed:'✓ Completed',cancelled:'Cancelled'};
+  document.getElementById('tripsListEl').innerHTML=`<div class="blist">${myDuties.map(t=>`
     <div class="tcard">
-      <div class="tc-top"><div class="tc-id">${t.id}</div><div class="tc-date">${t.date}</div><span class="sbadge ${sm[t.status]}">${sl[t.status]}</span></div>
-      <div class="tc-route"><div class="tc-city">${t.from}</div><div class="tc-arr">→</div><div class="tc-city">${t.to}</div></div>
-      <div class="tc-meta"><span>👤 ${t.pax}</span><span>📏 ${t.d} km</span><span>💰 ${t.fare}</span>${t.status==='active'?'<button class="btn-sm btn-sf" style="margin-left:auto" onclick="alert(\'Opening navigation...\')">🗺️ Navigate</button>':''}</div>
+      <div class="tc-top"><div class="tc-id">${t.id}</div><div class="tc-date">${escapeHtml(t.date||'')} ${escapeHtml(t.time||'')}</div><span class="sbadge ${sm[t.status]||''}">${sl[t.status]||t.status}</span></div>
+      <div class="tc-route"><div class="tc-city">${escapeHtml(t.from)}</div><div class="tc-arr">→</div><div class="tc-city">${escapeHtml(t.to)}</div></div>
+      <div class="tc-meta"><span>👤 ${escapeHtml(t.name)}</span><span>💰 ₹${Number(t.fare||0).toLocaleString('en-IN')}</span><span>🚗 ${escapeHtml(t.vehicleType||'')}</span>
+        ${t.status==='assigned' ? `<button class="btn-sm btn-sf" style="margin-left:auto" onclick="startTrip('${t.id}')">▶ Start</button>` : ''}
+        ${t.status==='ongoing' ? `<button class="btn-sm btn-sf" style="margin-left:auto" onclick="completeTrip('${t.id}')">✓ Complete</button>` : ''}
+      </div>
     </div>`).join('')}</div>`;
 }
 
-function renderWeekChart(){
-  const days=[{d:'Mon',v:4800,pct:68},{d:'Tue',v:6200,pct:88},{d:'Wed',v:3400,pct:48},{d:'Thu',v:5600,pct:80},{d:'Fri',v:7100,pct:100},{d:'Sat',v:6800,pct:96},{d:'Sun',v:4200,pct:60}];
-  document.getElementById('weekChart').innerHTML=days.map((d,i)=>`
-    <div class="wc-bar">
-      <div class="wc-fill ${i===4?'today':''}" style="height:${d.pct}%" title="₹${d.v.toLocaleString('en-IN')}"></div>
-      <div class="wc-day">${d.d}</div>
-    </div>`).join('');
+async function startTrip(dutyId){
+  try{ await api('/duty/status', {method:'POST', body: JSON.stringify({dutyId, status:'ongoing'})}); loadMyDuties(); }
+  catch(err){ alert(err.message); }
 }
-
-function renderCal(){
-  const present=[1,2,3,4,5,7,8,9,10,11,12,14,15,16,17,18,19,21,22];
-  const absent=[6,13,20];
-  let h='';
-  ['S','M','T','W','T','F','S'].forEach(d=>{h+=`<div class="cal-day-hdr">${d}</div>`;});
-  for(let i=1;i<=31;i++){
-    const cls=present.includes(i)?'cal-pre':absent.includes(i)?'cal-abs':'cal-empty';
-    h+=`<div class="cal-cell ${cls}">${i}</div>`;
-  }
-  document.getElementById('calEl').innerHTML=`<div class="cal">${h}</div>`;
+async function completeTrip(dutyId){
+  if(!confirm('Mark this trip as completed?')) return;
+  try{ await api('/duty/status', {method:'POST', body: JSON.stringify({dutyId, status:'completed'})}); loadMyDuties(); }
+  catch(err){ alert(err.message); }
 }
 
 function showPanel(name,navEl){
@@ -238,21 +343,16 @@ function showPanel(name,navEl){
   if(navEl){document.querySelectorAll('.ni').forEach(n=>n.classList.remove('act'));navEl.classList.add('act');}
   const titles={dashboard:'Driver Dashboard',trips:'My Trips',earnings:'Earnings',navigation:'Navigation',kyc:'KYC Documents',attendance:'Attendance',profile:'Driver Profile'};
   document.getElementById('panelTitle').textContent=titles[name]||name;
-  if(name==='trips')renderTrips();
-  if(name==='earnings')renderWeekChart();
-  if(name==='attendance')renderCal();
+  if(name==='trips') renderTrips();
 }
 
-function toggleOnline(){
-  const btn=document.getElementById('onlineToggle');
-  const status=document.getElementById('onlineStatus');
-  btn.classList.toggle('off');
-  if(btn.classList.contains('off')){status.textContent='Offline';status.style.color='rgba(255,255,255,0.4)';}
-  else{status.textContent='Online';status.style.color='var(--gr3)';}
+// ── Boot ──────────────────────────────────────────────────────────────────
+if(authToken){
+  api('/auth/me').then(()=>enterApp()).catch(()=>doLogout());
+} else {
+  doLogout();
 }
-
-// Init earnings chart
-renderWeekChart();
 </script>
+</div>
 </body>
 </html>

@@ -20,6 +20,13 @@ const OTP_VERIFY_RATE_LIMIT_MAX = 10;
 // current stable version: https://developers.facebook.com/docs/graph-api/changelog
 const WHATSAPP_API_VERSION = "v21.0";
 
+// ── CRM (duty/booking management) config ─────────────────────────────────────
+// Session tokens for admin/driver logins are valid for this long, then the
+// person has to log in again. 12 hours covers a full duty shift comfortably.
+const SESSION_TTL_SECONDS = 12 * 60 * 60;
+// Login attempts are capped per-IP to slow down password guessing.
+const LOGIN_RATE_LIMIT_MAX = 8;
+
 
 // ── Security headers — added to every response ───────────────────────────────
 function addSecurityHeaders(response) {
@@ -86,6 +93,45 @@ var worker_default = {
     // 2b. Customer confirmation WhatsApp message after payment
     if (url.pathname.includes("booking/customer-confirm")) {
       return addSecurityHeaders(await withRateLimit(request, env, ctx, "customer-confirm", () => handleCustomerConfirm(request, env, allowOrigin), allowOrigin))
+    }
+
+    // ── CRM: auth ────────────────────────────────────────────────────────────
+    if (url.pathname.includes("auth/admin-login")) {
+      return addSecurityHeaders(await withRateLimit(request, env, ctx, "admin-login", () => handleAdminLogin(request, env, allowOrigin), allowOrigin, LOGIN_RATE_LIMIT_MAX))
+    }
+    if (url.pathname.includes("auth/driver-login")) {
+      return addSecurityHeaders(await withRateLimit(request, env, ctx, "driver-login", () => handleDriverLogin(request, env, allowOrigin), allowOrigin, LOGIN_RATE_LIMIT_MAX))
+    }
+    if (url.pathname.includes("auth/logout")) {
+      return addSecurityHeaders(await withRateLimit(request, env, ctx, "logout", () => handleLogout(request, env, allowOrigin), allowOrigin))
+    }
+    if (url.pathname.includes("auth/me")) {
+      return addSecurityHeaders(await withRateLimit(request, env, ctx, "me", () => handleMe(request, env, allowOrigin), allowOrigin))
+    }
+
+    // ── CRM: duties (bookings) ───────────────────────────────────────────────
+    if (url.pathname.includes("duty/create")) {
+      return addSecurityHeaders(await withRateLimit(request, env, ctx, "duty-create", () => handleDutyCreate(request, env, allowOrigin), allowOrigin))
+    }
+    if (url.pathname.includes("duty/assign")) {
+      return addSecurityHeaders(await withRateLimit(request, env, ctx, "duty-assign", () => handleDutyAssign(request, env, allowOrigin), allowOrigin))
+    }
+    if (url.pathname.includes("duty/status")) {
+      return addSecurityHeaders(await withRateLimit(request, env, ctx, "duty-status", () => handleDutyStatus(request, env, allowOrigin), allowOrigin))
+    }
+    if (url.pathname.includes("duty/list")) {
+      return addSecurityHeaders(await withRateLimit(request, env, ctx, "duty-list", () => handleDutyList(request, env, allowOrigin), allowOrigin))
+    }
+
+    // ── CRM: drivers ─────────────────────────────────────────────────────────
+    if (url.pathname.includes("driver/create")) {
+      return addSecurityHeaders(await withRateLimit(request, env, ctx, "driver-create", () => handleDriverCreate(request, env, allowOrigin), allowOrigin))
+    }
+    if (url.pathname.includes("driver/list")) {
+      return addSecurityHeaders(await withRateLimit(request, env, ctx, "driver-list", () => handleDriverList(request, env, allowOrigin), allowOrigin))
+    }
+    if (url.pathname.includes("driver/update")) {
+      return addSecurityHeaders(await withRateLimit(request, env, ctx, "driver-update", () => handleDriverUpdate(request, env, allowOrigin), allowOrigin))
     }
 
     // 2. Distance Matrix endpoint — used by booking modal to get road distance + ETA
@@ -416,7 +462,7 @@ async function handleDistance(request, url, env, allowOrigin) {
 }
 __name(handleDistance, "handleDistance");
 
-// ── Booking notification — WhatsApp admin + customer via oneway_notification template ──
+// ── Booking notification — WhatsApp admin alert via oneway_notification_v2 template ──
 async function handleBookingNotify(request, env, allowOrigin) {
   if (request.method !== "POST") return jsonResponse({ error: "Method not allowed" }, 405, allowOrigin);
 
@@ -430,10 +476,24 @@ async function handleBookingNotify(request, env, allowOrigin) {
     return jsonResponse({ error: "Missing required booking fields" }, 400, allowOrigin);
   }
 
+  // Persist the duty so it shows up in the admin panel for assignment.
+  // This is best-effort — a KV hiccup here should never block the WhatsApp
+  // alert from going out, since that's the part the business depends on most.
+  if (env.CRM_KV) {
+    try { await saveDutyFromBooking(env, b); }
+    catch (err) { console.error("Duty persist failed:", err.message); }
+  }
+
   const adminNumber   = env.ADMIN_WHATSAPP_NUMBER || "919355757579";
+  const supportNumber = env.ADMIN_SUPPORT_NUMBER || adminNumber;
   const accessToken   = env.WHATSAPP_ACCESS_TOKEN;
   const phoneNumberId = env.WHATSAPP_PHONE_NUMBER_ID;
-  const notifTemplate = env.WHATSAPP_NOTIFY_TEMPLATE_NAME || "oneway_notification";
+  // v2 template adds: payment status, vehicle type, trip type, separate
+  // pickup/drop labels, and a 24x7 support number. Falls back to the old
+  // 8-param template name if WHATSAPP_NOTIFY_TEMPLATE_NAME isn't switched
+  // over yet, so this keeps working before/while the new template is
+  // pending Meta approval.
+  const notifTemplate = env.WHATSAPP_NOTIFY_TEMPLATE_NAME || "oneway_notification_v2";
 
   if (!accessToken || !phoneNumberId) {
     console.warn("WhatsApp admin notification not configured — skipping");
@@ -442,27 +502,57 @@ async function handleBookingNotify(request, env, allowOrigin) {
 
   const stops = Array.isArray(b.extraCities) ? b.extraCities.filter(c => c.trim()) : [];
 
-  // Template variables — must match oneway_notification exactly (8 params):
-  // {{1}} Booking ID  {{2}} Name  {{3}} Phone  {{4}} From  {{5}} To
-  // {{6}} Paid amt    {{7}} Due amt              {{8}} Trip timing
-  const fromCity   = `${b.from || "—"}${stops.length ? " → " + stops.join(" → ") : ""}`;
-  const toCity     = b.to || "—";
+  // Template variables — must match oneway_notification_v2 exactly (12 params):
+  // {{1}} Payment status   {{2}} Booking ID   {{3}} Name      {{4}} Phone
+  // {{5}} Vehicle          {{6}} Trip type    {{7}} Pickup    {{8}} Drop
+  // {{9}} Trip timing      {{10}} Paid amt    {{11}} Due amt  {{12}} Support number
+  const paymentStatus = b.type === "payment" ? "Payment Completed" : "Payment Pending";
+  const isRoundTrip= b.tripType === "roundtrip";
+  const pickupLoc  = `${b.from || "—"}${stops.length ? " → " + stops.join(" → ") : ""}`;
+  const dropLoc    = isRoundTrip ? "Same as pickup (round trip)" : (b.to || "—");
+  const vehicleType= b.vehicle || "—";
+  const tripType   = isRoundTrip ? "Round Trip" : "One Way";
   const paidAmt    = `₹${Number(b.payAmt || b.advance || 0).toLocaleString("en-IN")}`;
   const dueAmt     = `₹${Number((b.fare || 0) - (b.payAmt || b.advance || 0)).toLocaleString("en-IN")}`;
-  const tripTiming = `${b.date || "—"} ${b.time || ""}`.trim();
+  const tripTiming = isRoundTrip && b.retdate
+    ? `${b.date || "—"} ${b.time || ""}`.trim() + ` → Return ${b.retdate}`
+    : `${b.date || "—"} ${b.time || ""}`.trim();
+  const supportDisplay = `+91 ${String(supportNumber).replace(/^91/, "").replace(/(\d{5})(\d{5})/, "$1 $2")}`;
 
-  const makePayloads = (to) => [
-    { messaging_product: "whatsapp", to, type: "template", template: { name: notifTemplate, language: { code: "en" }, components: [{ type: "body", parameters: [
-      { type: "text", text: String(b.id) },
-      { type: "text", text: String(b.name) },
-      { type: "text", text: `+91${b.phone}` },
-      { type: "text", text: fromCity },
-      { type: "text", text: toCity },
-      { type: "text", text: paidAmt },
-      { type: "text", text: dueAmt },
-      { type: "text", text: tripTiming }
-    ]}]}},
-  ];
+  const v2Payload = (to) => ({ messaging_product: "whatsapp", to, type: "template", template: { name: notifTemplate, language: { code: "en" }, components: [{ type: "body", parameters: [
+    { type: "text", text: paymentStatus },
+    { type: "text", text: String(b.id) },
+    { type: "text", text: String(b.name) },
+    { type: "text", text: `+91${b.phone}` },
+    { type: "text", text: vehicleType },
+    { type: "text", text: tripType },
+    { type: "text", text: pickupLoc },
+    { type: "text", text: dropLoc },
+    { type: "text", text: tripTiming },
+    { type: "text", text: paidAmt },
+    { type: "text", text: dueAmt },
+    { type: "text", text: supportDisplay }
+  ]}]}});
+
+  const legacyPayload = (to) => ({ messaging_product: "whatsapp", to, type: "template", template: { name: "oneway_notification", language: { code: "en" }, components: [{ type: "body", parameters: [
+    { type: "text", text: String(b.id) },
+    { type: "text", text: String(b.name) },
+    { type: "text", text: `+91${b.phone}` },
+    { type: "text", text: pickupLoc },
+    { type: "text", text: dropLoc },
+    { type: "text", text: paidAmt },
+    { type: "text", text: dueAmt },
+    { type: "text", text: tripTiming }
+  ]}]}});
+
+  // If the env var explicitly names the legacy template, send the correctly
+  // shaped 8-param payload directly — don't waste a guaranteed-failing
+  // 12-param attempt against an 8-param template first. Otherwise (v2 name,
+  // or no override yet) try v2 first, with the legacy payload as a fallback
+  // in case v2 isn't approved/created on Meta yet.
+  const makePayloads = (to) => notifTemplate === "oneway_notification"
+    ? [legacyPayload(to)]
+    : [v2Payload(to), legacyPayload(to)];
 
   const trySend = async (to, label) => {
     for (const payload of makePayloads(to)) {
@@ -718,6 +808,7 @@ async function handleCustomerConfirm(request, env, allowOrigin) {
 
   const accessToken   = env.WHATSAPP_ACCESS_TOKEN;
   const phoneNumberId = env.WHATSAPP_PHONE_NUMBER_ID;
+  const supportNumber = env.ADMIN_SUPPORT_NUMBER || env.ADMIN_WHATSAPP_NUMBER || "919355757579";
 
   if (!accessToken || !phoneNumberId) {
     console.warn("WhatsApp not configured — skipping customer confirmation");
@@ -726,31 +817,59 @@ async function handleCustomerConfirm(request, env, allowOrigin) {
 
   const stops = Array.isArray(b.extraCities) ? b.extraCities.filter(c => c.trim()) : [];
   const customerNumber = `91${b.phone}`;
-  const notifTemplate  = env.WHATSAPP_NOTIFY_TEMPLATE_NAME || "oneway_notification";
+  // Same v2 template as the admin alert, so there's only one template to
+  // maintain in Meta Business Manager. Falls back to the old 8-param
+  // template if WHATSAPP_NOTIFY_TEMPLATE_NAME still points at it.
+  const notifTemplate  = env.WHATSAPP_NOTIFY_TEMPLATE_NAME || "oneway_notification_v2";
 
-  // Template variables — must match oneway_notification exactly (8 params):
-  // {{1}} Booking ID  {{2}} Name  {{3}} Phone  {{4}} From  {{5}} To
-  // {{6}} Paid amt    {{7}} Due amt              {{8}} Trip timing
-  const fromCity   = `${b.from || "—"}${stops.length ? " → " + stops.join(" → ") : ""}`;
-  const toCity     = b.to || "—";
-  const paidAmt    = `₹${Number(b.payAmt || 0).toLocaleString("en-IN")}`;
-  const dueAmt     = `₹${Number((b.fare || 0) - (b.payAmt || 0)).toLocaleString("en-IN")}`;
-  const tripTiming = `${b.date || "—"} ${b.time || ""}`.trim();
+  // Template variables — must match oneway_notification_v2 exactly (12 params):
+  // {{1}} Payment status   {{2}} Booking ID   {{3}} Name      {{4}} Phone
+  // {{5}} Vehicle          {{6}} Trip type    {{7}} Pickup    {{8}} Drop
+  // {{9}} Trip timing      {{10}} Paid amt    {{11}} Due amt  {{12}} Support number
+  const isRoundTrip = b.tripType === "roundtrip";
+  const pickupLoc   = `${b.from || "—"}${stops.length ? " → " + stops.join(" → ") : ""}`;
+  const dropLoc     = isRoundTrip ? "Same as pickup (round trip)" : (b.to || "—");
+  const vehicleType = b.vehicle || "—";
+  const tripType    = isRoundTrip ? "Round Trip" : "One Way";
+  const paidAmt     = `₹${Number(b.payAmt || 0).toLocaleString("en-IN")}`;
+  const dueAmt      = `₹${Number((b.fare || 0) - (b.payAmt || 0)).toLocaleString("en-IN")}`;
+  const tripTiming  = isRoundTrip && b.retdate
+    ? `${b.date || "—"} ${b.time || ""}`.trim() + ` → Return ${b.retdate}`
+    : `${b.date || "—"} ${b.time || ""}`.trim();
+  const supportDisplay = `+91 ${String(supportNumber).replace(/^91/, "").replace(/(\d{5})(\d{5})/, "$1 $2")}`;
 
-  const params = [
+  const v2Payload = { messaging_product: "whatsapp", to: customerNumber, type: "template", template: { name: notifTemplate, language: { code: "en" }, components: [{ type: "body", parameters: [
+    { type: "text", text: "Payment Completed" },
     { type: "text", text: String(b.id) },
     { type: "text", text: String(b.name) },
     { type: "text", text: `+91${b.phone}` },
-    { type: "text", text: fromCity },
-    { type: "text", text: toCity },
+    { type: "text", text: vehicleType },
+    { type: "text", text: tripType },
+    { type: "text", text: pickupLoc },
+    { type: "text", text: dropLoc },
+    { type: "text", text: tripTiming },
+    { type: "text", text: paidAmt },
+    { type: "text", text: dueAmt },
+    { type: "text", text: supportDisplay }
+  ]}]}};
+
+  const legacyPayload = { messaging_product: "whatsapp", to: customerNumber, type: "template", template: { name: "oneway_notification", language: { code: "en" }, components: [{ type: "body", parameters: [
+    { type: "text", text: String(b.id) },
+    { type: "text", text: String(b.name) },
+    { type: "text", text: `+91${b.phone}` },
+    { type: "text", text: pickupLoc },
+    { type: "text", text: dropLoc },
     { type: "text", text: paidAmt },
     { type: "text", text: dueAmt },
     { type: "text", text: tripTiming }
-  ];
+  ]}]}};
 
-  const payloads = [
-    { messaging_product: "whatsapp", to: customerNumber, type: "template", template: { name: notifTemplate, language: { code: "en" }, components: [{ type: "body", parameters: params }] }},
-  ];
+  // If the env var explicitly names the legacy template, send the correctly
+  // shaped 8-param payload directly rather than guaranteeing a failed first
+  // attempt against an 8-param template with 12 params.
+  const payloads = notifTemplate === "oneway_notification"
+    ? [legacyPayload]
+    : [v2Payload, legacyPayload];
 
   for (const payload of payloads) {
     try {
@@ -775,11 +894,532 @@ async function handleCustomerConfirm(request, env, allowOrigin) {
   return jsonResponse({ sent: false, reason: "upstream_error" }, 200, allowOrigin);
 }
 
+// ════════════════════════════════════════════════════════════════════════════
+// CRM MODULE — duties (bookings), drivers, admin/driver auth, and the
+// auto-notify-on-assignment flow. Everything below is new; nothing above
+// this banner (other than the two saveDutyFromBooking() call-sites and the
+// routing block near the top) was touched from the original file.
+// ════════════════════════════════════════════════════════════════════════════
+
+// ── Password hashing (PBKDF2-SHA256, Web Crypto — no external deps) ─────────
+async function hashPassword(password, saltHex) {
+  const enc = new TextEncoder();
+  let salt;
+  if (saltHex) {
+    salt = new Uint8Array(saltHex.match(/.{2}/g).map(b => parseInt(b, 16)));
+  } else {
+    salt = crypto.getRandomValues(new Uint8Array(16));
+  }
+  const keyMaterial = await crypto.subtle.importKey("raw", enc.encode(password), { name: "PBKDF2" }, false, ["deriveBits"]);
+  const bits = await crypto.subtle.deriveBits(
+    { name: "PBKDF2", salt, iterations: 100000, hash: "SHA-256" },
+    keyMaterial,
+    256
+  );
+  const hashHex = [...new Uint8Array(bits)].map(b => b.toString(16).padStart(2, "0")).join("");
+  const saltOutHex = [...salt].map(b => b.toString(16).padStart(2, "0")).join("");
+  return { hash: hashHex, salt: saltOutHex };
+}
+__name(hashPassword, "hashPassword");
+
+async function verifyPassword(password, saltHex, expectedHashHex) {
+  const { hash } = await hashPassword(password, saltHex);
+  // Constant-time-ish comparison
+  if (hash.length !== expectedHashHex.length) return false;
+  let diff = 0;
+  for (let i = 0; i < hash.length; i++) diff |= hash.charCodeAt(i) ^ expectedHashHex.charCodeAt(i);
+  return diff === 0;
+}
+__name(verifyPassword, "verifyPassword");
+
+// ── Sessions ──────────────────────────────────────────────────────────────────
+// Session tokens are random opaque strings stored in KV as session:<token> ->
+// { role: 'admin'|'driver', id: <username or driverId>, exp: <epoch ms> }.
+// Simple, fast to check, and easy to revoke (delete the KV key) on logout.
+async function createSession(env, role, id) {
+  const token = generateToken() + generateToken(); // 64 chars, plenty of entropy
+  const record = { role, id, exp: Date.now() + SESSION_TTL_SECONDS * 1000 };
+  await env.CRM_KV.put(`session:${token}`, JSON.stringify(record), { expirationTtl: SESSION_TTL_SECONDS });
+  return token;
+}
+__name(createSession, "createSession");
+
+async function getSession(env, request) {
+  const auth = request.headers.get("Authorization") || "";
+  const token = auth.startsWith("Bearer ") ? auth.slice(7).trim() : "";
+  if (!token) return null;
+  try {
+    const raw = await env.CRM_KV.get(`session:${token}`);
+    if (!raw) return null;
+    const record = JSON.parse(raw);
+    if (!record.exp || record.exp < Date.now()) return null;
+    return { ...record, token };
+  } catch {
+    return null;
+  }
+}
+__name(getSession, "getSession");
+
+async function requireRole(env, request, role) {
+  const session = await getSession(env, request);
+  if (!session) return { error: jsonResponse({ error: "Not logged in" }, 401) };
+  if (role && session.role !== role) return { error: jsonResponse({ error: "Not authorized" }, 403) };
+  return { session };
+}
+__name(requireRole, "requireRole");
+
+// ── Index helpers — KV has no query/list-by-field, so we keep small JSON
+// arrays of IDs alongside the records themselves. Fine at hundreds-to-low-
+// thousands of duties/drivers; if this grows much past that, move to D1. ──
+async function readIndex(env, key) {
+  try {
+    const raw = await env.CRM_KV.get(key);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+__name(readIndex, "readIndex");
+
+async function addToIndex(env, key, id) {
+  const list = await readIndex(env, key);
+  if (!list.includes(id)) {
+    list.unshift(id); // newest first
+    await env.CRM_KV.put(key, JSON.stringify(list));
+  }
+}
+__name(addToIndex, "addToIndex");
+
+// ── Admin login ───────────────────────────────────────────────────────────────
+async function handleAdminLogin(request, env, allowOrigin) {
+  if (request.method !== "POST") return jsonResponse({ error: "Method not allowed" }, 405, allowOrigin);
+  if (!env.CRM_KV) return jsonResponse({ error: "CRM not configured" }, 500, allowOrigin);
+
+  let body;
+  try { body = await request.json(); } catch { return jsonResponse({ error: "Invalid JSON" }, 400, allowOrigin); }
+
+  const username = sanitizeString(body.username, 80).toLowerCase();
+  const password = String(body.password || "");
+  if (!username || !password) return jsonResponse({ error: "Username and password required" }, 400, allowOrigin);
+
+  const raw = await env.CRM_KV.get(`admin:${username}`);
+  if (!raw) return jsonResponse({ error: "Invalid username or password" }, 401, allowOrigin);
+
+  const user = JSON.parse(raw);
+  const ok = await verifyPassword(password, user.salt, user.hash);
+  if (!ok) return jsonResponse({ error: "Invalid username or password" }, 401, allowOrigin);
+
+  const token = await createSession(env, "admin", username);
+  return jsonResponse({ token, name: user.name || username, role: "admin" }, 200, allowOrigin);
+}
+__name(handleAdminLogin, "handleAdminLogin");
+
+// ── Driver login — driver logs in with phone (10 digits) + password ─────────
+async function handleDriverLogin(request, env, allowOrigin) {
+  if (request.method !== "POST") return jsonResponse({ error: "Method not allowed" }, 405, allowOrigin);
+  if (!env.CRM_KV) return jsonResponse({ error: "CRM not configured" }, 500, allowOrigin);
+
+  let body;
+  try { body = await request.json(); } catch { return jsonResponse({ error: "Invalid JSON" }, 400, allowOrigin); }
+
+  const phone = validatePhone(body.phone);
+  const password = String(body.password || "");
+  if (!phone || !password) return jsonResponse({ error: "Valid phone and password required" }, 400, allowOrigin);
+
+  const raw = await env.CRM_KV.get(`driver:${phone}`);
+  if (!raw) return jsonResponse({ error: "Invalid phone or password" }, 401, allowOrigin);
+
+  const driver = JSON.parse(raw);
+  if (driver.active === false) return jsonResponse({ error: "This driver account is disabled" }, 403, allowOrigin);
+
+  const ok = await verifyPassword(password, driver.salt, driver.hash);
+  if (!ok) return jsonResponse({ error: "Invalid phone or password" }, 401, allowOrigin);
+
+  const token = await createSession(env, "driver", phone);
+  return jsonResponse({ token, name: driver.name, phone, role: "driver" }, 200, allowOrigin);
+}
+__name(handleDriverLogin, "handleDriverLogin");
+
+async function handleLogout(request, env, allowOrigin) {
+  if (request.method !== "POST") return jsonResponse({ error: "Method not allowed" }, 405, allowOrigin);
+  const session = await getSession(env, request);
+  if (session && env.CRM_KV) await env.CRM_KV.delete(`session:${session.token}`);
+  return jsonResponse({ ok: true }, 200, allowOrigin);
+}
+__name(handleLogout, "handleLogout");
+
+async function handleMe(request, env, allowOrigin) {
+  const session = await getSession(env, request);
+  if (!session) return jsonResponse({ error: "Not logged in" }, 401, allowOrigin);
+  return jsonResponse({ role: session.role, id: session.id }, 200, allowOrigin);
+}
+__name(handleMe, "handleMe");
+
+// ── Duties ────────────────────────────────────────────────────────────────────
+// A duty record looks like:
+// {
+//   id, name, phone, from, to, extraCities, date, time, fare, advance,
+//   vehicleType, status: 'new'|'assigned'|'ongoing'|'completed'|'cancelled',
+//   driverId, driverName, driverPhone, vehicleNumber, createdAt, assignedAt
+// }
+async function saveDutyFromBooking(env, b) {
+  const id = String(b.id);
+  const existingRaw = await env.CRM_KV.get(`duty:${id}`);
+  if (existingRaw) return JSON.parse(existingRaw); // already stored, don't clobber assignment state
+
+  const stops = Array.isArray(b.extraCities) ? b.extraCities.filter(c => String(c || "").trim()) : [];
+  const duty = {
+    id,
+    name: sanitizeString(b.name, 120),
+    phone: validatePhone(b.phone) || sanitizeString(String(b.phone || ""), 15),
+    from: sanitizeString(b.from, 200),
+    to: sanitizeString(b.to, 200),
+    extraCities: stops.map(c => sanitizeString(c, 200)),
+    date: sanitizeString(b.date, 30),
+    time: sanitizeString(b.time, 30),
+    fare: Number(b.fare || 0),
+    advance: Number(b.payAmt || b.advance || 0),
+    vehicleType: sanitizeString(b.vehicleType || b.cabType || b.vehicle || "", 60),
+    tripType: b.tripType === "roundtrip" ? "roundtrip" : "oneway",
+    retdate: sanitizeString(b.retdate || "", 30),
+    status: "new",
+    driverId: null,
+    driverName: null,
+    driverPhone: null,
+    vehicleNumber: null,
+    createdAt: Date.now(),
+    assignedAt: null,
+    source: "website"
+  };
+  await env.CRM_KV.put(`duty:${id}`, JSON.stringify(duty));
+  await addToIndex(env, "duty-index", id);
+  return duty;
+}
+__name(saveDutyFromBooking, "saveDutyFromBooking");
+
+// Admin manually adding a duty that didn't come through the website
+// (phone booking, walk-in, etc).
+async function handleDutyCreate(request, env, allowOrigin) {
+  const auth = await requireRole(env, request, "admin");
+  if (auth.error) return auth.error;
+  if (request.method !== "POST") return jsonResponse({ error: "Method not allowed" }, 405, allowOrigin);
+
+  let body;
+  try { body = await request.json(); } catch { return jsonResponse({ error: "Invalid JSON" }, 400, allowOrigin); }
+
+  const phone = validatePhone(body.phone);
+  const name = sanitizeString(body.name, 120);
+  const from = sanitizeString(body.from, 200);
+  const to = sanitizeString(body.to, 200);
+  if (!phone || !name || !from || !to) {
+    return jsonResponse({ error: "name, phone, from and to are required" }, 400, allowOrigin);
+  }
+
+  const id = "M" + Date.now().toString(36).toUpperCase(); // M-prefixed so it's visually distinct from website IDs
+  const duty = {
+    id,
+    name,
+    phone,
+    from,
+    to,
+    extraCities: [],
+    date: sanitizeString(body.date, 30),
+    time: sanitizeString(body.time, 30),
+    fare: Number(body.fare || 0),
+    advance: Number(body.advance || 0),
+    vehicleType: sanitizeString(body.vehicleType, 60),
+    status: "new",
+    driverId: null,
+    driverName: null,
+    driverPhone: null,
+    vehicleNumber: null,
+    createdAt: Date.now(),
+    assignedAt: null,
+    source: "manual"
+  };
+  await env.CRM_KV.put(`duty:${id}`, JSON.stringify(duty));
+  await addToIndex(env, "duty-index", id);
+  return jsonResponse({ duty }, 200, allowOrigin);
+}
+__name(handleDutyCreate, "handleDutyCreate");
+
+// List duties — admin sees all, driver sees only their own assigned duties.
+async function handleDutyList(request, env, allowOrigin) {
+  const auth = await requireRole(env, request, null);
+  if (auth.error) return auth.error;
+  if (!env.CRM_KV) return jsonResponse({ duties: [] }, 200, allowOrigin);
+
+  const ids = await readIndex(env, "duty-index");
+  const records = await Promise.all(ids.map(id => env.CRM_KV.get(`duty:${id}`)));
+  let duties = records.filter(Boolean).map(r => JSON.parse(r));
+
+  if (auth.session.role === "driver") {
+    duties = duties.filter(d => d.driverId === auth.session.id);
+  }
+
+  return jsonResponse({ duties }, 200, allowOrigin);
+}
+__name(handleDutyList, "handleDutyList");
+
+// Driver/admin updates a duty's status (e.g. driver marks "ongoing" or
+// "completed"; admin can cancel).
+async function handleDutyStatus(request, env, allowOrigin) {
+  const auth = await requireRole(env, request, null);
+  if (auth.error) return auth.error;
+  if (request.method !== "POST") return jsonResponse({ error: "Method not allowed" }, 405, allowOrigin);
+
+  let body;
+  try { body = await request.json(); } catch { return jsonResponse({ error: "Invalid JSON" }, 400, allowOrigin); }
+
+  const dutyId = String(body.dutyId || "");
+  const newStatus = String(body.status || "");
+  const allowedStatuses = ["new", "assigned", "ongoing", "completed", "cancelled"];
+  if (!dutyId || !allowedStatuses.includes(newStatus)) {
+    return jsonResponse({ error: "Valid dutyId and status required" }, 400, allowOrigin);
+  }
+
+  const raw = await env.CRM_KV.get(`duty:${dutyId}`);
+  if (!raw) return jsonResponse({ error: "Duty not found" }, 404, allowOrigin);
+  const duty = JSON.parse(raw);
+
+  // A driver may only touch their own assigned duty, and only move it
+  // forward (ongoing/completed) — not reassign or cancel.
+  if (auth.session.role === "driver") {
+    if (duty.driverId !== auth.session.id) return jsonResponse({ error: "Not your duty" }, 403, allowOrigin);
+    if (!["ongoing", "completed"].includes(newStatus)) return jsonResponse({ error: "Not allowed" }, 403, allowOrigin);
+  }
+
+  duty.status = newStatus;
+  await env.CRM_KV.put(`duty:${dutyId}`, JSON.stringify(duty));
+  return jsonResponse({ duty }, 200, allowOrigin);
+}
+__name(handleDutyStatus, "handleDutyStatus");
+
+// ── THE key feature: assign a driver+vehicle to a duty, then fire all 3
+// WhatsApp notifications (customer, driver, admin) in one shot. ────────────
+async function handleDutyAssign(request, env, allowOrigin) {
+  const auth = await requireRole(env, request, "admin");
+  if (auth.error) return auth.error;
+  if (request.method !== "POST") return jsonResponse({ error: "Method not allowed" }, 405, allowOrigin);
+  if (!env.CRM_KV) return jsonResponse({ error: "CRM not configured" }, 500, allowOrigin);
+
+  let body;
+  try { body = await request.json(); } catch { return jsonResponse({ error: "Invalid JSON" }, 400, allowOrigin); }
+
+  const dutyId = String(body.dutyId || "");
+  const driverId = validatePhone(body.driverId || body.driverPhone);
+  const vehicleNumber = sanitizeString(body.vehicleNumber, 30);
+  if (!dutyId || !driverId) return jsonResponse({ error: "dutyId and driverId (driver phone) are required" }, 400, allowOrigin);
+
+  const dutyRaw = await env.CRM_KV.get(`duty:${dutyId}`);
+  if (!dutyRaw) return jsonResponse({ error: "Duty not found" }, 404, allowOrigin);
+  const duty = JSON.parse(dutyRaw);
+
+  const driverRaw = await env.CRM_KV.get(`driver:${driverId}`);
+  if (!driverRaw) return jsonResponse({ error: "Driver not found" }, 404, allowOrigin);
+  const driver = JSON.parse(driverRaw);
+
+  duty.driverId = driverId;
+  duty.driverName = driver.name;
+  duty.driverPhone = driverId;
+  duty.vehicleNumber = vehicleNumber || driver.vehicleNumber || "";
+  duty.vehicleType = duty.vehicleType || driver.vehicleType || "";
+  duty.status = "assigned";
+  duty.assignedAt = Date.now();
+  await env.CRM_KV.put(`duty:${dutyId}`, JSON.stringify(duty));
+
+  // Fire all 3 notifications. Each is independent and best-effort — if one
+  // WhatsApp send fails (e.g. template not yet approved), the assignment
+  // itself still goes through; we just report which sends succeeded.
+  const results = await sendAssignmentNotifications(env, duty, driver);
+
+  return jsonResponse({ duty, notifications: results }, 200, allowOrigin);
+}
+__name(handleDutyAssign, "handleDutyAssign");
+
+async function sendAssignmentNotifications(env, duty, driver) {
+  const accessToken   = env.WHATSAPP_ACCESS_TOKEN;
+  const phoneNumberId = env.WHATSAPP_PHONE_NUMBER_ID;
+  const adminNumber    = env.ADMIN_WHATSAPP_NUMBER || "919355757579";
+  const driverTemplate  = env.WHATSAPP_DRIVER_ASSIGN_TEMPLATE_NAME   || "oneway_driver_assignment";
+  const customerTemplate= env.WHATSAPP_CUSTOMER_ASSIGN_TEMPLATE_NAME || "oneway_assignment_confirmed";
+  // Deliberately a SEPARATE template/env var from WHATSAPP_NOTIFY_TEMPLATE_NAME
+  // (the payment-status alert, now 12 params as of oneway_notification_v2).
+  // This message is about driver assignment, not payment, and is still an
+  // 8-param template — pointing both concerns at the same env var would break
+  // whichever one didn't match the live template's param count.
+  const adminTemplate   = env.WHATSAPP_ASSIGN_NOTIFY_TEMPLATE_NAME || "oneway_notification";
+
+  const results = { driver: false, customer: false, admin: false };
+  if (!accessToken || !phoneNumberId) {
+    console.warn("WhatsApp not configured — skipping assignment notifications");
+    return results;
+  }
+
+  const stops = Array.isArray(duty.extraCities) ? duty.extraCities.filter(c => c) : [];
+  const pickup = `${duty.from || "—"}${stops.length ? " → " + stops.join(" → ") : ""}`;
+  const tripTiming = `${duty.date || "—"} ${duty.time || ""}`.trim();
+  const vehicleLabel = [duty.vehicleType, duty.vehicleNumber].filter(Boolean).join(" · ") || "—";
+  const fareLabel = `₹${Number(duty.fare || 0).toLocaleString("en-IN")}`;
+
+  const send = async (to, templateName, parameters, label) => {
+    const payload = {
+      messaging_product: "whatsapp",
+      to,
+      type: "template",
+      template: { name: templateName, language: { code: "en" }, components: [{ type: "body", parameters }] }
+    };
+    try {
+      const waRes = await fetch(`https://graph.facebook.com/${WHATSAPP_API_VERSION}/${phoneNumberId}/messages`, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${accessToken}`, "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const waData = await waRes.json();
+      if (waRes.ok && waData?.messages?.[0]?.id) {
+        console.log(`${label} assignment notify sent — id:`, waData.messages[0].id);
+        return true;
+      }
+      console.error(`${label} assignment notify failed — code:`, waData?.error?.code, "| message:", waData?.error?.message);
+      return false;
+    } catch (err) {
+      console.error(`${label} assignment notify exception:`, err.message);
+      return false;
+    }
+  };
+
+  // 1) Driver — gets full duty-slip style message
+  results.driver = await send(`91${duty.driverPhone}`, driverTemplate, [
+    { type: "text", text: String(duty.id) },
+    { type: "text", text: String(duty.name) },
+    { type: "text", text: `+91${duty.phone}` },
+    { type: "text", text: pickup },
+    { type: "text", text: duty.to || "—" },
+    { type: "text", text: tripTiming },
+    { type: "text", text: vehicleLabel },
+    { type: "text", text: fareLabel }
+  ], "Driver");
+
+  // 2) Customer — gets driver + vehicle confirmation
+  results.customer = await send(`91${duty.phone}`, customerTemplate, [
+    { type: "text", text: String(duty.id) },
+    { type: "text", text: String(duty.driverName) },
+    { type: "text", text: `+91${duty.driverPhone}` },
+    { type: "text", text: vehicleLabel },
+    { type: "text", text: pickup },
+    { type: "text", text: tripTiming }
+  ], "Customer");
+
+  // 3) Admin — internal heads-up reusing the existing notification template
+  results.admin = await send(adminNumber, adminTemplate, [
+    { type: "text", text: String(duty.id) },
+    { type: "text", text: `Assigned: ${duty.driverName}` },
+    { type: "text", text: `+91${duty.driverPhone}` },
+    { type: "text", text: pickup },
+    { type: "text", text: duty.to || "—" },
+    { type: "text", text: vehicleLabel },
+    { type: "text", text: fareLabel },
+    { type: "text", text: tripTiming }
+  ], "Admin");
+
+  return results;
+}
+__name(sendAssignmentNotifications, "sendAssignmentNotifications");
+
+// ── Drivers ───────────────────────────────────────────────────────────────────
+async function handleDriverCreate(request, env, allowOrigin) {
+  const auth = await requireRole(env, request, "admin");
+  if (auth.error) return auth.error;
+  if (request.method !== "POST") return jsonResponse({ error: "Method not allowed" }, 405, allowOrigin);
+
+  let body;
+  try { body = await request.json(); } catch { return jsonResponse({ error: "Invalid JSON" }, 400, allowOrigin); }
+
+  const phone = validatePhone(body.phone);
+  const name = sanitizeString(body.name, 120);
+  const password = String(body.password || "");
+  if (!phone || !name || !password || password.length < 6) {
+    return jsonResponse({ error: "name, valid 10-digit phone, and a password of 6+ characters are required" }, 400, allowOrigin);
+  }
+
+  const existing = await env.CRM_KV.get(`driver:${phone}`);
+  if (existing) return jsonResponse({ error: "A driver with this phone number already exists" }, 409, allowOrigin);
+
+  const { hash, salt } = await hashPassword(password);
+  const driver = {
+    id: phone,
+    phone,
+    name,
+    vehicleType: sanitizeString(body.vehicleType, 60),
+    vehicleNumber: sanitizeString(body.vehicleNumber, 30),
+    active: true,
+    hash,
+    salt,
+    createdAt: Date.now()
+  };
+  await env.CRM_KV.put(`driver:${phone}`, JSON.stringify(driver));
+  await addToIndex(env, "driver-index", phone);
+
+  const { hash: _h, salt: _s, ...safeDriver } = driver;
+  return jsonResponse({ driver: safeDriver }, 200, allowOrigin);
+}
+__name(handleDriverCreate, "handleDriverCreate");
+
+async function handleDriverList(request, env, allowOrigin) {
+  const auth = await requireRole(env, request, "admin");
+  if (auth.error) return auth.error;
+  if (!env.CRM_KV) return jsonResponse({ drivers: [] }, 200, allowOrigin);
+
+  const ids = await readIndex(env, "driver-index");
+  const records = await Promise.all(ids.map(id => env.CRM_KV.get(`driver:${id}`)));
+  const drivers = records.filter(Boolean).map(r => {
+    const { hash, salt, ...safe } = JSON.parse(r);
+    return safe;
+  });
+
+  return jsonResponse({ drivers }, 200, allowOrigin);
+}
+__name(handleDriverList, "handleDriverList");
+
+// Admin edits a driver's details, optionally resets password, or
+// activates/deactivates them (disabled drivers can't log in or be assigned).
+async function handleDriverUpdate(request, env, allowOrigin) {
+  const auth = await requireRole(env, request, "admin");
+  if (auth.error) return auth.error;
+  if (request.method !== "POST") return jsonResponse({ error: "Method not allowed" }, 405, allowOrigin);
+
+  let body;
+  try { body = await request.json(); } catch { return jsonResponse({ error: "Invalid JSON" }, 400, allowOrigin); }
+
+  const phone = validatePhone(body.phone || body.id);
+  if (!phone) return jsonResponse({ error: "Valid driver phone required" }, 400, allowOrigin);
+
+  const raw = await env.CRM_KV.get(`driver:${phone}`);
+  if (!raw) return jsonResponse({ error: "Driver not found" }, 404, allowOrigin);
+  const driver = JSON.parse(raw);
+
+  if (body.name !== undefined) driver.name = sanitizeString(body.name, 120);
+  if (body.vehicleType !== undefined) driver.vehicleType = sanitizeString(body.vehicleType, 60);
+  if (body.vehicleNumber !== undefined) driver.vehicleNumber = sanitizeString(body.vehicleNumber, 30);
+  if (body.active !== undefined) driver.active = !!body.active;
+  if (body.password) {
+    if (String(body.password).length < 6) return jsonResponse({ error: "Password must be 6+ characters" }, 400, allowOrigin);
+    const { hash, salt } = await hashPassword(String(body.password));
+    driver.hash = hash;
+    driver.salt = salt;
+  }
+
+  await env.CRM_KV.put(`driver:${phone}`, JSON.stringify(driver));
+  const { hash: _h, salt: _s, ...safeDriver } = driver;
+  return jsonResponse({ driver: safeDriver }, 200, allowOrigin);
+}
+__name(handleDriverUpdate, "handleDriverUpdate");
+
 function jsonResponse(data, status = 200, allowOrigin = null) {
   const headers = {
     "Content-Type": "application/json",
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type"
+    "Access-Control-Allow-Headers": "Content-Type, Authorization"
   };
   if (allowOrigin) headers["Access-Control-Allow-Origin"] = allowOrigin;
   return new Response(JSON.stringify(data), { status, headers });
@@ -789,7 +1429,7 @@ __name(jsonResponse, "jsonResponse");
 function corsPreflight(allowOrigin) {
   const headers = {
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type"
+    "Access-Control-Allow-Headers": "Content-Type, Authorization"
   };
   if (allowOrigin) headers["Access-Control-Allow-Origin"] = allowOrigin;
   return new Response(null, { status: 204, headers });
