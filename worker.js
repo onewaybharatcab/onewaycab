@@ -134,6 +134,80 @@ var worker_default = {
       return addSecurityHeaders(await withRateLimit(request, env, ctx, "driver-update", () => handleDriverUpdate(request, env, allowOrigin), allowOrigin))
     }
 
+    // ── Admin: computed views (derived from existing duty records, no new storage) ──
+    if (url.pathname.includes("admin/customers")) {
+      return addSecurityHeaders(await withRateLimit(request, env, ctx, "admin-customers", () => handleCustomersList(request, env, allowOrigin), allowOrigin))
+    }
+    if (url.pathname.includes("admin/payments")) {
+      return addSecurityHeaders(await withRateLimit(request, env, ctx, "admin-payments", () => handlePaymentsList(request, env, allowOrigin), allowOrigin))
+    }
+
+    // ── Admin: vehicles (simple reference list, admin-managed) ──────────────
+    if (url.pathname.includes("vehicle/create")) {
+      return addSecurityHeaders(await withRateLimit(request, env, ctx, "vehicle-create", () => handleVehicleCreate(request, env, allowOrigin), allowOrigin))
+    }
+    if (url.pathname.includes("vehicle/list")) {
+      return addSecurityHeaders(await withRateLimit(request, env, ctx, "vehicle-list", () => handleVehicleList(request, env, allowOrigin), allowOrigin))
+    }
+    if (url.pathname.includes("vehicle/delete")) {
+      return addSecurityHeaders(await withRateLimit(request, env, ctx, "vehicle-delete", () => handleVehicleDelete(request, env, allowOrigin), allowOrigin))
+    }
+
+    // ── Admin: routes (simple reference list, admin-managed, NOT wired to live fare calc) ──
+    if (url.pathname.includes("route/create")) {
+      return addSecurityHeaders(await withRateLimit(request, env, ctx, "route-create", () => handleRouteCreate(request, env, allowOrigin), allowOrigin))
+    }
+    if (url.pathname.includes("route/list")) {
+      return addSecurityHeaders(await withRateLimit(request, env, ctx, "route-list", () => handleRouteList(request, env, allowOrigin), allowOrigin))
+    }
+    if (url.pathname.includes("route/delete")) {
+      return addSecurityHeaders(await withRateLimit(request, env, ctx, "route-delete", () => handleRouteDelete(request, env, allowOrigin), allowOrigin))
+    }
+
+    // ── Admin: coupons (stored + manageable, NOT yet validated at checkout) ──
+    if (url.pathname.includes("coupon/create")) {
+      return addSecurityHeaders(await withRateLimit(request, env, ctx, "coupon-create", () => handleCouponCreate(request, env, allowOrigin), allowOrigin))
+    }
+    if (url.pathname.includes("coupon/list")) {
+      return addSecurityHeaders(await withRateLimit(request, env, ctx, "coupon-list", () => handleCouponList(request, env, allowOrigin), allowOrigin))
+    }
+    if (url.pathname.includes("coupon/update")) {
+      return addSecurityHeaders(await withRateLimit(request, env, ctx, "coupon-update", () => handleCouponUpdate(request, env, allowOrigin), allowOrigin))
+    }
+    if (url.pathname.includes("coupon/delete")) {
+      return addSecurityHeaders(await withRateLimit(request, env, ctx, "coupon-delete", () => handleCouponDelete(request, env, allowOrigin), allowOrigin))
+    }
+
+    // ── Admin: refunds (manual admin-logged refund requests, no customer-facing flow yet) ──
+    if (url.pathname.includes("refund/create")) {
+      return addSecurityHeaders(await withRateLimit(request, env, ctx, "refund-create", () => handleRefundCreate(request, env, allowOrigin), allowOrigin))
+    }
+    if (url.pathname.includes("refund/list")) {
+      return addSecurityHeaders(await withRateLimit(request, env, ctx, "refund-list", () => handleRefundList(request, env, allowOrigin), allowOrigin))
+    }
+    if (url.pathname.includes("refund/update")) {
+      return addSecurityHeaders(await withRateLimit(request, env, ctx, "refund-update", () => handleRefundUpdate(request, env, allowOrigin), allowOrigin))
+    }
+
+    // ── Admin: settings (pricing rates + GST config — persisted, not yet wired
+    // into the live public booking-form fare calculation) ───────────────────
+    if (url.pathname.includes("settings/pricing")) {
+      return addSecurityHeaders(await withRateLimit(request, env, ctx, "settings-pricing", () => handlePricingSettings(request, env, allowOrigin), allowOrigin))
+    }
+
+    // ── Admin: GST summary report (derived from existing duty records) ──────
+    if (url.pathname.includes("admin/gst-summary")) {
+      return addSecurityHeaders(await withRateLimit(request, env, ctx, "gst-summary", () => handleGstSummary(request, env, allowOrigin), allowOrigin))
+    }
+
+    // ── Admin: dashboard stats + analytics (derived from existing duty/driver records) ──
+    if (url.pathname.includes("admin/dashboard-stats")) {
+      return addSecurityHeaders(await withRateLimit(request, env, ctx, "dashboard-stats", () => handleDashboardStats(request, env, allowOrigin), allowOrigin))
+    }
+    if (url.pathname.includes("admin/analytics")) {
+      return addSecurityHeaders(await withRateLimit(request, env, ctx, "analytics", () => handleAnalytics(request, env, allowOrigin), allowOrigin))
+    }
+
     // 2. Distance Matrix endpoint — used by booking modal to get road distance + ETA
     if (url.pathname.includes("distance")) {
       return addSecurityHeaders(await withRateLimit(request, env, ctx, "distance", () => handleDistance(request, url, env, allowOrigin), allowOrigin))
@@ -506,14 +580,21 @@ async function handleBookingNotify(request, env, allowOrigin) {
   // {{1}} Payment status   {{2}} Booking ID   {{3}} Name      {{4}} Phone
   // {{5}} Vehicle          {{6}} Trip type    {{7}} Pickup    {{8}} Drop
   // {{9}} Trip timing      {{10}} Paid amt    {{11}} Due amt  {{12}} Support number
-  const paymentStatus = b.type === "payment" ? "Payment Completed" : "Payment Pending";
+  const isPaymentDone = b.type === "payment";
+  const paymentStatus = isPaymentDone ? "Payment Completed" : "Payment Pending";
   const isRoundTrip= b.tripType === "roundtrip";
   const pickupLoc  = `${b.from || "—"}${stops.length ? " → " + stops.join(" → ") : ""}`;
   const dropLoc    = isRoundTrip ? "Same as pickup (round trip)" : (b.to || "—");
   const vehicleType= b.vehicle || "—";
   const tripType   = isRoundTrip ? "Round Trip" : "One Way";
-  const paidAmt    = `₹${Number(b.payAmt || b.advance || 0).toLocaleString("en-IN")}`;
-  const dueAmt     = `₹${Number((b.fare || 0) - (b.payAmt || b.advance || 0)).toLocaleString("en-IN")}`;
+  // Before payment actually completes, nothing has been paid yet — b.advance
+  // at that point is the INTENDED amount the customer is about to pay, not
+  // money already received, so it must not be shown as "Paid". Only the
+  // post-payment call (type:"payment", carrying payAmt from a real Razorpay
+  // success) reflects money actually collected.
+  const actuallyPaid = isPaymentDone ? Number(b.payAmt || b.advance || 0) : 0;
+  const paidAmt    = `₹${actuallyPaid.toLocaleString("en-IN")}`;
+  const dueAmt     = `₹${Number((b.fare || 0) - actuallyPaid).toLocaleString("en-IN")}`;
   const tripTiming = isRoundTrip && b.retdate
     ? `${b.date || "—"} ${b.time || ""}`.trim() + ` → Return ${b.retdate}`
     : `${b.date || "—"} ${b.time || ""}`.trim();
@@ -990,6 +1071,15 @@ async function addToIndex(env, key, id) {
 }
 __name(addToIndex, "addToIndex");
 
+async function removeFromIndex(env, key, id) {
+  const list = await readIndex(env, key);
+  const filtered = list.filter(x => x !== id);
+  if (filtered.length !== list.length) {
+    await env.CRM_KV.put(key, JSON.stringify(filtered));
+  }
+}
+__name(removeFromIndex, "removeFromIndex");
+
 // ── Admin login ───────────────────────────────────────────────────────────────
 async function handleAdminLogin(request, env, allowOrigin) {
   if (request.method !== "POST") return jsonResponse({ error: "Method not allowed" }, 405, allowOrigin);
@@ -1005,7 +1095,14 @@ async function handleAdminLogin(request, env, allowOrigin) {
   const raw = await env.CRM_KV.get(`admin:${username}`);
   if (!raw) return jsonResponse({ error: "Invalid username or password" }, 401, allowOrigin);
 
-  const user = JSON.parse(raw);
+  let user;
+  try {
+    user = JSON.parse(raw);
+  } catch (err) {
+    // Don't log the raw value here — it contains the password hash/salt.
+    console.error("Admin login: stored record for", username, "failed to parse:", err.message);
+    return jsonResponse({ error: "Account data is corrupted. Contact support." }, 500, allowOrigin);
+  }
   const ok = await verifyPassword(password, user.salt, user.hash);
   if (!ok) return jsonResponse({ error: "Invalid username or password" }, 401, allowOrigin);
 
@@ -1029,7 +1126,13 @@ async function handleDriverLogin(request, env, allowOrigin) {
   const raw = await env.CRM_KV.get(`driver:${phone}`);
   if (!raw) return jsonResponse({ error: "Invalid phone or password" }, 401, allowOrigin);
 
-  const driver = JSON.parse(raw);
+  let driver;
+  try {
+    driver = JSON.parse(raw);
+  } catch (err) {
+    console.error("Driver login: stored record for", phone, "failed to parse:", err.message);
+    return jsonResponse({ error: "Account data is corrupted. Contact support." }, 500, allowOrigin);
+  }
   if (driver.active === false) return jsonResponse({ error: "This driver account is disabled" }, 403, allowOrigin);
 
   const ok = await verifyPassword(password, driver.salt, driver.hash);
@@ -1065,7 +1168,26 @@ __name(handleMe, "handleMe");
 async function saveDutyFromBooking(env, b) {
   const id = String(b.id);
   const existingRaw = await env.CRM_KV.get(`duty:${id}`);
-  if (existingRaw) return JSON.parse(existingRaw); // already stored, don't clobber assignment state
+  const isPaymentDone = b.type === "payment";
+  // Only the post-payment call (type:"payment") reflects money actually
+  // collected. The pre-payment call's b.advance is the INTENDED amount the
+  // customer is about to pay — recording that as paid would make a duty
+  // look paid even if the customer abandons checkout and never pays at all.
+  const actuallyPaid = isPaymentDone ? Number(b.payAmt || b.advance || 0) : 0;
+
+  if (existingRaw) {
+    // Duty already exists (created by the earlier pre-payment call). Keep
+    // its assignment/status state intact, but DO update the payment fields
+    // once the real post-payment call comes in — otherwise a booking that's
+    // genuinely paid would be stuck showing ₹0 paid forever.
+    const existing = JSON.parse(existingRaw);
+    if (isPaymentDone && actuallyPaid > existing.advance) {
+      existing.advance = actuallyPaid;
+      existing.paymentId = sanitizeString(b.paymentId || "", 60) || existing.paymentId || null;
+      await env.CRM_KV.put(`duty:${id}`, JSON.stringify(existing));
+    }
+    return existing;
+  }
 
   const stops = Array.isArray(b.extraCities) ? b.extraCities.filter(c => String(c || "").trim()) : [];
   const duty = {
@@ -1078,7 +1200,8 @@ async function saveDutyFromBooking(env, b) {
     date: sanitizeString(b.date, 30),
     time: sanitizeString(b.time, 30),
     fare: Number(b.fare || 0),
-    advance: Number(b.payAmt || b.advance || 0),
+    advance: actuallyPaid,
+    paymentId: sanitizeString(b.paymentId || "", 60) || null,
     vehicleType: sanitizeString(b.vehicleType || b.cabType || b.vehicle || "", 60),
     tripType: b.tripType === "roundtrip" ? "roundtrip" : "oneway",
     retdate: sanitizeString(b.retdate || "", 30),
@@ -1089,6 +1212,7 @@ async function saveDutyFromBooking(env, b) {
     vehicleNumber: null,
     createdAt: Date.now(),
     assignedAt: null,
+    reviewRequestSent: false,
     source: "website"
   };
   await env.CRM_KV.put(`duty:${id}`, JSON.stringify(duty));
@@ -1115,7 +1239,11 @@ async function handleDutyCreate(request, env, allowOrigin) {
     return jsonResponse({ error: "name, phone, from and to are required" }, 400, allowOrigin);
   }
 
-  const id = "M" + Date.now().toString(36).toUpperCase(); // M-prefixed so it's visually distinct from website IDs
+  // NOTE: previously used Date.now().toString(36), but that collides when two
+  // duties are created within the same millisecond (e.g. rapid admin clicks,
+  // or concurrent requests), silently overwriting one booking with another.
+  // generateToken() uses real randomness instead, so this can't happen.
+  const id = "M" + generateToken().slice(0, 10).toUpperCase();
   const duty = {
     id,
     name,
@@ -1135,6 +1263,7 @@ async function handleDutyCreate(request, env, allowOrigin) {
     vehicleNumber: null,
     createdAt: Date.now(),
     assignedAt: null,
+    reviewRequestSent: false,
     source: "manual"
   };
   await env.CRM_KV.put(`duty:${id}`, JSON.stringify(duty));
@@ -1189,11 +1318,68 @@ async function handleDutyStatus(request, env, allowOrigin) {
     if (!["ongoing", "completed"].includes(newStatus)) return jsonResponse({ error: "Not allowed" }, 403, allowOrigin);
   }
 
+  const wasAlreadyCompleted = duty.status === "completed";
   duty.status = newStatus;
+
+  // Fire a Google-review request the moment a trip is freshly marked
+  // completed (not on every subsequent status write once it's already
+  // completed, and not blocking the response if WhatsApp is slow/down).
+  let reviewRequestSent = duty.reviewRequestSent || false;
+  if (newStatus === "completed" && !wasAlreadyCompleted && !duty.reviewRequestSent) {
+    reviewRequestSent = await sendReviewRequest(env, duty).catch(err => {
+      console.error("Review request send failed:", err.message);
+      return false;
+    });
+    duty.reviewRequestSent = reviewRequestSent;
+  }
+
   await env.CRM_KV.put(`duty:${dutyId}`, JSON.stringify(duty));
-  return jsonResponse({ duty }, 200, allowOrigin);
+  return jsonResponse({ duty, reviewRequestSent }, 200, allowOrigin);
 }
 __name(handleDutyStatus, "handleDutyStatus");
+
+// ── Send a Google-review request to the customer right after their trip is
+// marked completed. Uses a dedicated template since this is a distinct
+// message (post-trip, asking for a review) from the payment/assignment
+// alerts. GOOGLE_REVIEW_LINK defaults to a placeholder until the real Google
+// Business review link is set as a Worker secret. ───────────────────────────
+async function sendReviewRequest(env, duty) {
+  const accessToken   = env.WHATSAPP_ACCESS_TOKEN;
+  const phoneNumberId = env.WHATSAPP_PHONE_NUMBER_ID;
+  if (!accessToken || !phoneNumberId || !duty.phone) return false;
+
+  const reviewTemplate = env.WHATSAPP_REVIEW_REQUEST_TEMPLATE_NAME || "oneway_review_request";
+  const reviewLink = env.GOOGLE_REVIEW_LINK || "https://g.page/r/REPLACE_WITH_REAL_LINK/review";
+  const customerNumber = `91${duty.phone}`;
+
+  const payload = {
+    messaging_product: "whatsapp", to: customerNumber, type: "template",
+    template: { name: reviewTemplate, language: { code: "en" }, components: [{ type: "body", parameters: [
+      { type: "text", text: String(duty.name || "there") },
+      { type: "text", text: String(duty.id) },
+      { type: "text", text: reviewLink }
+    ]}]}
+  };
+
+  try {
+    const waRes = await fetch(`https://graph.facebook.com/${WHATSAPP_API_VERSION}/${phoneNumberId}/messages`, {
+      method: "POST",
+      headers: { "Authorization": `Bearer ${accessToken}`, "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    const waData = await waRes.json();
+    if (waRes.ok && waData?.messages?.[0]?.id) {
+      console.log("Review request sent — id:", waData.messages[0].id);
+      return true;
+    }
+    console.error("Review request WA failed — code:", waData?.error?.code, "| message:", waData?.error?.message);
+    return false;
+  } catch (err) {
+    console.error("Review request WA exception:", err.message);
+    return false;
+  }
+}
+__name(sendReviewRequest, "sendReviewRequest");
 
 // ── THE key feature: assign a driver+vehicle to a duty, then fire all 3
 // WhatsApp notifications (customer, driver, admin) in one shot. ────────────
@@ -1414,6 +1600,534 @@ async function handleDriverUpdate(request, env, allowOrigin) {
   return jsonResponse({ driver: safeDriver }, 200, allowOrigin);
 }
 __name(handleDriverUpdate, "handleDriverUpdate");
+
+// ── Admin: Customers (computed view, derived from duty records) ─────────────
+// No separate customer storage — a "customer" is just the set of distinct
+// phone numbers seen across duties, with trip count and total spend rolled
+// up. Keeps a single source of truth (the duty records) instead of two
+// copies of the same data that could drift out of sync.
+async function handleCustomersList(request, env, allowOrigin) {
+  const auth = await requireRole(env, request, "admin");
+  if (auth.error) return auth.error;
+  if (!env.CRM_KV) return jsonResponse({ error: "CRM not configured" }, 500, allowOrigin);
+
+  const ids = await readIndex(env, "duty-index");
+  const records = await Promise.all(ids.map(id => env.CRM_KV.get(`duty:${id}`)));
+  const duties = records.filter(Boolean).map(r => JSON.parse(r));
+
+  const byPhone = new Map();
+  for (const d of duties) {
+    if (!d.phone) continue;
+    const existing = byPhone.get(d.phone) || {
+      phone: d.phone, name: d.name, trips: 0, spent: 0, firstSeen: d.createdAt, lastSeen: d.createdAt
+    };
+    existing.trips += 1;
+    existing.spent += Number(d.advance || 0);
+    // Only adopt this duty's name if it's genuinely the most recent one seen
+    // so far — duty-index order isn't a reliable proxy for "most recent"
+    // once any one of several KV reads races or the index gets rebuilt.
+    if (d.name && d.createdAt >= existing.lastSeen) existing.name = d.name;
+    if (d.createdAt < existing.firstSeen) existing.firstSeen = d.createdAt;
+    if (d.createdAt > existing.lastSeen) existing.lastSeen = d.createdAt;
+    byPhone.set(d.phone, existing);
+  }
+
+  const customers = [...byPhone.values()].sort((a, b) => b.lastSeen - a.lastSeen);
+  return jsonResponse({ customers }, 200, allowOrigin);
+}
+__name(handleCustomersList, "handleCustomersList");
+
+// ── Admin: Payments (computed view, derived from duty records) ──────────────
+async function handlePaymentsList(request, env, allowOrigin) {
+  const auth = await requireRole(env, request, "admin");
+  if (auth.error) return auth.error;
+  if (!env.CRM_KV) return jsonResponse({ error: "CRM not configured" }, 500, allowOrigin);
+
+  const ids = await readIndex(env, "duty-index");
+  const records = await Promise.all(ids.map(id => env.CRM_KV.get(`duty:${id}`)));
+  const duties = records.filter(Boolean).map(r => JSON.parse(r));
+
+  const payments = duties
+    .filter(d => Number(d.advance || 0) > 0)
+    .map(d => ({
+      bookingId: d.id,
+      customerName: d.name,
+      customerPhone: d.phone,
+      amount: Number(d.advance || 0),
+      fare: Number(d.fare || 0),
+      due: Math.max(0, Number(d.fare || 0) - Number(d.advance || 0)),
+      status: d.status === "cancelled" ? "refund_pending" : "paid",
+      date: d.createdAt
+    }))
+    .sort((a, b) => b.date - a.date);
+
+  return jsonResponse({ payments }, 200, allowOrigin);
+}
+__name(handlePaymentsList, "handlePaymentsList");
+
+// ── Admin: Vehicles (simple reference list — name, capacity, icon) ──────────
+async function handleVehicleCreate(request, env, allowOrigin) {
+  const auth = await requireRole(env, request, "admin");
+  if (auth.error) return auth.error;
+  if (!env.CRM_KV) return jsonResponse({ error: "CRM not configured" }, 500, allowOrigin);
+
+  let body;
+  try { body = await request.json(); } catch { return jsonResponse({ error: "Invalid JSON" }, 400, allowOrigin); }
+
+  const name = sanitizeString(body.name, 60);
+  if (!name) return jsonResponse({ error: "Vehicle name is required" }, 400, allowOrigin);
+
+  const id = "veh_" + generateToken().slice(0, 12);
+  const vehicle = {
+    id,
+    name,
+    capacity: sanitizeString(body.capacity, 20) || "—",
+    icon: sanitizeString(body.icon, 8) || "🚗",
+    notes: sanitizeString(body.notes, 200) || "",
+    createdAt: Date.now()
+  };
+  await env.CRM_KV.put(`vehicle:${id}`, JSON.stringify(vehicle));
+  await addToIndex(env, "vehicle-index", id);
+  return jsonResponse({ vehicle }, 200, allowOrigin);
+}
+__name(handleVehicleCreate, "handleVehicleCreate");
+
+async function handleVehicleList(request, env, allowOrigin) {
+  const auth = await requireRole(env, request, "admin");
+  if (auth.error) return auth.error;
+  if (!env.CRM_KV) return jsonResponse({ error: "CRM not configured" }, 500, allowOrigin);
+
+  const ids = await readIndex(env, "vehicle-index");
+  const records = await Promise.all(ids.map(id => env.CRM_KV.get(`vehicle:${id}`)));
+  const vehicles = records.filter(Boolean).map(r => JSON.parse(r));
+  return jsonResponse({ vehicles }, 200, allowOrigin);
+}
+__name(handleVehicleList, "handleVehicleList");
+
+async function handleVehicleDelete(request, env, allowOrigin) {
+  const auth = await requireRole(env, request, "admin");
+  if (auth.error) return auth.error;
+  if (!env.CRM_KV) return jsonResponse({ error: "CRM not configured" }, 500, allowOrigin);
+
+  let body;
+  try { body = await request.json(); } catch { return jsonResponse({ error: "Invalid JSON" }, 400, allowOrigin); }
+  const id = sanitizeString(body.id, 40);
+  if (!id) return jsonResponse({ error: "Vehicle id is required" }, 400, allowOrigin);
+
+  await env.CRM_KV.delete(`vehicle:${id}`);
+  await removeFromIndex(env, "vehicle-index", id);
+  return jsonResponse({ deleted: true }, 200, allowOrigin);
+}
+__name(handleVehicleDelete, "handleVehicleDelete");
+
+// ── Admin: Routes (simple reference list — from/to/distance, NOT wired to
+// live fare calculation on the public booking form) ──────────────────────────
+async function handleRouteCreate(request, env, allowOrigin) {
+  const auth = await requireRole(env, request, "admin");
+  if (auth.error) return auth.error;
+  if (!env.CRM_KV) return jsonResponse({ error: "CRM not configured" }, 500, allowOrigin);
+
+  let body;
+  try { body = await request.json(); } catch { return jsonResponse({ error: "Invalid JSON" }, 400, allowOrigin); }
+
+  const from = sanitizeString(body.from, 100);
+  const to = sanitizeString(body.to, 100);
+  if (!from || !to) return jsonResponse({ error: "Both from and to cities are required" }, 400, allowOrigin);
+
+  const id = "route_" + generateToken().slice(0, 12);
+  const route = {
+    id,
+    from,
+    to,
+    distanceKm: Number(body.distanceKm) > 0 ? Number(body.distanceKm) : null,
+    notes: sanitizeString(body.notes, 200) || "",
+    createdAt: Date.now()
+  };
+  await env.CRM_KV.put(`route:${id}`, JSON.stringify(route));
+  await addToIndex(env, "route-index", id);
+  return jsonResponse({ route }, 200, allowOrigin);
+}
+__name(handleRouteCreate, "handleRouteCreate");
+
+async function handleRouteList(request, env, allowOrigin) {
+  const auth = await requireRole(env, request, "admin");
+  if (auth.error) return auth.error;
+  if (!env.CRM_KV) return jsonResponse({ error: "CRM not configured" }, 500, allowOrigin);
+
+  const ids = await readIndex(env, "route-index");
+  const records = await Promise.all(ids.map(id => env.CRM_KV.get(`route:${id}`)));
+  const routes = records.filter(Boolean).map(r => JSON.parse(r));
+  return jsonResponse({ routes }, 200, allowOrigin);
+}
+__name(handleRouteList, "handleRouteList");
+
+async function handleRouteDelete(request, env, allowOrigin) {
+  const auth = await requireRole(env, request, "admin");
+  if (auth.error) return auth.error;
+  if (!env.CRM_KV) return jsonResponse({ error: "CRM not configured" }, 500, allowOrigin);
+
+  let body;
+  try { body = await request.json(); } catch { return jsonResponse({ error: "Invalid JSON" }, 400, allowOrigin); }
+  const id = sanitizeString(body.id, 40);
+  if (!id) return jsonResponse({ error: "Route id is required" }, 400, allowOrigin);
+
+  await env.CRM_KV.delete(`route:${id}`);
+  await removeFromIndex(env, "route-index", id);
+  return jsonResponse({ deleted: true }, 200, allowOrigin);
+}
+__name(handleRouteDelete, "handleRouteDelete");
+
+// ── Admin: Coupons (stored + manageable — NOT yet validated at checkout;
+// wiring this into the live payment flow is a separate follow-up task) ───────
+async function handleCouponCreate(request, env, allowOrigin) {
+  const auth = await requireRole(env, request, "admin");
+  if (auth.error) return auth.error;
+  if (!env.CRM_KV) return jsonResponse({ error: "CRM not configured" }, 500, allowOrigin);
+
+  let body;
+  try { body = await request.json(); } catch { return jsonResponse({ error: "Invalid JSON" }, 400, allowOrigin); }
+
+  const code = sanitizeString(body.code, 30).toUpperCase().replace(/\s+/g, "");
+  if (!code) return jsonResponse({ error: "Coupon code is required" }, 400, allowOrigin);
+  const discountPercent = Number(body.discountPercent);
+  if (!discountPercent || discountPercent <= 0 || discountPercent > 100) {
+    return jsonResponse({ error: "discountPercent must be between 1 and 100" }, 400, allowOrigin);
+  }
+
+  const existing = await env.CRM_KV.get(`coupon:${code}`);
+  if (existing) return jsonResponse({ error: "A coupon with this code already exists" }, 409, allowOrigin);
+
+  const coupon = {
+    code,
+    discountPercent,
+    expiresAt: sanitizeString(body.expiresAt, 30) || null,
+    active: true,
+    notes: sanitizeString(body.notes, 200) || "",
+    createdAt: Date.now()
+  };
+  await env.CRM_KV.put(`coupon:${code}`, JSON.stringify(coupon));
+  await addToIndex(env, "coupon-index", code);
+  return jsonResponse({ coupon }, 200, allowOrigin);
+}
+__name(handleCouponCreate, "handleCouponCreate");
+
+async function handleCouponList(request, env, allowOrigin) {
+  const auth = await requireRole(env, request, "admin");
+  if (auth.error) return auth.error;
+  if (!env.CRM_KV) return jsonResponse({ error: "CRM not configured" }, 500, allowOrigin);
+
+  const codes = await readIndex(env, "coupon-index");
+  const records = await Promise.all(codes.map(c => env.CRM_KV.get(`coupon:${c}`)));
+  const coupons = records.filter(Boolean).map(r => JSON.parse(r));
+  return jsonResponse({ coupons }, 200, allowOrigin);
+}
+__name(handleCouponList, "handleCouponList");
+
+async function handleCouponUpdate(request, env, allowOrigin) {
+  const auth = await requireRole(env, request, "admin");
+  if (auth.error) return auth.error;
+  if (!env.CRM_KV) return jsonResponse({ error: "CRM not configured" }, 500, allowOrigin);
+
+  let body;
+  try { body = await request.json(); } catch { return jsonResponse({ error: "Invalid JSON" }, 400, allowOrigin); }
+  const code = sanitizeString(body.code, 30).toUpperCase();
+  if (!code) return jsonResponse({ error: "Coupon code is required" }, 400, allowOrigin);
+
+  const raw = await env.CRM_KV.get(`coupon:${code}`);
+  if (!raw) return jsonResponse({ error: "Coupon not found" }, 404, allowOrigin);
+
+  let coupon;
+  try { coupon = JSON.parse(raw); }
+  catch (err) {
+    console.error("Coupon update: stored record for", code, "failed to parse:", err.message);
+    return jsonResponse({ error: "Coupon data is corrupted. Contact support." }, 500, allowOrigin);
+  }
+
+  if (typeof body.active === "boolean") coupon.active = body.active;
+  if (Number(body.discountPercent) > 0 && Number(body.discountPercent) <= 100) coupon.discountPercent = Number(body.discountPercent);
+  if (body.expiresAt !== undefined) coupon.expiresAt = sanitizeString(body.expiresAt, 30) || null;
+
+  await env.CRM_KV.put(`coupon:${code}`, JSON.stringify(coupon));
+  return jsonResponse({ coupon }, 200, allowOrigin);
+}
+__name(handleCouponUpdate, "handleCouponUpdate");
+
+async function handleCouponDelete(request, env, allowOrigin) {
+  const auth = await requireRole(env, request, "admin");
+  if (auth.error) return auth.error;
+  if (!env.CRM_KV) return jsonResponse({ error: "CRM not configured" }, 500, allowOrigin);
+
+  let body;
+  try { body = await request.json(); } catch { return jsonResponse({ error: "Invalid JSON" }, 400, allowOrigin); }
+  const code = sanitizeString(body.code, 30).toUpperCase();
+  if (!code) return jsonResponse({ error: "Coupon code is required" }, 400, allowOrigin);
+
+  await env.CRM_KV.delete(`coupon:${code}`);
+  await removeFromIndex(env, "coupon-index", code);
+  return jsonResponse({ deleted: true }, 200, allowOrigin);
+}
+__name(handleCouponDelete, "handleCouponDelete");
+
+// ── Admin: Refunds (manual admin-logged refund tracking — there is no
+// customer-facing "request a refund" flow yet; admin logs these directly
+// after handling a refund conversation with the customer some other way) ────
+async function handleRefundCreate(request, env, allowOrigin) {
+  const auth = await requireRole(env, request, "admin");
+  if (auth.error) return auth.error;
+  if (!env.CRM_KV) return jsonResponse({ error: "CRM not configured" }, 500, allowOrigin);
+
+  let body;
+  try { body = await request.json(); } catch { return jsonResponse({ error: "Invalid JSON" }, 400, allowOrigin); }
+
+  const bookingId = sanitizeString(body.bookingId, 40);
+  const amount = Number(body.amount);
+  if (!bookingId || !amount || amount <= 0) {
+    return jsonResponse({ error: "bookingId and a positive amount are required" }, 400, allowOrigin);
+  }
+
+  const id = "refund_" + generateToken().slice(0, 12);
+  const refund = {
+    id,
+    bookingId,
+    customerName: sanitizeString(body.customerName, 120) || "",
+    customerPhone: validatePhone(body.customerPhone) || "",
+    amount,
+    reason: sanitizeString(body.reason, 300) || "",
+    status: "pending",
+    createdAt: Date.now(),
+    resolvedAt: null
+  };
+  await env.CRM_KV.put(`refund:${id}`, JSON.stringify(refund));
+  await addToIndex(env, "refund-index", id);
+  return jsonResponse({ refund }, 200, allowOrigin);
+}
+__name(handleRefundCreate, "handleRefundCreate");
+
+async function handleRefundList(request, env, allowOrigin) {
+  const auth = await requireRole(env, request, "admin");
+  if (auth.error) return auth.error;
+  if (!env.CRM_KV) return jsonResponse({ error: "CRM not configured" }, 500, allowOrigin);
+
+  const ids = await readIndex(env, "refund-index");
+  const records = await Promise.all(ids.map(id => env.CRM_KV.get(`refund:${id}`)));
+  const refunds = records.filter(Boolean).map(r => JSON.parse(r)).sort((a, b) => b.createdAt - a.createdAt);
+  return jsonResponse({ refunds }, 200, allowOrigin);
+}
+__name(handleRefundList, "handleRefundList");
+
+async function handleRefundUpdate(request, env, allowOrigin) {
+  const auth = await requireRole(env, request, "admin");
+  if (auth.error) return auth.error;
+  if (!env.CRM_KV) return jsonResponse({ error: "CRM not configured" }, 500, allowOrigin);
+
+  let body;
+  try { body = await request.json(); } catch { return jsonResponse({ error: "Invalid JSON" }, 400, allowOrigin); }
+  const id = sanitizeString(body.id, 40);
+  if (!id) return jsonResponse({ error: "Refund id is required" }, 400, allowOrigin);
+  if (!["pending", "processed", "rejected"].includes(body.status)) {
+    return jsonResponse({ error: "status must be pending, processed, or rejected" }, 400, allowOrigin);
+  }
+
+  const raw = await env.CRM_KV.get(`refund:${id}`);
+  if (!raw) return jsonResponse({ error: "Refund not found" }, 404, allowOrigin);
+
+  let refund;
+  try { refund = JSON.parse(raw); }
+  catch (err) {
+    console.error("Refund update: stored record for", id, "failed to parse:", err.message);
+    return jsonResponse({ error: "Refund data is corrupted. Contact support." }, 500, allowOrigin);
+  }
+
+  refund.status = body.status;
+  refund.resolvedAt = body.status === "pending" ? null : Date.now();
+  await env.CRM_KV.put(`refund:${id}`, JSON.stringify(refund));
+  return jsonResponse({ refund }, 200, allowOrigin);
+}
+__name(handleRefundUpdate, "handleRefundUpdate");
+
+// ── Admin: Pricing settings (persisted rate table — saved/loaded for real,
+// but NOT yet wired into the live public booking-form fare calculation.
+// Wiring it in is a separate follow-up since it touches the customer-facing
+// fare logic in index.html/main.js.) ──────────────────────────────────────────
+async function handlePricingSettings(request, env, allowOrigin) {
+  if (request.method === "GET") {
+    const auth = await requireRole(env, request, "admin");
+    if (auth.error) return auth.error;
+    if (!env.CRM_KV) return jsonResponse({ error: "CRM not configured" }, 500, allowOrigin);
+
+    const raw = await env.CRM_KV.get("settings:pricing");
+    if (!raw) return jsonResponse({ pricing: null }, 200, allowOrigin);
+    try {
+      return jsonResponse({ pricing: JSON.parse(raw) }, 200, allowOrigin);
+    } catch (err) {
+      console.error("Pricing settings: stored record failed to parse:", err.message);
+      return jsonResponse({ error: "Pricing data is corrupted. Contact support." }, 500, allowOrigin);
+    }
+  }
+
+  if (request.method === "POST") {
+    const auth = await requireRole(env, request, "admin");
+    if (auth.error) return auth.error;
+    if (!env.CRM_KV) return jsonResponse({ error: "CRM not configured" }, 500, allowOrigin);
+
+    let body;
+    try { body = await request.json(); } catch { return jsonResponse({ error: "Invalid JSON" }, 400, allowOrigin); }
+
+    const sanitizeRates = (rates) => {
+      const out = {};
+      if (!rates || typeof rates !== "object") return out;
+      for (const [vehicle, rate] of Object.entries(rates)) {
+        const key = sanitizeString(vehicle, 40);
+        const num = Number(rate);
+        if (key && num > 0) out[key] = num;
+      }
+      return out;
+    };
+
+    const pricing = {
+      oneWay: sanitizeRates(body.oneWay),
+      roundTrip: sanitizeRates(body.roundTrip),
+      updatedAt: Date.now()
+    };
+    await env.CRM_KV.put("settings:pricing", JSON.stringify(pricing));
+    return jsonResponse({ pricing }, 200, allowOrigin);
+  }
+
+  return jsonResponse({ error: "Method not allowed" }, 405, allowOrigin);
+}
+__name(handlePricingSettings, "handlePricingSettings");
+
+// ── Admin: GST summary (basic report derived from existing duty records —
+// totals/counts only, NOT a GSTR-1-compliant filing export. Building that
+// would need per-booking tax-rate fields that don't currently exist.) ────────
+async function handleGstSummary(request, env, allowOrigin) {
+  const auth = await requireRole(env, request, "admin");
+  if (auth.error) return auth.error;
+  if (!env.CRM_KV) return jsonResponse({ error: "CRM not configured" }, 500, allowOrigin);
+
+  const ids = await readIndex(env, "duty-index");
+  const records = await Promise.all(ids.map(id => env.CRM_KV.get(`duty:${id}`)));
+  const duties = records.filter(Boolean).map(r => JSON.parse(r));
+
+  const totalCollected = duties.reduce((sum, d) => sum + Number(d.advance || 0), 0);
+  const totalFareValue = duties.reduce((sum, d) => sum + Number(d.fare || 0), 0);
+  const totalPending = totalFareValue - totalCollected;
+  const tripCount = duties.length;
+
+  // Monthly breakdown for a basic report view
+  const byMonth = new Map();
+  for (const d of duties) {
+    const month = new Date(d.createdAt).toISOString().slice(0, 7); // YYYY-MM
+    const existing = byMonth.get(month) || { month, trips: 0, collected: 0 };
+    existing.trips += 1;
+    existing.collected += Number(d.advance || 0);
+    byMonth.set(month, existing);
+  }
+  const monthly = [...byMonth.values()].sort((a, b) => a.month.localeCompare(b.month));
+
+  return jsonResponse({
+    summary: { totalCollected, totalFareValue, totalPending, tripCount },
+    monthly,
+    note: "This is a basic summary derived from booking records, not a GSTR-1-compliant filing export."
+  }, 200, allowOrigin);
+}
+__name(handleGstSummary, "handleGstSummary");
+
+// ── Admin: Dashboard stats (top stat cards — real numbers, derived from
+// duty/driver records). "Customer Rating" has no real data source anywhere
+// in this system (no review/star-rating storage exists), so it's replaced
+// with a count of Google-review requests actually sent after completed
+// trips, rather than showing a fabricated average. ──────────────────────────
+async function handleDashboardStats(request, env, allowOrigin) {
+  const auth = await requireRole(env, request, "admin");
+  if (auth.error) return auth.error;
+  if (!env.CRM_KV) return jsonResponse({ error: "CRM not configured" }, 500, allowOrigin);
+
+  const dutyIds = await readIndex(env, "duty-index");
+  const dutyRecords = await Promise.all(dutyIds.map(id => env.CRM_KV.get(`duty:${id}`)));
+  const duties = dutyRecords.filter(Boolean).map(r => JSON.parse(r));
+
+  const driverIds = await readIndex(env, "driver-index");
+  const driverRecords = await Promise.all(driverIds.map(id => env.CRM_KV.get(`driver:${id}`)));
+  const drivers = driverRecords.filter(Boolean).map(r => JSON.parse(r));
+
+  const now = new Date();
+  const thisMonthKey = now.toISOString().slice(0, 7);
+  const lastMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const lastMonthKey = lastMonthDate.toISOString().slice(0, 7);
+
+  const monthKeyOf = (ts) => new Date(ts).toISOString().slice(0, 7);
+  const thisMonthDuties = duties.filter(d => monthKeyOf(d.createdAt) === thisMonthKey);
+  const lastMonthDuties = duties.filter(d => monthKeyOf(d.createdAt) === lastMonthKey);
+
+  const revenueThisMonth = thisMonthDuties.reduce((s, d) => s + Number(d.advance || 0), 0);
+  const revenueLastMonth = lastMonthDuties.reduce((s, d) => s + Number(d.advance || 0), 0);
+  const bookingsPctChange = lastMonthDuties.length > 0
+    ? Math.round(((thisMonthDuties.length - lastMonthDuties.length) / lastMonthDuties.length) * 100)
+    : null;
+  const revenuePctChange = revenueLastMonth > 0
+    ? Math.round(((revenueThisMonth - revenueLastMonth) / revenueLastMonth) * 100)
+    : null;
+
+  const activeDrivers = drivers.filter(d => d.active !== false).length;
+  const newDriversThisWeek = drivers.filter(d => d.createdAt && (now.getTime() - d.createdAt) < 7 * 24 * 60 * 60 * 1000).length;
+
+  const reviewRequestsSent = duties.filter(d => d.reviewRequestSent).length;
+  const completedTrips = duties.filter(d => d.status === "completed").length;
+
+  return jsonResponse({
+    totalBookings: duties.length,
+    bookingsPctChange,
+    revenueThisMonth,
+    revenuePctChange,
+    activeDrivers,
+    newDriversThisWeek,
+    reviewRequestsSent,
+    completedTrips
+  }, 200, allowOrigin);
+}
+__name(handleDashboardStats, "handleDashboardStats");
+
+// ── Admin: Analytics (monthly trend + vehicle-type distribution, derived
+// from duty records). ────────────────────────────────────────────────────────
+async function handleAnalytics(request, env, allowOrigin) {
+  const auth = await requireRole(env, request, "admin");
+  if (auth.error) return auth.error;
+  if (!env.CRM_KV) return jsonResponse({ error: "CRM not configured" }, 500, allowOrigin);
+
+  const ids = await readIndex(env, "duty-index");
+  const records = await Promise.all(ids.map(id => env.CRM_KV.get(`duty:${id}`)));
+  const duties = records.filter(Boolean).map(r => JSON.parse(r));
+
+  // Last 6 months of booking counts, oldest to newest, including months
+  // with zero bookings so the chart doesn't silently skip gaps.
+  const now = new Date();
+  const months = [];
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    months.push({ key: d.toISOString().slice(0, 7), label: d.toLocaleDateString("en-IN", { month: "short" }) });
+  }
+  const countByMonth = new Map(months.map(m => [m.key, 0]));
+  for (const d of duties) {
+    const key = new Date(d.createdAt).toISOString().slice(0, 7);
+    if (countByMonth.has(key)) countByMonth.set(key, countByMonth.get(key) + 1);
+  }
+  const monthlyBookings = months.map(m => ({ month: m.label, count: countByMonth.get(m.key) }));
+
+  // Distribution by vehicle type, across all duties that have one set.
+  const vehicleCounts = new Map();
+  for (const d of duties) {
+    const v = (d.vehicleType || "Unspecified").trim() || "Unspecified";
+    vehicleCounts.set(v, (vehicleCounts.get(v) || 0) + 1);
+  }
+  const totalWithVehicle = duties.length;
+  const vehicleDistribution = [...vehicleCounts.entries()]
+    .map(([name, count]) => ({ name, count, percent: totalWithVehicle ? Math.round((count / totalWithVehicle) * 100) : 0 }))
+    .sort((a, b) => b.count - a.count);
+
+  return jsonResponse({ monthlyBookings, vehicleDistribution, totalBookings: duties.length }, 200, allowOrigin);
+}
+__name(handleAnalytics, "handleAnalytics");
 
 function jsonResponse(data, status = 200, allowOrigin = null) {
   const headers = {

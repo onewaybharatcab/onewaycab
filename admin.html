@@ -66,10 +66,10 @@
     <!-- DASHBOARD -->
     <div class="panel act" id="pn-dashboard">
       <div class="stats-row">
-        <div class="sc"><div class="sc-icon ic-o">🗓️</div><div><div class="sc-lbl">Total Bookings</div><div class="sc-val">1,248</div><div class="sc-ch">↑ 12% this month</div></div></div>
-        <div class="sc"><div class="sc-icon ic-g">💰</div><div><div class="sc-lbl">Revenue (Month)</div><div class="sc-val">₹3.2L</div><div class="sc-ch">↑ 8% vs last month</div></div></div>
-        <div class="sc"><div class="sc-icon ic-b">🚗</div><div><div class="sc-lbl">Active Drivers</div><div class="sc-val">84</div><div class="sc-ch">↑ 5 new this week</div></div></div>
-        <div class="sc"><div class="sc-icon ic-gd">⭐</div><div><div class="sc-lbl">Customer Rating</div><div class="sc-val">4.8</div><div class="sc-ch">↑ 0.1 this month</div></div></div>
+        <div class="sc"><div class="sc-icon ic-o">🗓️</div><div><div class="sc-lbl">Total Bookings</div><div class="sc-val" id="statTotalBookings">—</div><div class="sc-ch" id="statBookingsChange"></div></div></div>
+        <div class="sc"><div class="sc-icon ic-g">💰</div><div><div class="sc-lbl">Revenue (Month)</div><div class="sc-val" id="statRevenue">—</div><div class="sc-ch" id="statRevenueChange"></div></div></div>
+        <div class="sc"><div class="sc-icon ic-b">🚗</div><div><div class="sc-lbl">Active Drivers</div><div class="sc-val" id="statActiveDrivers">—</div><div class="sc-ch" id="statDriversChange"></div></div></div>
+        <div class="sc"><div class="sc-icon ic-gd">⭐</div><div><div class="sc-lbl">Review Requests Sent</div><div class="sc-val" id="statReviewRequests">—</div><div class="sc-ch" id="statReviewSub"></div></div></div>
       </div>
       <div class="charts-row">
         <div class="chart-card">
@@ -79,23 +79,8 @@
         </div>
         <div class="chart-card">
           <div class="cc-title">Bookings by Vehicle</div>
-          <div class="cc-sub">Current month distribution</div>
-          <div class="donut-wrap">
-            <svg width="110" height="110" viewBox="0 0 110 110">
-              <circle cx="55" cy="55" r="42" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="18"/>
-              <circle cx="55" cy="55" r="42" fill="none" stroke="#F47B00" stroke-width="18" stroke-dasharray="119 146" stroke-dashoffset="0" transform="rotate(-90 55 55)"/>
-              <circle cx="55" cy="55" r="42" fill="none" stroke="#1C3E6A" stroke-width="18" stroke-dasharray="66 199" stroke-dashoffset="-119" transform="rotate(-90 55 55)"/>
-              <circle cx="55" cy="55" r="42" fill="none" stroke="#E8BD3A" stroke-width="18" stroke-dasharray="53 212" stroke-dashoffset="-185" transform="rotate(-90 55 55)"/>
-              <circle cx="55" cy="55" r="42" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="18" stroke-dasharray="27 238" stroke-dashoffset="-238" transform="rotate(-90 55 55)"/>
-              <text x="55" y="59" text-anchor="middle" fill="#fff" font-size="14" font-weight="700" font-family="Cinzel,serif">562</text>
-            </svg>
-            <div class="legend">
-              <div class="leg-item"><div class="leg-dot" style="background:#F47B00"></div><span class="leg-lbl">Sedan</span><span class="leg-val">45%</span></div>
-              <div class="leg-item"><div class="leg-dot" style="background:#1C3E6A"></div><span class="leg-lbl">Innova</span><span class="leg-val">25%</span></div>
-              <div class="leg-item"><div class="leg-dot" style="background:#E8BD3A"></div><span class="leg-lbl">Ertiga</span><span class="leg-val">20%</span></div>
-              <div class="leg-item"><div class="leg-dot" style="background:rgba(255,255,255,.15)"></div><span class="leg-lbl">Tempo Traveller</span><span class="leg-val">10%</span></div>
-            </div>
-          </div>
+          <div class="cc-sub">All-time distribution</div>
+          <div class="donut-wrap" id="donutWrap"></div>
         </div>
       </div>
       <div class="sec-hdr"><div class="sec-title">Recent Bookings</div><button class="btn-sm btn-sf" onclick="showPanel('bookings',null)">View All →</button></div>
@@ -177,6 +162,65 @@
       </div>
     </div>
 
+    <div id="vehicleModal" class="modal-bg" style="display:none">
+      <div class="modal-card">
+        <div class="modal-hdr"><span>Add Vehicle</span> <span class="modal-x" onclick="closeVehicleModal()">×</span></div>
+        <div class="modal-grid">
+          <div><label class="field-label">Vehicle Name</label><input id="vehName" class="finput" style="width:100%;box-sizing:border-box" placeholder="Sedan, Ertiga, Innova Crysta..."></div>
+          <div><label class="field-label">Capacity</label><input id="vehCapacity" class="finput" style="width:100%;box-sizing:border-box" placeholder="4+1, 6+1..."></div>
+          <div><label class="field-label">Icon (emoji)</label><input id="vehIcon" class="finput" style="width:100%;box-sizing:border-box" placeholder="🚗" maxlength="4"></div>
+          <div><label class="field-label">Notes</label><input id="vehNotes" class="finput" style="width:100%;box-sizing:border-box" placeholder="optional"></div>
+        </div>
+        <div id="vehError" style="color:#f87171;font-size:12px;margin:10px 0;display:none"></div>
+        <button class="btn-sm btn-sf" style="width:100%;justify-content:center;padding:11px;margin-top:8px" onclick="submitVehicle()">+ Add Vehicle</button>
+      </div>
+    </div>
+
+    <div id="routeModal" class="modal-bg" style="display:none">
+      <div class="modal-card">
+        <div class="modal-hdr"><span>Add Route</span> <span class="modal-x" onclick="closeRouteModal()">×</span></div>
+        <div class="modal-grid">
+          <div><label class="field-label">From City</label><input id="rtFrom" class="finput" style="width:100%;box-sizing:border-box"></div>
+          <div><label class="field-label">To City</label><input id="rtTo" class="finput" style="width:100%;box-sizing:border-box"></div>
+          <div><label class="field-label">Approx Distance (km)</label><input id="rtDistance" type="number" class="finput" style="width:100%;box-sizing:border-box"></div>
+          <div><label class="field-label">Notes</label><input id="rtNotes" class="finput" style="width:100%;box-sizing:border-box" placeholder="optional"></div>
+        </div>
+        <div id="rtError" style="color:#f87171;font-size:12px;margin:10px 0;display:none"></div>
+        <button class="btn-sm btn-sf" style="width:100%;justify-content:center;padding:11px;margin-top:8px" onclick="submitRoute()">+ Add Route</button>
+      </div>
+    </div>
+
+    <div id="couponModal" class="modal-bg" style="display:none">
+      <div class="modal-card">
+        <div class="modal-hdr"><span>Create Coupon</span> <span class="modal-x" onclick="closeCouponModal()">×</span></div>
+        <div style="font-size:12px;color:rgba(255,255,255,.45);margin-bottom:10px">Note: coupons are stored here but not yet validated automatically at checkout.</div>
+        <div class="modal-grid">
+          <div><label class="field-label">Coupon Code</label><input id="cpnCode" class="finput" style="width:100%;box-sizing:border-box" placeholder="WELCOME10"></div>
+          <div><label class="field-label">Discount %</label><input id="cpnDiscount" type="number" class="finput" style="width:100%;box-sizing:border-box" placeholder="10"></div>
+          <div><label class="field-label">Expires On</label><input id="cpnExpiry" type="date" class="finput" style="width:100%;box-sizing:border-box"></div>
+          <div><label class="field-label">Notes</label><input id="cpnNotes" class="finput" style="width:100%;box-sizing:border-box" placeholder="optional"></div>
+        </div>
+        <div id="cpnError" style="color:#f87171;font-size:12px;margin:10px 0;display:none"></div>
+        <button class="btn-sm btn-sf" style="width:100%;justify-content:center;padding:11px;margin-top:8px" onclick="submitCoupon()">+ Create Coupon</button>
+      </div>
+    </div>
+
+    <div id="refundModal" class="modal-bg" style="display:none">
+      <div class="modal-card">
+        <div class="modal-hdr"><span>Log Refund Request</span> <span class="modal-x" onclick="closeRefundModal()">×</span></div>
+        <div style="font-size:12px;color:rgba(255,255,255,.45);margin-bottom:10px">There's no automatic customer-facing refund request flow yet — log refunds here after handling them directly.</div>
+        <div class="modal-grid">
+          <div><label class="field-label">Booking ID</label><input id="rfBookingId" class="finput" style="width:100%;box-sizing:border-box" placeholder="OWB1234"></div>
+          <div><label class="field-label">Customer Name</label><input id="rfName" class="finput" style="width:100%;box-sizing:border-box"></div>
+          <div><label class="field-label">Customer Phone</label><input id="rfPhone" class="finput" style="width:100%;box-sizing:border-box" maxlength="10"></div>
+          <div><label class="field-label">Refund Amount (₹)</label><input id="rfAmount" type="number" class="finput" style="width:100%;box-sizing:border-box"></div>
+          <div style="grid-column:1/-1"><label class="field-label">Reason</label><input id="rfReason" class="finput" style="width:100%;box-sizing:border-box"></div>
+        </div>
+        <div id="rfError" style="color:#f87171;font-size:12px;margin:10px 0;display:none"></div>
+        <button class="btn-sm btn-sf" style="width:100%;justify-content:center;padding:11px;margin-top:8px" onclick="submitRefund()">+ Log Refund</button>
+      </div>
+    </div>
+
     <!-- CUSTOMERS -->
     <div class="panel" id="pn-customers">
       <div class="sec-hdr"><div class="sec-title">Customer Management</div><button class="btn-sm btn-ol">⬇ Export</button></div>
@@ -190,9 +234,9 @@
     <div class="panel" id="pn-payments">
       <div class="sec-hdr"><div class="sec-title">Payment Records</div><div style="display:flex;gap:8px"><button class="btn-sm btn-ol">⬇ Export</button><button class="btn-sm btn-sf">GST Report</button></div></div>
       <div class="stats-row" style="grid-template-columns:repeat(3,1fr)">
-        <div class="sc"><div class="sc-icon ic-g">💰</div><div><div class="sc-lbl">Total Collected</div><div class="sc-val">₹12.4L</div></div></div>
-        <div class="sc"><div class="sc-icon ic-o">⏳</div><div><div class="sc-lbl">Pending</div><div class="sc-val">₹84K</div></div></div>
-        <div class="sc"><div class="sc-icon ic-b">↩️</div><div><div class="sc-lbl">Total Refunds</div><div class="sc-val">₹18.6K</div></div></div>
+        <div class="sc"><div class="sc-icon ic-g">💰</div><div><div class="sc-lbl">Total Collected</div><div class="sc-val" id="payStatCollected">₹0</div></div></div>
+        <div class="sc"><div class="sc-icon ic-o">⏳</div><div><div class="sc-lbl">Pending</div><div class="sc-val" id="payStatPending">₹0</div></div></div>
+        <div class="sc"><div class="sc-icon ic-b">↩️</div><div><div class="sc-lbl">Total Refunds</div><div class="sc-val" id="payStatRefunds">₹0</div></div></div>
       </div>
       <div class="tbl-wrap"><div id="payTbl"></div></div>
     </div>
@@ -200,31 +244,81 @@
     <!-- PRICING -->
     <div class="panel" id="pn-pricing">
       <div class="sec-hdr"><div class="sec-title">Fare & Pricing Management</div><button class="btn-sm btn-sf" onclick="savePricing()">💾 Save Changes</button></div>
+      <div style="margin:0 0 16px;font-size:13px;color:rgba(255,255,255,.45)">Note: these rates are saved here for record-keeping but are not yet wired into the live fare calculation on the public booking form.</div>
       <div class="price-grid">
         <div class="price-section">
           <div class="ps-title">🔷 One Way Rates (₹/km)</div>
-          <div class="rate-row"><span class="rate-lbl">🚗 Sedan</span><input class="rate-inp" type="number" value="16"></div>
-          <div class="rate-row"><span class="rate-lbl">🚐 Ertiga</span><input class="rate-inp" type="number" value="21"></div>
-          <div class="rate-row"><span class="rate-lbl">🚙 Innova Crysta</span><input class="rate-inp" type="number" value="30"></div>
-          <div class="rate-row"><span class="rate-lbl">🚌 Tempo Traveller</span><input class="rate-inp" type="number" value="42"></div>
+          <div class="rate-row"><span class="rate-lbl">🚗 Sedan</span><input class="rate-inp" type="number" data-trip="oneWay" data-vehicle="Sedan" value="16"></div>
+          <div class="rate-row"><span class="rate-lbl">🚐 Ertiga</span><input class="rate-inp" type="number" data-trip="oneWay" data-vehicle="Ertiga" value="21"></div>
+          <div class="rate-row"><span class="rate-lbl">🚙 Innova Crysta</span><input class="rate-inp" type="number" data-trip="oneWay" data-vehicle="Innova Crysta" value="30"></div>
+          <div class="rate-row"><span class="rate-lbl">🚌 Tempo Traveller</span><input class="rate-inp" type="number" data-trip="oneWay" data-vehicle="Tempo Traveller" value="42"></div>
         </div>
         <div class="price-section">
           <div class="ps-title">🔄 Round Trip Rates (₹/km)</div>
-          <div class="rate-row"><span class="rate-lbl">🚗 Sedan</span><input class="rate-inp" type="number" value="11"></div>
-          <div class="rate-row"><span class="rate-lbl">🚐 Ertiga</span><input class="rate-inp" type="number" value="15"></div>
-          <div class="rate-row"><span class="rate-lbl">🚙 Innova Crysta</span><input class="rate-inp" type="number" value="20"></div>
-          <div class="rate-row"><span class="rate-lbl">🚌 Tempo Traveller</span><input class="rate-inp" type="number" value="35"></div>
+          <div class="rate-row"><span class="rate-lbl">🚗 Sedan</span><input class="rate-inp" type="number" data-trip="roundTrip" data-vehicle="Sedan" value="11"></div>
+          <div class="rate-row"><span class="rate-lbl">🚐 Ertiga</span><input class="rate-inp" type="number" data-trip="roundTrip" data-vehicle="Ertiga" value="15"></div>
+          <div class="rate-row"><span class="rate-lbl">🚙 Innova Crysta</span><input class="rate-inp" type="number" data-trip="roundTrip" data-vehicle="Innova Crysta" value="20"></div>
+          <div class="rate-row"><span class="rate-lbl">🚌 Tempo Traveller</span><input class="rate-inp" type="number" data-trip="roundTrip" data-vehicle="Tempo Traveller" value="35"></div>
         </div>
       </div>
+      <div id="pricingStatus" style="margin-top:14px;font-size:13px"></div>
     </div>
 
-    <!-- GENERIC PANELS -->
-    <div class="panel" id="pn-vehicles"><div class="sec-hdr"><div class="sec-title">Vehicle Management</div><button class="btn-sm btn-sf">+ Add Vehicle</button></div><div class="tbl-wrap" style="padding:60px;text-align:center"><div style="font-size:48px">🚗</div><div style="font-size:16px;color:rgba(255,255,255,0.4);margin-top:12px">Vehicle management module</div></div></div>
-    <div class="panel" id="pn-routes"><div class="sec-hdr"><div class="sec-title">Route Management</div><button class="btn-sm btn-sf">+ Add Route</button></div><div class="tbl-wrap" style="padding:60px;text-align:center"><div style="font-size:48px">🗺️</div><div style="font-size:16px;color:rgba(255,255,255,0.4);margin-top:12px">Route management module</div></div></div>
-    <div class="panel" id="pn-refunds"><div class="sec-hdr"><div class="sec-title">Refund Requests</div></div><div class="tbl-wrap" style="padding:60px;text-align:center"><div style="font-size:48px">↩️</div><div style="font-size:16px;color:rgba(255,255,255,0.4);margin-top:12px">Refund management module</div></div></div>
-    <div class="panel" id="pn-gst"><div class="sec-hdr"><div class="sec-title">GST Reports</div><button class="btn-sm btn-sf">⬇ Download GSTR-1</button></div><div class="tbl-wrap" style="padding:60px;text-align:center"><div style="font-size:48px">🧾</div><div style="font-size:16px;color:rgba(255,255,255,0.4);margin-top:12px">GST reporting module</div></div></div>
-    <div class="panel" id="pn-coupons"><div class="sec-hdr"><div class="sec-title">Coupon Management</div><button class="btn-sm btn-sf">+ Create Coupon</button></div><div class="tbl-wrap" style="padding:60px;text-align:center"><div style="font-size:48px">🎫</div><div style="font-size:16px;color:rgba(255,255,255,0.4);margin-top:12px">Coupon management module</div></div></div>
-    <div class="panel" id="pn-analytics"><div class="sec-hdr"><div class="sec-title">Analytics</div></div><div class="tbl-wrap" style="padding:60px;text-align:center"><div style="font-size:48px">📈</div><div style="font-size:16px;color:rgba(255,255,255,0.4);margin-top:12px">Advanced analytics module</div></div></div>
+    <!-- VEHICLES -->
+    <div class="panel" id="pn-vehicles">
+      <div class="sec-hdr"><div class="sec-title">Vehicle Management</div><button class="btn-sm btn-sf" onclick="openVehicleModal()">+ Add Vehicle</button></div>
+      <div class="tbl-wrap"><div id="vehTbl"></div></div>
+    </div>
+
+    <!-- ROUTES -->
+    <div class="panel" id="pn-routes">
+      <div class="sec-hdr"><div class="sec-title">Route Management</div><button class="btn-sm btn-sf" onclick="openRouteModal()">+ Add Route</button></div>
+      <div style="margin:0 0 14px;font-size:13px;color:rgba(255,255,255,.45)">A reference list you manage — not yet wired to the live fare calculation on the booking form.</div>
+      <div class="tbl-wrap"><div id="rtTbl"></div></div>
+    </div>
+
+    <!-- REFUNDS -->
+    <div class="panel" id="pn-refunds">
+      <div class="sec-hdr"><div class="sec-title">Refund Requests</div><button class="btn-sm btn-sf" onclick="openRefundModal()">+ Log Refund</button></div>
+      <div class="tbl-wrap"><div id="rfTbl"></div></div>
+    </div>
+
+    <!-- GST -->
+    <div class="panel" id="pn-gst">
+      <div class="sec-hdr"><div class="sec-title">GST Reports</div></div>
+      <div style="margin:0 0 14px;font-size:13px;color:rgba(255,255,255,.45)">A basic summary derived from booking records — not a GSTR-1-compliant filing export.</div>
+      <div class="stats-row" style="grid-template-columns:repeat(4,1fr)">
+        <div class="sc"><div class="sc-icon ic-g">💰</div><div><div class="sc-lbl">Total Collected</div><div class="sc-val" id="gstCollected">₹0</div></div></div>
+        <div class="sc"><div class="sc-icon ic-b">🧾</div><div><div class="sc-lbl">Total Fare Value</div><div class="sc-val" id="gstFareValue">₹0</div></div></div>
+        <div class="sc"><div class="sc-icon ic-o">⏳</div><div><div class="sc-lbl">Pending</div><div class="sc-val" id="gstPending">₹0</div></div></div>
+        <div class="sc"><div class="sc-icon ic-g">🚕</div><div><div class="sc-lbl">Total Trips</div><div class="sc-val" id="gstTrips">0</div></div></div>
+      </div>
+      <div class="tbl-wrap"><div id="gstTbl"></div></div>
+    </div>
+
+    <!-- COUPONS -->
+    <div class="panel" id="pn-coupons">
+      <div class="sec-hdr"><div class="sec-title">Coupon Management</div><button class="btn-sm btn-sf" onclick="openCouponModal()">+ Create Coupon</button></div>
+      <div style="margin:0 0 14px;font-size:13px;color:rgba(255,255,255,.45)">Coupons are stored here but not yet validated automatically at checkout.</div>
+      <div class="tbl-wrap"><div id="cpnTbl"></div></div>
+    </div>
+    <div class="panel" id="pn-analytics">
+      <div class="sec-hdr"><div class="sec-title">Analytics</div></div>
+      <div class="charts-row">
+        <div class="chart-card">
+          <div class="cc-title">Monthly Bookings</div>
+          <div class="cc-sub">Last 6 months performance</div>
+          <div class="bar-chart" id="barChartAnalytics"></div>
+        </div>
+        <div class="chart-card">
+          <div class="cc-title">Bookings by Vehicle</div>
+          <div class="cc-sub">All-time distribution</div>
+          <div class="donut-wrap" id="donutWrapAnalytics"></div>
+        </div>
+      </div>
+      <div class="sec-hdr" style="margin-top:24px"><div class="sec-title">Monthly Breakdown</div></div>
+      <div class="tbl-wrap"><div id="analyticsTbl"></div></div>
+    </div>
 
   </div>
 </div>
@@ -280,7 +374,7 @@ function enterApp(){
   document.getElementById('appShell').style.display='block';
   document.getElementById('sbUserName').textContent = authName;
   document.getElementById('sbAvatar').textContent = (authName[0]||'A').toUpperCase();
-  initChart();
+  loadDashboardStats();
   loadDuties();
   loadDrivers();
 }
@@ -554,21 +648,110 @@ async function submitDriver(){
 }
 
 // ── Static mock data (customers/payments — not part of this build yet) ──
-const customers=[
-  {id:'CUS-001',name:'Rahul Kapoor',mob:'9876543210',email:'rahul@email.com',trips:5,spent:'₹22,400',joined:'Dec 2023',status:'Active'},
-  {id:'CUS-002',name:'Priya Sharma',mob:'9988776655',email:'priya@email.com',trips:3,spent:'₹11,800',joined:'Nov 2023',status:'Active'},
-  {id:'CUS-003',name:'Anand Venkat',mob:'8877665544',email:'anand@email.com',trips:8,spent:'₹41,200',joined:'Oct 2023',status:'Active'},
-];
-const payments=[
-  {id:'PAY-001',bid:'OWB-2024-A1B2C',cust:'Rahul Kapoor',amt:'₹490',method:'Razorpay/UPI',date:'2024-01-15',status:'Success'},
-  {id:'PAY-002',bid:'OWB-2024-D3E4F',cust:'Priya Sharma',amt:'₹320',method:'PhonePe',date:'2024-01-14',status:'Success'},
-  {id:'PAY-003',bid:'OWB-2024-M9N0O',cust:'Arun Mishra',amt:'₹260',method:'Razorpay/Card',date:'2024-01-12',status:'Refunded'},
-];
-function badge(s){const m={Confirmed:'sb-conf',Completed:'sb-comp',Pending:'sb-pend',Cancelled:'sb-canc',Active:'sb-act',Inactive:'sb-inact',Verified:'sb-act',Success:'sb-conf',Refunded:'sb-pend'};return`<span class="sbadge ${m[s]||''}">${s}</span>`;}
-function renderCustomers(){document.getElementById('custTbl').innerHTML=`<table><thead><tr><th>ID</th><th>Name</th><th>Mobile</th><th>Trips</th><th>Spent</th><th>Joined</th><th>Status</th></tr></thead><tbody>${customers.map(c=>`<tr><td style="font-size:11px;font-family:monospace;color:#93c5fd">${c.id}</td><td style="font-weight:700">${c.name}</td><td>${c.mob}</td><td style="font-weight:700;text-align:center">${c.trips}</td><td style="font-weight:700;color:var(--gr3)">${c.spent}</td><td style="font-size:12px;color:rgba(255,255,255,.4)">${c.joined}</td><td>${badge(c.status)}</td></tr>`).join('')}</tbody></table>`;}
-function renderPayments(){document.getElementById('payTbl').innerHTML=`<table><thead><tr><th>Pay ID</th><th>Booking ID</th><th>Customer</th><th>Amount</th><th>Method</th><th>Date</th><th>Status</th></tr></thead><tbody>${payments.map(p=>`<tr><td style="font-size:11px;font-weight:700">${p.id}</td><td style="font-size:11px;font-family:monospace;color:#93c5fd">${p.bid}</td><td style="font-weight:600">${p.cust}</td><td style="font-weight:700;color:var(--gr3)">${p.amt}</td><td>${p.method}</td><td style="font-size:12px;color:rgba(255,255,255,.4)">${p.date}</td><td>${badge(p.status)}</td></tr>`).join('')}</tbody></table>`;}
+function badge(s){const m={Confirmed:'sb-conf',Completed:'sb-comp',Pending:'sb-pend',Cancelled:'sb-canc',Active:'sb-act',Inactive:'sb-inact',Verified:'sb-act',Success:'sb-conf',Refunded:'sb-pend','paid':'sb-conf','refund_pending':'sb-pend','processed':'sb-conf','rejected':'sb-canc'};return`<span class="sbadge ${m[s]||''}">${s}</span>`;}
 
-function initChart(){const data=[{m:'Aug',v:68},{m:'Sep',v:82},{m:'Oct',v:95},{m:'Nov',v:110},{m:'Dec',v:125},{m:'Jan',v:148}];const max=Math.max(...data.map(d=>d.v));document.getElementById('barChart').innerHTML=data.map((d,i)=>`<div class="bar-wrap"><div class="bar-fill ${i===5?'sf':''}" style="height:${Math.round(d.v/max*110)}px" title="₹${(d.v*2200).toLocaleString('en-IN')}"></div><div class="bar-lbl">${d.m}</div></div>`).join('');}
+async function renderCustomers(){
+  const wrap=document.getElementById('custTbl');
+  wrap.innerHTML='<div style="padding:40px;text-align:center;color:rgba(255,255,255,.4)">Loading…</div>';
+  try{
+    const {customers}=await api('/admin/customers');
+    if(!customers.length){wrap.innerHTML='<div style="padding:40px;text-align:center;color:rgba(255,255,255,.4)">No customers yet — they will appear here once bookings come in.</div>';return;}
+    wrap.innerHTML=`<table><thead><tr><th>Name</th><th>Mobile</th><th>Trips</th><th>Spent</th><th>First Seen</th><th>Last Seen</th></tr></thead><tbody>${customers.map(c=>`<tr><td style="font-weight:700">${escapeHtml(c.name||'—')}</td><td>${escapeHtml(c.phone)}</td><td style="font-weight:700;text-align:center">${c.trips}</td><td style="font-weight:700;color:var(--gr3)">₹${c.spent.toLocaleString('en-IN')}</td><td style="font-size:12px;color:rgba(255,255,255,.4)">${new Date(c.firstSeen).toLocaleDateString('en-IN')}</td><td style="font-size:12px;color:rgba(255,255,255,.4)">${new Date(c.lastSeen).toLocaleDateString('en-IN')}</td></tr>`).join('')}</tbody></table>`;
+  }catch(e){wrap.innerHTML=`<div style="padding:40px;text-align:center;color:#f87171">${escapeHtml(e.message)}</div>`;}
+}
+
+async function renderPayments(){
+  const wrap=document.getElementById('payTbl');
+  wrap.innerHTML='<div style="padding:40px;text-align:center;color:rgba(255,255,255,.4)">Loading…</div>';
+  try{
+    const {payments}=await api('/admin/payments');
+    const collected=payments.reduce((s,p)=>s+p.amount,0);
+    const pending=payments.reduce((s,p)=>s+p.due,0);
+    const refunds=payments.filter(p=>p.status==='refund_pending').reduce((s,p)=>s+p.amount,0);
+    document.getElementById('payStatCollected').textContent='₹'+collected.toLocaleString('en-IN');
+    document.getElementById('payStatPending').textContent='₹'+pending.toLocaleString('en-IN');
+    document.getElementById('payStatRefunds').textContent='₹'+refunds.toLocaleString('en-IN');
+    if(!payments.length){wrap.innerHTML='<div style="padding:40px;text-align:center;color:rgba(255,255,255,.4)">No payments yet.</div>';return;}
+    wrap.innerHTML=`<table><thead><tr><th>Booking ID</th><th>Customer</th><th>Paid</th><th>Due</th><th>Date</th><th>Status</th></tr></thead><tbody>${payments.map(p=>`<tr><td style="font-size:11px;font-family:monospace;color:#93c5fd">${escapeHtml(p.bookingId)}</td><td style="font-weight:600">${escapeHtml(p.customerName||'—')}</td><td style="font-weight:700;color:var(--gr3)">₹${p.amount.toLocaleString('en-IN')}</td><td>${p.due>0?'₹'+p.due.toLocaleString('en-IN'):'—'}</td><td style="font-size:12px;color:rgba(255,255,255,.4)">${new Date(p.date).toLocaleDateString('en-IN')}</td><td>${badge(p.status)}</td></tr>`).join('')}</tbody></table>`;
+  }catch(e){wrap.innerHTML=`<div style="padding:40px;text-align:center;color:#f87171">${escapeHtml(e.message)}</div>`;}
+}
+
+function escapeHtml(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+// ── Dashboard stats (real numbers) ───────────────────────────────────────
+async function loadDashboardStats(){
+  try{
+    const s=await api('/admin/dashboard-stats');
+    document.getElementById('statTotalBookings').textContent=s.totalBookings.toLocaleString('en-IN');
+    document.getElementById('statBookingsChange').textContent=pctChangeLabel(s.bookingsPctChange,'this month');
+    document.getElementById('statRevenue').textContent=formatCompactRupees(s.revenueThisMonth);
+    document.getElementById('statRevenueChange').textContent=pctChangeLabel(s.revenuePctChange,'vs last month');
+    document.getElementById('statActiveDrivers').textContent=s.activeDrivers.toLocaleString('en-IN');
+    document.getElementById('statDriversChange').textContent=s.newDriversThisWeek>0?`↑ ${s.newDriversThisWeek} new this week`:'';
+    document.getElementById('statReviewRequests').textContent=s.reviewRequestsSent.toLocaleString('en-IN');
+    document.getElementById('statReviewSub').textContent=`from ${s.completedTrips} completed trip${s.completedTrips===1?'':'s'}`;
+  }catch(e){/* leave dashes showing rather than break the page */}
+  loadAnalyticsCharts('barChart','donutWrap');
+}
+function pctChangeLabel(pct,suffix){
+  if(pct===null||pct===undefined)return '';
+  const arrow=pct>=0?'↑':'↓';
+  return `${arrow} ${Math.abs(pct)}% ${suffix}`;
+}
+function formatCompactRupees(n){
+  if(n>=100000)return '₹'+(n/100000).toFixed(1)+'L';
+  if(n>=1000)return '₹'+(n/1000).toFixed(1)+'K';
+  return '₹'+n.toLocaleString('en-IN');
+}
+
+// ── Shared chart renderers (used by both Dashboard and Analytics panels) ──
+async function loadAnalyticsCharts(barElId,donutElId){
+  try{
+    const {monthlyBookings,vehicleDistribution}=await api('/admin/analytics');
+    renderBarChart(barElId,monthlyBookings);
+    renderDonut(donutElId,vehicleDistribution);
+  }catch(e){/* non-fatal */}
+}
+function renderBarChart(elId,data){
+  const el=document.getElementById(elId);
+  if(!el)return;
+  const max=Math.max(1,...data.map(d=>d.count));
+  el.innerHTML=data.map((d,i)=>`<div class="bar-wrap"><div class="bar-fill ${i===data.length-1?'sf':''}" style="height:${Math.round(d.count/max*110)}px" title="${d.count} booking${d.count===1?'':'s'}"></div><div class="bar-lbl">${d.month}</div></div>`).join('');
+}
+const DONUT_COLORS=['#F47B00','#1C3E6A','#E8BD3A','rgba(255,255,255,0.35)','rgba(255,255,255,0.15)'];
+function renderDonut(elId,distribution){
+  const el=document.getElementById(elId);
+  if(!el)return;
+  if(!distribution.length){el.innerHTML='<div style="padding:30px;text-align:center;color:rgba(255,255,255,.4);font-size:13px">No bookings yet</div>';return;}
+  const top=distribution.slice(0,4);
+  const otherCount=distribution.slice(4).reduce((s,d)=>s+d.count,0);
+  const otherPercent=distribution.slice(4).reduce((s,d)=>s+d.percent,0);
+  if(otherCount>0)top.push({name:'Other',count:otherCount,percent:otherPercent});
+  const total=top.reduce((s,d)=>s+d.percent,0)||1;
+  const circumference=2*Math.PI*42;
+  let offset=0;
+  const circles=top.map((d,i)=>{
+    const frac=d.percent/total;
+    const dash=frac*circumference;
+    const c=`<circle cx="55" cy="55" r="42" fill="none" stroke="${DONUT_COLORS[i]||DONUT_COLORS[DONUT_COLORS.length-1]}" stroke-width="18" stroke-dasharray="${dash.toFixed(1)} ${(circumference-dash).toFixed(1)}" stroke-dashoffset="${(-offset).toFixed(1)}" transform="rotate(-90 55 55)"/>`;
+    offset+=dash;
+    return c;
+  }).join('');
+  const legend=top.map((d,i)=>`<div class="leg-item"><div class="leg-dot" style="background:${DONUT_COLORS[i]||DONUT_COLORS[DONUT_COLORS.length-1]}"></div><span class="leg-lbl">${escapeHtml(d.name)}</span><span class="leg-val">${d.percent}%</span></div>`).join('');
+  const grandTotal=top.reduce((s,d)=>s+d.count,0);
+  el.innerHTML=`<svg width="110" height="110" viewBox="0 0 110 110"><circle cx="55" cy="55" r="42" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="18"/>${circles}<text x="55" y="59" text-anchor="middle" fill="#fff" font-size="14" font-weight="700" font-family="Cinzel,serif">${grandTotal}</text></svg><div class="legend">${legend}</div>`;
+}
+
+async function renderAnalyticsPanel(){
+  await loadAnalyticsCharts('barChartAnalytics','donutWrapAnalytics');
+  const wrap=document.getElementById('analyticsTbl');
+  wrap.innerHTML='<div style="padding:40px;text-align:center;color:rgba(255,255,255,.4)">Loading…</div>';
+  try{
+    const {monthlyBookings}=await api('/admin/analytics');
+    wrap.innerHTML=`<table><thead><tr><th>Month</th><th>Bookings</th></tr></thead><tbody>${monthlyBookings.map(m=>`<tr><td style="font-weight:700">${m.month}</td><td style="text-align:center">${m.count}</td></tr>`).join('')}</tbody></table>`;
+  }catch(e){wrap.innerHTML=`<div style="padding:40px;text-align:center;color:#f87171">${escapeHtml(e.message)}</div>`;}
+}
+
 
 function showPanel(name,navEl){
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('act'));
@@ -580,8 +763,166 @@ function showPanel(name,navEl){
   if(name==='drivers'){renderDrivers();}
   if(name==='customers'){renderCustomers();}
   if(name==='payments'){renderPayments();}
+  if(name==='pricing'){loadPricing();}
+  if(name==='vehicles'){renderVehicles();}
+  if(name==='routes'){renderRoutes();}
+  if(name==='coupons'){renderCoupons();}
+  if(name==='refunds'){renderRefunds();}
+  if(name==='gst'){renderGst();}
+  if(name==='dashboard'){loadDashboardStats();}
+  if(name==='analytics'){renderAnalyticsPanel();}
 }
-function savePricing(){alert('✅ Pricing updated successfully!\nChanges will reflect on the website immediately.');}
+async function savePricing(){
+  const statusEl=document.getElementById('pricingStatus');
+  statusEl.textContent='Saving…';statusEl.style.color='rgba(255,255,255,.5)';
+  const oneWay={},roundTrip={};
+  document.querySelectorAll('.rate-inp').forEach(inp=>{
+    const trip=inp.dataset.trip,veh=inp.dataset.vehicle,val=Number(inp.value);
+    if(!trip||!veh||!val)return;
+    (trip==='oneWay'?oneWay:roundTrip)[veh]=val;
+  });
+  try{
+    await api('/settings/pricing',{method:'POST',body:JSON.stringify({oneWay,roundTrip})});
+    statusEl.textContent='✅ Saved. Note: not yet wired into the live booking-form fare calculation.';statusEl.style.color='var(--gr3)';
+  }catch(e){statusEl.textContent='❌ '+e.message;statusEl.style.color='#f87171';}
+}
+
+async function loadPricing(){
+  try{
+    const {pricing}=await api('/settings/pricing');
+    if(!pricing)return;
+    document.querySelectorAll('.rate-inp').forEach(inp=>{
+      const trip=inp.dataset.trip,veh=inp.dataset.vehicle;
+      const rates=trip==='oneWay'?pricing.oneWay:pricing.roundTrip;
+      if(rates&&rates[veh]!=null)inp.value=rates[veh];
+    });
+  }catch(e){/* non-fatal — leave defaults showing */}
+}
+
+// ── Vehicles ──────────────────────────────────────────────────────────────
+function openVehicleModal(){document.getElementById('vehName').value='';document.getElementById('vehCapacity').value='';document.getElementById('vehIcon').value='';document.getElementById('vehNotes').value='';document.getElementById('vehError').style.display='none';document.getElementById('vehicleModal').style.display='flex';}
+function closeVehicleModal(){document.getElementById('vehicleModal').style.display='none';}
+async function submitVehicle(){
+  const errEl=document.getElementById('vehError');errEl.style.display='none';
+  const name=document.getElementById('vehName').value.trim();
+  if(!name){errEl.textContent='Vehicle name is required';errEl.style.display='block';return;}
+  try{
+    await api('/vehicle/create',{method:'POST',body:JSON.stringify({name,capacity:document.getElementById('vehCapacity').value.trim(),icon:document.getElementById('vehIcon').value.trim(),notes:document.getElementById('vehNotes').value.trim()})});
+    closeVehicleModal();renderVehicles();
+  }catch(e){errEl.textContent=e.message;errEl.style.display='block';}
+}
+async function renderVehicles(){
+  const wrap=document.getElementById('vehTbl');
+  wrap.innerHTML='<div style="padding:40px;text-align:center;color:rgba(255,255,255,.4)">Loading…</div>';
+  try{
+    const {vehicles}=await api('/vehicle/list');
+    if(!vehicles.length){wrap.innerHTML='<div style="padding:60px;text-align:center"><div style="font-size:48px">🚗</div><div style="font-size:16px;color:rgba(255,255,255,0.4);margin-top:12px">No vehicles yet — click "+ Add Vehicle" to create one.</div></div>';return;}
+    wrap.innerHTML=`<table><thead><tr><th></th><th>Name</th><th>Capacity</th><th>Notes</th><th></th></tr></thead><tbody>${vehicles.map(v=>`<tr><td style="font-size:22px">${escapeHtml(v.icon)}</td><td style="font-weight:700">${escapeHtml(v.name)}</td><td>${escapeHtml(v.capacity)}</td><td style="color:rgba(255,255,255,.5)">${escapeHtml(v.notes||'—')}</td><td><button class="btn-sm btn-ol" onclick="deleteVehicle('${v.id}')">Delete</button></td></tr>`).join('')}</tbody></table>`;
+  }catch(e){wrap.innerHTML=`<div style="padding:40px;text-align:center;color:#f87171">${escapeHtml(e.message)}</div>`;}
+}
+async function deleteVehicle(id){
+  if(!confirm('Delete this vehicle?'))return;
+  try{await api('/vehicle/delete',{method:'POST',body:JSON.stringify({id})});renderVehicles();}catch(e){alert(e.message);}
+}
+
+// ── Routes ────────────────────────────────────────────────────────────────
+function openRouteModal(){document.getElementById('rtFrom').value='';document.getElementById('rtTo').value='';document.getElementById('rtDistance').value='';document.getElementById('rtNotes').value='';document.getElementById('rtError').style.display='none';document.getElementById('routeModal').style.display='flex';}
+function closeRouteModal(){document.getElementById('routeModal').style.display='none';}
+async function submitRoute(){
+  const errEl=document.getElementById('rtError');errEl.style.display='none';
+  const from=document.getElementById('rtFrom').value.trim(),to=document.getElementById('rtTo').value.trim();
+  if(!from||!to){errEl.textContent='Both From and To cities are required';errEl.style.display='block';return;}
+  try{
+    await api('/route/create',{method:'POST',body:JSON.stringify({from,to,distanceKm:Number(document.getElementById('rtDistance').value)||null,notes:document.getElementById('rtNotes').value.trim()})});
+    closeRouteModal();renderRoutes();
+  }catch(e){errEl.textContent=e.message;errEl.style.display='block';}
+}
+async function renderRoutes(){
+  const wrap=document.getElementById('rtTbl');
+  wrap.innerHTML='<div style="padding:40px;text-align:center;color:rgba(255,255,255,.4)">Loading…</div>';
+  try{
+    const {routes}=await api('/route/list');
+    if(!routes.length){wrap.innerHTML='<div style="padding:60px;text-align:center"><div style="font-size:48px">🗺️</div><div style="font-size:16px;color:rgba(255,255,255,0.4);margin-top:12px">No routes yet — click "+ Add Route" to create one.</div></div>';return;}
+    wrap.innerHTML=`<table><thead><tr><th>From</th><th>To</th><th>Distance</th><th>Notes</th><th></th></tr></thead><tbody>${routes.map(r=>`<tr><td style="font-weight:700">${escapeHtml(r.from)}</td><td style="font-weight:700">${escapeHtml(r.to)}</td><td>${r.distanceKm?r.distanceKm+' km':'—'}</td><td style="color:rgba(255,255,255,.5)">${escapeHtml(r.notes||'—')}</td><td><button class="btn-sm btn-ol" onclick="deleteRoute('${r.id}')">Delete</button></td></tr>`).join('')}</tbody></table>`;
+  }catch(e){wrap.innerHTML=`<div style="padding:40px;text-align:center;color:#f87171">${escapeHtml(e.message)}</div>`;}
+}
+async function deleteRoute(id){
+  if(!confirm('Delete this route?'))return;
+  try{await api('/route/delete',{method:'POST',body:JSON.stringify({id})});renderRoutes();}catch(e){alert(e.message);}
+}
+
+// ── Coupons ───────────────────────────────────────────────────────────────
+function openCouponModal(){document.getElementById('cpnCode').value='';document.getElementById('cpnDiscount').value='';document.getElementById('cpnExpiry').value='';document.getElementById('cpnNotes').value='';document.getElementById('cpnError').style.display='none';document.getElementById('couponModal').style.display='flex';}
+function closeCouponModal(){document.getElementById('couponModal').style.display='none';}
+async function submitCoupon(){
+  const errEl=document.getElementById('cpnError');errEl.style.display='none';
+  const code=document.getElementById('cpnCode').value.trim();
+  const discountPercent=Number(document.getElementById('cpnDiscount').value);
+  if(!code||!discountPercent){errEl.textContent='Coupon code and a discount % are required';errEl.style.display='block';return;}
+  try{
+    await api('/coupon/create',{method:'POST',body:JSON.stringify({code,discountPercent,expiresAt:document.getElementById('cpnExpiry').value,notes:document.getElementById('cpnNotes').value.trim()})});
+    closeCouponModal();renderCoupons();
+  }catch(e){errEl.textContent=e.message;errEl.style.display='block';}
+}
+async function renderCoupons(){
+  const wrap=document.getElementById('cpnTbl');
+  wrap.innerHTML='<div style="padding:40px;text-align:center;color:rgba(255,255,255,.4)">Loading…</div>';
+  try{
+    const {coupons}=await api('/coupon/list');
+    if(!coupons.length){wrap.innerHTML='<div style="padding:60px;text-align:center"><div style="font-size:48px">🎫</div><div style="font-size:16px;color:rgba(255,255,255,0.4);margin-top:12px">No coupons yet — click "+ Create Coupon" to add one.</div></div>';return;}
+    wrap.innerHTML=`<table><thead><tr><th>Code</th><th>Discount</th><th>Expires</th><th>Status</th><th></th></tr></thead><tbody>${coupons.map(c=>`<tr><td style="font-weight:700;font-family:monospace;color:#93c5fd">${escapeHtml(c.code)}</td><td style="font-weight:700;color:var(--gr3)">${c.discountPercent}%</td><td style="color:rgba(255,255,255,.5)">${c.expiresAt||'—'}</td><td>${badge(c.active?'Active':'Inactive')}</td><td style="display:flex;gap:6px"><button class="btn-sm btn-ol" onclick="toggleCoupon('${c.code}',${!c.active})">${c.active?'Deactivate':'Activate'}</button><button class="btn-sm btn-ol" onclick="deleteCoupon('${c.code}')">Delete</button></td></tr>`).join('')}</tbody></table>`;
+  }catch(e){wrap.innerHTML=`<div style="padding:40px;text-align:center;color:#f87171">${escapeHtml(e.message)}</div>`;}
+}
+async function toggleCoupon(code,active){
+  try{await api('/coupon/update',{method:'POST',body:JSON.stringify({code,active})});renderCoupons();}catch(e){alert(e.message);}
+}
+async function deleteCoupon(code){
+  if(!confirm('Delete this coupon?'))return;
+  try{await api('/coupon/delete',{method:'POST',body:JSON.stringify({code})});renderCoupons();}catch(e){alert(e.message);}
+}
+
+// ── Refunds ───────────────────────────────────────────────────────────────
+function openRefundModal(){document.getElementById('rfBookingId').value='';document.getElementById('rfName').value='';document.getElementById('rfPhone').value='';document.getElementById('rfAmount').value='';document.getElementById('rfReason').value='';document.getElementById('rfError').style.display='none';document.getElementById('refundModal').style.display='flex';}
+function closeRefundModal(){document.getElementById('refundModal').style.display='none';}
+async function submitRefund(){
+  const errEl=document.getElementById('rfError');errEl.style.display='none';
+  const bookingId=document.getElementById('rfBookingId').value.trim();
+  const amount=Number(document.getElementById('rfAmount').value);
+  if(!bookingId||!amount){errEl.textContent='Booking ID and a refund amount are required';errEl.style.display='block';return;}
+  try{
+    await api('/refund/create',{method:'POST',body:JSON.stringify({bookingId,amount,customerName:document.getElementById('rfName').value.trim(),customerPhone:document.getElementById('rfPhone').value.trim(),reason:document.getElementById('rfReason').value.trim()})});
+    closeRefundModal();renderRefunds();
+  }catch(e){errEl.textContent=e.message;errEl.style.display='block';}
+}
+async function renderRefunds(){
+  const wrap=document.getElementById('rfTbl');
+  wrap.innerHTML='<div style="padding:40px;text-align:center;color:rgba(255,255,255,.4)">Loading…</div>';
+  try{
+    const {refunds}=await api('/refund/list');
+    if(!refunds.length){wrap.innerHTML='<div style="padding:60px;text-align:center"><div style="font-size:48px">↩️</div><div style="font-size:16px;color:rgba(255,255,255,0.4);margin-top:12px">No refund requests logged yet.</div></div>';return;}
+    const statusLabel={pending:'Pending',processed:'Completed',rejected:'Cancelled'};
+    wrap.innerHTML=`<table><thead><tr><th>Booking ID</th><th>Customer</th><th>Amount</th><th>Reason</th><th>Status</th><th></th></tr></thead><tbody>${refunds.map(r=>`<tr><td style="font-family:monospace;color:#93c5fd">${escapeHtml(r.bookingId)}</td><td>${escapeHtml(r.customerName||'—')}</td><td style="font-weight:700;color:var(--gr3)">₹${r.amount.toLocaleString('en-IN')}</td><td style="color:rgba(255,255,255,.5)">${escapeHtml(r.reason||'—')}</td><td>${badge(statusLabel[r.status])}</td><td>${r.status==='pending'?`<select class="finput" style="padding:4px 8px;font-size:12px" onchange="updateRefundStatus('${r.id}',this.value)"><option value="">Mark as…</option><option value="processed">Processed</option><option value="rejected">Rejected</option></select>`:'—'}</td></tr>`).join('')}</tbody></table>`;
+  }catch(e){wrap.innerHTML=`<div style="padding:40px;text-align:center;color:#f87171">${escapeHtml(e.message)}</div>`;}
+}
+async function updateRefundStatus(id,status){
+  if(!status)return;
+  try{await api('/refund/update',{method:'POST',body:JSON.stringify({id,status})});renderRefunds();}catch(e){alert(e.message);}
+}
+
+// ── GST summary ───────────────────────────────────────────────────────────
+async function renderGst(){
+  const wrap=document.getElementById('gstTbl');
+  wrap.innerHTML='<div style="padding:40px;text-align:center;color:rgba(255,255,255,.4)">Loading…</div>';
+  try{
+    const {summary,monthly}=await api('/admin/gst-summary');
+    document.getElementById('gstCollected').textContent='₹'+summary.totalCollected.toLocaleString('en-IN');
+    document.getElementById('gstFareValue').textContent='₹'+summary.totalFareValue.toLocaleString('en-IN');
+    document.getElementById('gstPending').textContent='₹'+summary.totalPending.toLocaleString('en-IN');
+    document.getElementById('gstTrips').textContent=summary.tripCount;
+    if(!monthly.length){wrap.innerHTML='<div style="padding:40px;text-align:center;color:rgba(255,255,255,.4)">No data yet.</div>';return;}
+    wrap.innerHTML=`<table><thead><tr><th>Month</th><th>Trips</th><th>Collected</th></tr></thead><tbody>${monthly.map(m=>`<tr><td style="font-weight:700">${m.month}</td><td style="text-align:center">${m.trips}</td><td style="font-weight:700;color:var(--gr3)">₹${m.collected.toLocaleString('en-IN')}</td></tr>`).join('')}</tbody></table>`;
+  }catch(e){wrap.innerHTML=`<div style="padding:40px;text-align:center;color:#f87171">${escapeHtml(e.message)}</div>`;}
+}
 
 // ── Boot ──────────────────────────────────────────────────────────────────
 if(authToken){

@@ -714,3 +714,25 @@ footer::after {
 /* ─── Typography Readability Improvements ─── */
 body { text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
 p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
+
+/* ─── CRM modals (assign duty, new duty, new driver) ─── */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:150;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal-card{background:var(--nv3);border:1px solid rgba(255,255,255,0.08);border-radius:var(--r20);padding:26px;width:100%;max-width:460px;max-height:90vh;overflow-y:auto}
+.modal-hdr{font-size:16px;font-weight:700;color:#fff;margin-bottom:18px;display:flex;justify-content:space-between;align-items:center}
+.modal-x{cursor:pointer;font-size:20px;color:rgba(255,255,255,0.4);line-height:1}
+.modal-x:hover{color:#fff}
+.modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.modal-grid .field-label,#assignModal .field-label,#driverModal .field-label{display:block;font-size:11px;color:rgba(255,255,255,0.45) !important;margin-bottom:4px;font-weight:700;text-transform:uppercase;letter-spacing:.3px}
+#assignModal .finput,#newDutyModal .finput,#driverModal .finput{background:rgba(255,255,255,0.06) !important;border:1px solid rgba(255,255,255,0.1) !important;color:#fff !important;border-radius:var(--r6);padding:9px 12px;font-size:13px;font-family:'Nunito',sans-serif}
+#assignModal .finput::placeholder,#newDutyModal .finput::placeholder,#driverModal .finput::placeholder{color:rgba(255,255,255,0.3) !important}
+#assignModal .finput option,#newDutyModal .finput option,#driverModal .finput option{background:var(--nv3);color:#fff}
+.sb-pend{background:rgba(232,189,58,0.12);color:var(--gd)}
+.sb-canc{background:rgba(220,38,38,0.12);color:#f87171}
+.sb-comp{background:rgba(29,173,16,0.12);color:var(--gr3)}
+.sb-inact{background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.5)}
+.sb-asg{background:rgba(28,62,106,0.35);color:#93c5fd}
+.empty-state{padding:60px;text-align:center}
+.empty-state .es-ic{font-size:48px}
+.empty-state .es-tx{font-size:16px;color:rgba(255,255,255,0.4);margin-top:12px}
+.toast{position:fixed;bottom:24px;right:24px;background:var(--nv3);border:1px solid rgba(255,255,255,0.1);border-radius:var(--r12);padding:14px 20px;color:#fff;font-size:13px;z-index:300;box-shadow:var(--sh);max-width:320px}
+.toast.toast-err{border-color:rgba(220,38,38,0.4)}
