@@ -427,9 +427,9 @@ function _bkmReset(){
   S.vehicle=null; S.vehicleName=''; S.rate=0; S.distKm=0;
   S.totalFare=0; S.advAmt=0; S.payMode='partial'; S.payAmt=0;
   S.name=''; S.phone=''; S.email=''; S.notes='';
-  S.bookingId=''; S.extraCities=[];
+  S.bookingId=''; S.extraCities=[]; S.retloc='';
   BKM._preDistKm=0; BKM._puData={}; BKM._drData={};
-  ['bk-pu','bk-dr','bk-dt','bk-tm','bk-ret','bk-ret-tm','bk-pn','bk-ph','bk-em','bk-notes']
+  ['bk-pu','bk-dr','bk-dt','bk-tm','bk-ret','bk-ret-tm','bk-retloc','bk-pn','bk-ph','bk-em','bk-notes']
     .forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
   const distEl = document.getElementById('bkm-dist');
   if(distEl) distEl.classList.remove('show');
@@ -498,15 +498,35 @@ function bkmSetTrip(t){
 }
 
 function _bkmSyncRTDrop(t){
-  const drEl    = document.getElementById('bk-dr');
-  const drLabel = document.getElementById('bk-dr-label');
-  const puEl    = document.getElementById('bk-pu');
+  const drEl      = document.getElementById('bk-dr');
+  const drLabel   = document.getElementById('bk-dr-label');
+  const puEl      = document.getElementById('bk-pu');
+  const retLocEl  = document.getElementById('bk-retloc');
   if(!drEl) return;
   if(t==='roundtrip'){
-    drEl.value    = puEl ? puEl.value : '';
-    drEl.readOnly = true;
-    drEl.classList.add('u-drop-locked');
-    if(drLabel) drLabel.innerHTML = '🔄 Return To <span style="font-size:.62rem;color:var(--sf-400);font-weight:700">(same as pickup)</span>';
+    // Round trip: Drop field stays editable as the main destination.
+    // "Return To" field (bk-retloc) is pre-filled with pickup but editable.
+    drEl.readOnly = false;
+    drEl.classList.remove('u-drop-locked');
+    drEl.style.background=''; drEl.style.color=''; drEl.style.cursor=''; drEl.style.borderColor='';
+    if(drLabel) drLabel.textContent = '🏁 Drop Location *';
+    // Pre-fill Return To with pickup location
+    if(retLocEl){
+      retLocEl.value = puEl ? puEl.value : '';
+      BKM.S.retloc = retLocEl.value;
+      // Attach autocomplete to retloc if not already done
+      if(!retLocEl._acAttached){
+        retLocEl._acAttached = true;
+        _bkmAttachAC(retLocEl, name => {
+          retLocEl.value = name;
+          BKM.S.retloc = name;
+          BKM.S.distKm = 0; BKM._preDistKm = 0;
+          const distEl = document.getElementById('bkm-dist');
+          if(distEl) distEl.classList.remove('show');
+          _bkmMaybeLiveDist();
+        });
+      }
+    }
     BKM.S.distKm = 0; BKM._preDistKm = 0;
     const distEl = document.getElementById('bkm-dist');
     if(distEl) distEl.classList.remove('show');
@@ -517,7 +537,8 @@ function _bkmSyncRTDrop(t){
     drEl.classList.remove('u-drop-locked');
     drEl.style.background=''; drEl.style.color=''; drEl.style.cursor=''; drEl.style.borderColor='';
     drEl.value = '';
-    BKM.S.dr = ''; BKM.S.distKm = 0; BKM._preDistKm = 0;
+    BKM.S.dr = ''; BKM.S.retloc = ''; BKM.S.distKm = 0; BKM._preDistKm = 0;
+    if(retLocEl) retLocEl.value = '';
     const distEl = document.getElementById('bkm-dist');
     if(distEl) distEl.classList.remove('show');
     const lf = document.getElementById('bkmLiveFares');
@@ -641,11 +662,19 @@ async function _bkmStep1Next(){
   BKM.S.retdate = ret;
   BKM.S.rettime = document.getElementById('bk-ret-tm')?.value || '';
   BKM.S.pax = (document.getElementById('bk-pax')||{}).value || '3–4 Passengers';
+  // Save Return To location (editable in round trip, defaults to pickup)
+  const retLocEl = document.getElementById('bk-retloc');
+  if(BKM.S.trip === 'roundtrip'){
+    BKM.S.retloc = (retLocEl && retLocEl.value.trim()) ? retLocEl.value.trim() : pu;
+  } else {
+    BKM.S.retloc = '';
+  }
   if(!BKM.S.distKm || BKM.S.distKm === 0){
     const isRound = BKM.S.trip === 'roundtrip';
     const stops = (BKM.S.extraCities||[]).filter(c=>c.trim());
-    // Round trip: append pickup at end so return leg is included in total distance
-    const waypoints = isRound ? [pu, ...stops, dr, pu] : [pu, ...stops, dr];
+    // Round trip: Pickup → [extra stops] → Drop → ReturnTo
+    const retDest = isRound ? (BKM.S.retloc || pu) : null;
+    const waypoints = isRound ? [pu, ...stops, dr, retDest] : [pu, ...stops, dr];
     if(waypoints.length > 2){ await _bkmFetchDistMultiStop(waypoints); }
     else { await _bkmFetchDist(pu, dr); }
   }
@@ -663,7 +692,8 @@ function _bkmBuildCabs(){
   const isRound = S.trip==='roundtrip';
   const km = S.distKm || 50;
   const set = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
-  set('bkrs-pu', S.pu); set('bkrs-dr', S.dr);
+  set('bkrs-pu', S.pu);
+  set('bkrs-dr', isRound && S.retloc && S.retloc !== S.dr ? S.dr + ' → ' + S.retloc : S.dr);
   set('bkrs-date', S.date + (S.time ? ' at '+_bkmFmtTime(S.time) : ''));
   set('bkrs-type', isRound ? 'Round Trip' : 'One Way');
   let kmLabel = `~${km} km`;
@@ -1109,7 +1139,7 @@ function bkmAddStop(){
   if(!list) return;
   const row=document.createElement('div');
   row.id='bkm-srow-'+idx; row.className='bkm-stop-item';
-  row.innerHTML=`<input type="text" id="bkm-sinp-${idx}" placeholder="Enter stop location…" autocomplete="off" style="flex:1;border:1.5px solid rgba(244,123,0,.3);border-radius:9px;padding:9px 12px;font-size:.82rem;background:rgba(255,255,255,.05);color:#fff;font-family:'Nunito',sans-serif;outline:none;box-sizing:border-box"/>
+  row.innerHTML=`<input type="text" id="bkm-sinp-${idx}" placeholder="Enter stop location…" autocomplete="off" style="flex:1;border:1.5px solid rgba(244,123,0,.3);border-radius:9px;padding:9px 12px;font-size:.82rem;background:#fff;color:#1A0800;-webkit-text-fill-color:#1A0800;font-family:'Nunito',sans-serif;outline:none;box-sizing:border-box"/>
     <button type="button" onclick="bkmConfirmStop(${idx})" style="background:linear-gradient(135deg,var(--sf-500),var(--sf-700));border:none;border-radius:8px;padding:7px 12px;color:#fff;cursor:pointer;font-size:.78rem;font-weight:700;flex-shrink:0;white-space:nowrap;font-family:'Nunito',sans-serif">Add ✓</button>`;
   list.appendChild(row);
   const inp=document.getElementById('bkm-sinp-'+idx);
@@ -1207,8 +1237,10 @@ function _bkmMaybeLiveDist(){
   if(!pu||!dr) return;
   const isRound=BKM.S.trip==='roundtrip';
   const stops=(BKM.S.extraCities||[]).filter(c=>c.trim());
-  // Round trip: close the loop — end back at pickup
-  const waypoints=isRound?[pu,...stops,dr,pu]:[pu,...stops,dr];
+  // Round trip: Pickup → [stops] → Drop → ReturnTo (editable, defaults to pickup)
+  const retLocEl=document.getElementById('bk-retloc');
+  const retDest=isRound?((retLocEl&&retLocEl.value.trim())||BKM.S.retloc||pu):null;
+  const waypoints=isRound?[pu,...stops,dr,retDest]:[pu,...stops,dr];
   _bkmShowDist('Calculating…');
   if(waypoints.length>2){ _bkmFetchDistMultiStop(waypoints); }
   else { _bkmFetchDist(pu,dr); }

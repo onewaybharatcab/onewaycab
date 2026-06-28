@@ -420,9 +420,9 @@ nav a:hover { color: #F47B00 !important; background: rgba(244,123,0,0.10) !impor
 
 
 /* ── INNER PAGE HERO ── */
-.page-hero { background: linear-gradient(160deg,#FFE8DC,#FFD9C8) !important; border-bottom-color: rgba(244,123,0,0.15) !important; }
+.page-hero { background: linear-gradient(160deg,#F5C4AC,#EDB48A) !important; border-bottom-color: rgba(200,90,0,0.28) !important; }
 .ph { color: #1A0800 !important; }
-.ps { color: rgba(60,25,5,0.52) !important; }
+.ps { color: rgba(60,25,5,0.68) !important; }
 .ptag { background: rgba(244,123,0,0.10) !important; border-color: rgba(244,123,0,0.22) !important; }
 
 /* ── CARDS — inner pages ── */
@@ -437,7 +437,7 @@ nav a:hover { color: #F47B00 !important; background: rgba(244,123,0,0.10) !impor
 .hours-row { border-bottom-color: rgba(60,25,5,0.06) !important; }
 
 /* ── CONTACT FORM ── */
-.content { background: #FFF0E8 !important; }
+.content { background: #FFE8DC !important; }
 .form-card { background: rgba(255,255,255,0.78) !important; border-color: rgba(60,25,5,0.10) !important; box-shadow: 0 4px 24px rgba(180,90,30,0.10) !important; }
 .form-title { color: #1A0800 !important; }
 .form-sub { color: rgba(60,25,5,0.45) !important; }
@@ -766,8 +766,8 @@ p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
 
 /* Hero layout */
 .page-hero {
-  background: linear-gradient(135deg, var(--nv2) 0%, var(--nv3) 50%, #0d1f3c 100%);
-  border-bottom: 1px solid rgba(244,123,0,.12);
+  background: linear-gradient(135deg, #FFD9C8 0%, #F5C4AC 45%, #EDB48A 100%);
+  border-bottom: 2px solid rgba(200,90,0,.22);
   padding: 72px 5% 56px;
   position: relative;
   overflow: hidden;
@@ -779,14 +779,14 @@ p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
   content: '';
   position: absolute; top: -120px; right: -80px;
   width: 520px; height: 520px;
-  background: radial-gradient(ellipse, rgba(244,123,0,.10), transparent 68%);
+  background: radial-gradient(ellipse, rgba(244,123,0,.18), transparent 68%);
   pointer-events: none; animation: heroOrb1 8s ease-in-out infinite alternate;
 }
 .page-hero::after {
   content: '';
   position: absolute; bottom: -60px; left: -60px;
   width: 380px; height: 380px;
-  background: radial-gradient(ellipse, rgba(180,90,30,.25), transparent 68%);
+  background: radial-gradient(ellipse, rgba(180,90,30,.20), transparent 68%);
   pointer-events: none; animation: heroOrb2 10s ease-in-out infinite alternate;
 }
 @keyframes heroOrb1 { from{transform:translate(0,0) scale(1)} to{transform:translate(-40px,30px) scale(1.15)} }
@@ -860,7 +860,7 @@ p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
 .hero-badges { display: flex; gap: 18px; flex-wrap: wrap; margin-top: 24px; }
 .hbadge {
   display: flex; align-items: center; gap: 7px;
-  font-size: 12px; font-weight: 600; color: rgba(255,255,255,.65);
+  font-size: 12px; font-weight: 600; color: rgba(60,25,5,0.70);
 }
 .hbadge-dot {
   width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
@@ -880,16 +880,12 @@ p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
   gap: 14px;
 }
 .hstat-card {
-  /* Was rgba(255,255,255,.04) — a leftover from the original dark-navy hero
-     design. After the hero background was changed to a light peach gradient
-     (see the !important override above), this near-invisible white-on-white
-     card never got updated, making the whole stats block look washed out. */
-  background: rgba(255,255,255,.65);
-  border: 1px solid rgba(200,90,0,.15);
+  background: rgba(255,255,255,.92);
+  border: 1.5px solid rgba(200,90,0,.22);
   border-radius: 18px; padding: 22px 16px;
   text-align: center; transition: all .3s;
   position: relative; overflow: hidden;
-  box-shadow: 0 4px 16px rgba(120,50,0,.06);
+  box-shadow: 0 6px 24px rgba(120,50,0,.14);
 }
 .hstat-card::before {
   content: ''; position: absolute; inset: 0;
@@ -907,7 +903,7 @@ p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
 .hstat-num {
   font-family: 'Cinzel', serif; font-size: 22px; font-weight: 700;
   color: var(--wh); line-height: 1;
-  background: linear-gradient(135deg, #fff, var(--sf2));
+  background: linear-gradient(135deg, #D46800, #E8BD3A);
   -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
 }
 .hstat-highlight .hstat-num {
@@ -921,7 +917,7 @@ p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
 }
 .hstat-label {
   font-size: 11px; font-weight: 700; letter-spacing: 1px;
-  text-transform: uppercase; color: rgba(255,255,255,.4);
+  text-transform: uppercase; color: rgba(60,25,5,0.52);
   margin-top: 6px;
 }
 
@@ -933,10 +929,10 @@ p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
 }
 .hero-scroll-hint span {
   font-size: 11px; font-weight: 600; letter-spacing: 1.5px;
-  text-transform: uppercase; color: rgba(255,255,255,.25);
+  text-transform: uppercase; color: rgba(60,25,5,0.30);
 }
 .scroll-arrow {
-  width: 18px; height: 28px; border: 2px solid rgba(255,255,255,.15);
+  width: 18px; height: 28px; border: 2px solid rgba(60,25,5,.18);
   border-radius: 10px; position: relative;
 }
 .scroll-arrow::after {

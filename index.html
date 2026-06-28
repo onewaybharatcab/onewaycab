@@ -787,6 +787,10 @@
         </div>
 
         <div id="bkm-ret-wrap" style="display:none">
+          <div class="bkm-fg" id="bkfg-retloc">
+            <label>🔄 Return To <span style="font-size:.62rem;color:var(--sf-400);font-weight:600">(editable)</span></label>
+            <input type="text" id="bk-retloc" placeholder="Return destination (default: pickup location)" autocomplete="off"/>
+          </div>
           <div class="bkm-fgrid">
             <div class="bkm-fg"><label>📅 Return Date *</label><input type="date" id="bk-ret"/></div>
             <div class="bkm-fg"><label>⏰ Return Time</label><input type="time" id="bk-ret-tm"/></div>
@@ -802,8 +806,8 @@
           </select>
         </div>
 
-        <!-- Live fare preview — shown after distance is known -->
-        <div id="bkmLiveFares" class="bkm-live-fares">
+        <!-- Live fare preview — hidden (shown only on Step 2) -->
+        <div id="bkmLiveFares" class="bkm-live-fares" style="display:none!important">
           <div class="bkm-lf-title">🚕 ONE WAY RATES</div>
           <div id="bkmLiveFareRows"></div>
         </div>
