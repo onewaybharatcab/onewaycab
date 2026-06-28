@@ -1165,13 +1165,18 @@ input:-webkit-autofill:focus {
 .bkm-lf-sub{font-size:.65rem;color:var(--bk-muted2)}
 .bkm-lf-price{font-family:'Cinzel',serif;font-size:1.05rem;font-weight:800;color:var(--bk-accent)}
 
-/* Autocomplete portal */
-#owb-ac-portal{position:fixed;z-index:9999;background:#fff;border:1.5px solid rgba(200,90,0,.25);border-radius:10px;box-shadow:0 12px 40px var(--bk-shadow);max-height:250px;overflow-y:auto;display:none;font-family:'Nunito',sans-serif}
-.bkm-ac-item{padding:10px 14px;font-size:.86rem;cursor:pointer;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(180,90,0,.07);transition:.15s;color:var(--bk-text)}
+/* Autocomplete portal — colors hardcoded here (not via var(--bk-*)) because
+   this element lives outside #bkModal in the DOM, so the --bk-* custom
+   properties (scoped to #bkModal and its descendants) never resolve for it —
+   they were silently falling back to browser defaults (black text, no
+   warmth), which is why the dropdown rendered as plain white/black instead
+   of the intended warm peach theme. Same color values as --bk-text/--bk-muted2/--bk-shadow. */
+#owb-ac-portal{position:fixed;z-index:9999;background:#fff;border:1.5px solid rgba(200,90,0,.25);border-radius:10px;box-shadow:0 12px 40px rgba(120,50,0,.18);max-height:250px;overflow-y:auto;display:none;font-family:'Nunito',sans-serif}
+.bkm-ac-item{padding:10px 14px;font-size:.86rem;cursor:pointer;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(180,90,0,.07);transition:.15s;color:#2d1a00}
 .bkm-ac-item:last-child{border:none}
 .bkm-ac-item:hover{background:rgba(200,90,0,.07)}
-.bkm-ac-main{font-weight:700;color:var(--bk-text)}
-.bkm-ac-sub{font-size:.7rem;color:var(--bk-muted2);margin-top:1px}
+.bkm-ac-main{font-weight:700;color:#2d1a00}
+.bkm-ac-sub{font-size:.7rem;color:#b07840;margin-top:1px}
 
 /* Results header (step 2) */
 .bkm-res-hdr{background:var(--bk-card);border:1.5px solid var(--bk-border);border-radius:12px;padding:13px 16px;margin-bottom:14px}

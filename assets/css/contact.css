@@ -205,6 +205,34 @@ footer a{color:var(--sf2);text-decoration:none}
    /* ═══════════════════ WARM PEACH THEME — Token Override
 ═══════════════════════════════════════════════ */
 :root {
+  /* sf2/gd/sf3/sfg/r6/r12/r20/r28/rp/gr3/nv/nv2/nv3 were used throughout this
+     file (button gradients, glow shadows, border-radius on cards/badges/nav
+     links, success-message color) but never actually defined here — they
+     silently resolved to nothing. Colors fall back to inherited values
+     and mostly still looked okay by coincidence, but border-radius and
+     box-shadow with an undefined var() are simply dropped, so every element
+     using --r6/--r12/--r20/--r28/--rp rendered with square corners instead
+     of rounded ones, and --sfg/--sf-glow shadows never appeared at all.
+     Same standard values used consistently across every other page. */
+  --sf:  #F47B00;
+  --sf2: #FF9D2F;
+  --sf3: #A85200;
+  --sfg: rgba(244,123,0,0.28);
+  --sf-glow: rgba(244,123,0,0.35);
+  --gd:  #E8BD3A;
+  --gd2: #F5D060;
+  --gr:  #1DAD10;
+  --gr3: #49CF3E;
+  --nv:  #040C1E;
+  --nv2: #061428;
+  --nv3: #0B1F3A;
+  --nv4: #1C3E6A;
+  --r6:  6px;
+  --r12: 12px;
+  --r20: 20px;
+  --r28: 28px;
+  --rp:  100px;
+
   --pc-900: #FFF0E8;   /* page base — warm peach */
   --pc-800: #FFE8DC;   /* alt sections */
   --pc-700: #FFD9C8;   /* deeper peach */
@@ -852,23 +880,28 @@ p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
   gap: 14px;
 }
 .hstat-card {
-  background: rgba(255,255,255,.04);
-  border: 1px solid rgba(255,255,255,.08);
+  /* Was rgba(255,255,255,.04) — a leftover from the original dark-navy hero
+     design. After the hero background was changed to a light peach gradient
+     (see the !important override above), this near-invisible white-on-white
+     card never got updated, making the whole stats block look washed out. */
+  background: rgba(255,255,255,.65);
+  border: 1px solid rgba(200,90,0,.15);
   border-radius: 18px; padding: 22px 16px;
   text-align: center; transition: all .3s;
   position: relative; overflow: hidden;
+  box-shadow: 0 4px 16px rgba(120,50,0,.06);
 }
 .hstat-card::before {
   content: ''; position: absolute; inset: 0;
   background: linear-gradient(135deg, rgba(244,123,0,.06), transparent);
   opacity: 0; transition: opacity .3s;
 }
-.hstat-card:hover { border-color: rgba(244,123,0,.25); transform: translateY(-4px); box-shadow: 0 16px 40px rgba(26,8,0,.4); }
+.hstat-card:hover { border-color: rgba(244,123,0,.3); transform: translateY(-4px); box-shadow: 0 16px 40px rgba(120,50,0,.15); }
 .hstat-card:hover::before { opacity: 1; }
 .hstat-highlight {
   grid-column: span 2;
-  background: linear-gradient(135deg, rgba(244,123,0,.14), rgba(232,189,58,.06));
-  border-color: rgba(244,123,0,.25);
+  background: linear-gradient(135deg, rgba(244,123,0,.16), rgba(232,189,58,.10));
+  border-color: rgba(244,123,0,.3);
 }
 .hstat-icon { font-size: 26px; margin-bottom: 8px; }
 .hstat-num {
@@ -877,7 +910,15 @@ p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
   background: linear-gradient(135deg, #fff, var(--sf2));
   -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
 }
-.hstat-highlight .hstat-num { font-size: 26px; }
+.hstat-highlight .hstat-num {
+  font-size: 26px;
+  /* The base .hstat-num gradient (white → light orange) is illegible here
+     since this card's own background is also a light orange tint — same
+     light-on-light contrast problem as the card-background fix above.
+     Use a solid, more saturated color instead of a gradient for this one. */
+  background: none; -webkit-text-fill-color: initial;
+  color: #A85200;
+}
 .hstat-label {
   font-size: 11px; font-weight: 700; letter-spacing: 1px;
   text-transform: uppercase; color: rgba(255,255,255,.4);
