@@ -122,14 +122,23 @@ function searchCabs() {
   const retDateEl = document.getElementById('rdate');
   const retDate = retDateEl ? retDateEl.value : '';
   BKM.S.pu      = p;
-  BKM.S.dr      = d;
   BKM.S.date    = pickupDate;
   BKM.S.time    = pickupTime;
   BKM.S.retdate = retDate;
   BKM.S.trip    = _heroTripType; // carry trip type from hero widget into modal
   if (pickupPlaceData && pickupPlaceData.lat) BKM._puData = pickupPlaceData;
-  if (dropPlaceData   && dropPlaceData.lat)   BKM._drData = dropPlaceData;
   BKM._preDistKm = 0;
+
+  if (_heroTripType === 'roundtrip') {
+    // Round trip: Drop field = return destination (defaults to pickup).
+    // Hero "To" value becomes Stop 1 automatically.
+    BKM.S.dr = p; // Drop = pickup (return to same city by default)
+    BKM.S.extraCities = d ? [d] : []; // Hero destination → Stop 1
+  } else {
+    BKM.S.dr = d;
+    if (dropPlaceData && dropPlaceData.lat) BKM._drData = dropPlaceData;
+    BKM.S.extraCities = [];
+  }
   bkmOpen({ prefill: true });
 }
 
@@ -390,15 +399,23 @@ function bkmOpen(opts={}){
     if(dtEl && BKM.S.date) dtEl.value = BKM.S.date;
     if(tmEl && BKM.S.time) tmEl.value = BKM.S.time;
     if(retEl && BKM.S.retdate) retEl.value = BKM.S.retdate;
-    // BUG FIX: bkmSetTrip → _bkmSyncRTDrop unconditionally wipes drEl.value
-    // and BKM.S.dr for one-way trips, erasing any prefilled drop location.
-    // Save dr first, then restore it after bkmSetTrip if trip is not round-trip.
+    // Save dr before bkmSetTrip (which calls _bkmSyncRTDrop and may reset it)
     const _prefillDr = BKM.S.dr;
+    const _prefillStops = (BKM.S.extraCities || []).slice();
     // Sync modal trip buttons to match hero widget selection
     if(BKM.S.trip) bkmSetTrip(BKM.S.trip);
-    if(_prefillDr && BKM.S.trip !== 'roundtrip') {
+    // After bkmSetTrip, restore the correct values:
+    // - One way: restore dr as typed destination
+    // - Round trip: dr = pickup (return city), stops already set by hero handler
+    if(BKM.S.trip !== 'roundtrip') {
       BKM.S.dr = _prefillDr;
       if(drEl) drEl.value = _prefillDr;
+    } else {
+      // Ensure drop field shows pickup value (return destination)
+      if(drEl) drEl.value = BKM.S.dr;
+      // Restore stops (hero destination was placed in extraCities)
+      BKM.S.extraCities = _prefillStops;
+      _bkmRenderStops();
     }
     BKM.S.distKm = 0;
     const distEl = document.getElementById('bkm-dist');
@@ -406,7 +423,7 @@ function bkmOpen(opts={}){
     if(BKM._preDistKm > 0){
       BKM.S.distKm = BKM._preDistKm;
       _bkmShowDist(`~${BKM._preDistKm} km`);
-    } else if(BKM.S.pu && BKM.S.dr){
+    } else if(BKM.S.pu && (BKM.S.dr || (BKM.S.extraCities||[]).length)){
       _bkmMaybeLiveDist();
     }
   }
@@ -429,7 +446,7 @@ function _bkmReset(){
   S.name=''; S.phone=''; S.email=''; S.notes='';
   S.bookingId=''; S.extraCities=[]; S.retloc='';
   BKM._preDistKm=0; BKM._puData={}; BKM._drData={};
-  ['bk-pu','bk-dr','bk-dt','bk-tm','bk-ret','bk-ret-tm','bk-retloc','bk-pn','bk-ph','bk-em','bk-notes']
+  ['bk-pu','bk-dr','bk-dt','bk-tm','bk-ret','bk-ret-tm','bk-pn','bk-ph','bk-em','bk-notes']
     .forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
   const distEl = document.getElementById('bkm-dist');
   if(distEl) distEl.classList.remove('show');
@@ -489,44 +506,36 @@ function bkmSetTrip(t){
   const stopsBlock = document.getElementById('bkm-stops-block');
   if(stopsBlock) stopsBlock.style.display = t==='roundtrip' ? '' : 'none';
   if(t==='oneway'){
+    // Switching to one-way clears stops (they were RT intermediate cities)
     BKM.S.extraCities=[];
     const stopList = document.getElementById('bkm-stop-list');
     if(stopList) stopList.innerHTML='';
+    // Also clear dr so customer types fresh destination
+    BKM.S.dr='';
+    const drEl2=document.getElementById('bk-dr'); if(drEl2) drEl2.value='';
   }
   if(BKM.S.distKm > 0) _bkmRenderLiveFares();
   _bkmSyncRTDrop(t);
 }
 
 function _bkmSyncRTDrop(t){
-  const drEl      = document.getElementById('bk-dr');
-  const drLabel   = document.getElementById('bk-dr-label');
-  const puEl      = document.getElementById('bk-pu');
-  const retLocEl  = document.getElementById('bk-retloc');
+  const drEl    = document.getElementById('bk-dr');
+  const drLabel = document.getElementById('bk-dr-label');
+  const puEl    = document.getElementById('bk-pu');
   if(!drEl) return;
   if(t==='roundtrip'){
-    // Round trip: Drop field stays editable as the main destination.
-    // "Return To" field (bk-retloc) is pre-filled with pickup but editable.
+    // Round trip: Drop field = return destination (editable, defaults to pickup).
+    // Hero "To" destination has already been placed in extraCities as Stop 1.
     drEl.readOnly = false;
     drEl.classList.remove('u-drop-locked');
     drEl.style.background=''; drEl.style.color=''; drEl.style.cursor=''; drEl.style.borderColor='';
-    if(drLabel) drLabel.textContent = '🏁 Drop Location *';
-    // Pre-fill Return To with pickup location
-    if(retLocEl){
-      retLocEl.value = puEl ? puEl.value : '';
-      BKM.S.retloc = retLocEl.value;
-      // Attach autocomplete to retloc if not already done
-      if(!retLocEl._acAttached){
-        retLocEl._acAttached = true;
-        _bkmAttachAC(retLocEl, name => {
-          retLocEl.value = name;
-          BKM.S.retloc = name;
-          BKM.S.distKm = 0; BKM._preDistKm = 0;
-          const distEl = document.getElementById('bkm-dist');
-          if(distEl) distEl.classList.remove('show');
-          _bkmMaybeLiveDist();
-        });
-      }
+    // Pre-fill with pickup if drop is empty or same — customer can change it
+    const puVal = puEl ? puEl.value : '';
+    if(!drEl.value || drEl.value === puVal){
+      drEl.value = puVal;
+      BKM.S.dr = puVal;
     }
+    if(drLabel) drLabel.innerHTML = '🔄 Return To <span style="font-size:.62rem;color:var(--sf-400);font-weight:600">(editable)</span>';
     BKM.S.distKm = 0; BKM._preDistKm = 0;
     const distEl = document.getElementById('bkm-dist');
     if(distEl) distEl.classList.remove('show');
@@ -537,8 +546,9 @@ function _bkmSyncRTDrop(t){
     drEl.classList.remove('u-drop-locked');
     drEl.style.background=''; drEl.style.color=''; drEl.style.cursor=''; drEl.style.borderColor='';
     drEl.value = '';
-    BKM.S.dr = ''; BKM.S.retloc = ''; BKM.S.distKm = 0; BKM._preDistKm = 0;
-    if(retLocEl) retLocEl.value = '';
+    BKM.S.dr = ''; BKM.S.extraCities = []; BKM.S.distKm = 0; BKM._preDistKm = 0;
+    const stopList = document.getElementById('bkm-stop-list');
+    if(stopList) stopList.innerHTML = '';
     const distEl = document.getElementById('bkm-dist');
     if(distEl) distEl.classList.remove('show');
     const lf = document.getElementById('bkmLiveFares');
@@ -662,21 +672,21 @@ async function _bkmStep1Next(){
   BKM.S.retdate = ret;
   BKM.S.rettime = document.getElementById('bk-ret-tm')?.value || '';
   BKM.S.pax = (document.getElementById('bk-pax')||{}).value || '3–4 Passengers';
-  // Save Return To location (editable in round trip, defaults to pickup)
-  const retLocEl = document.getElementById('bk-retloc');
-  if(BKM.S.trip === 'roundtrip'){
-    BKM.S.retloc = (retLocEl && retLocEl.value.trim()) ? retLocEl.value.trim() : pu;
-  } else {
-    BKM.S.retloc = '';
-  }
+  BKM.S.retloc = '';
   if(!BKM.S.distKm || BKM.S.distKm === 0){
     const isRound = BKM.S.trip === 'roundtrip';
     const stops = (BKM.S.extraCities||[]).filter(c=>c.trim());
-    // Round trip: Pickup → [extra stops] → Drop → ReturnTo
-    const retDest = isRound ? (BKM.S.retloc || pu) : null;
-    const waypoints = isRound ? [pu, ...stops, dr, retDest] : [pu, ...stops, dr];
-    if(waypoints.length > 2){ await _bkmFetchDistMultiStop(waypoints); }
-    else { await _bkmFetchDist(pu, dr); }
+    if(isRound){
+      // RT: Pickup → [stops] → return destination (dr field)
+      const returnDest = dr || pu;
+      const waypoints = [pu, ...stops, returnDest];
+      if(waypoints.length > 2){ await _bkmFetchDistMultiStop(waypoints); }
+      else { await _bkmFetchDist(pu, returnDest); }
+    } else {
+      const waypoints = [pu, ...stops, dr];
+      if(waypoints.length > 2){ await _bkmFetchDistMultiStop(waypoints); }
+      else { await _bkmFetchDist(pu, dr); }
+    }
   }
   if(!BKM.S.distKm || BKM.S.distKm === 0){
     bkmToast('⚠️ Could not calculate route distance. Please check locations and try again.');
@@ -1234,16 +1244,25 @@ function _bkmHidePortal(){
 function _bkmMaybeLiveDist(){
   const pu=(BKM.S.pu||(document.getElementById('bk-pu')||{}).value||'').trim();
   const dr=(BKM.S.dr||(document.getElementById('bk-dr')||{}).value||'').trim();
-  if(!pu||!dr) return;
+  if(!pu) return;
   const isRound=BKM.S.trip==='roundtrip';
   const stops=(BKM.S.extraCities||[]).filter(c=>c.trim());
-  // Round trip: Pickup → [stops] → Drop → ReturnTo (editable, defaults to pickup)
-  const retLocEl=document.getElementById('bk-retloc');
-  const retDest=isRound?((retLocEl&&retLocEl.value.trim())||BKM.S.retloc||pu):null;
-  const waypoints=isRound?[pu,...stops,dr,retDest]:[pu,...stops,dr];
-  _bkmShowDist('Calculating…');
-  if(waypoints.length>2){ _bkmFetchDistMultiStop(waypoints); }
-  else { _bkmFetchDist(pu,dr); }
+  if(isRound){
+    // RT: Pickup → [stops] → return destination (drop field)
+    // Need at least 1 stop to have a meaningful route
+    if(!stops.length && !dr) return;
+    const returnDest = dr || pu;
+    const waypoints = [pu, ...stops, returnDest];
+    _bkmShowDist('Calculating…');
+    if(waypoints.length>2){ _bkmFetchDistMultiStop(waypoints); }
+    else { _bkmFetchDist(pu, returnDest); }
+  } else {
+    if(!dr) return;
+    const waypoints=[pu,...stops,dr];
+    _bkmShowDist('Calculating…');
+    if(waypoints.length>2){ _bkmFetchDistMultiStop(waypoints); }
+    else { _bkmFetchDist(pu,dr); }
+  }
 }
 
 function _bkmFmtDate(s){
@@ -1328,7 +1347,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const bkDrEl=document.getElementById('bk-dr');
   if(bkPuEl) _bkmAttachAC(bkPuEl, name=>{
     bkPuEl.value=name; BKM.S.pu=name;
-    if(BKM.S.trip==='roundtrip'&&bkDrEl){ bkDrEl.value=name; BKM.S.dr=name; }
+    // Round trip: Drop = return destination. If it was empty or matched the old
+    // pickup, keep it in sync with the new pickup automatically.
+    if(BKM.S.trip==='roundtrip'&&bkDrEl){
+      if(!bkDrEl.value || bkDrEl.value===BKM.S.pu || bkDrEl.value===bkPuEl.value){
+        bkDrEl.value=name; BKM.S.dr=name;
+      }
+    }
     BKM.S.distKm=0; BKM._preDistKm=0;
     const distEl=document.getElementById('bkm-dist'); if(distEl) distEl.classList.remove('show');
     const lf=document.getElementById('bkmLiveFares'); if(lf) lf.classList.remove('show');
