@@ -730,6 +730,12 @@ function _bkmBuildCabs(){
     kmLabel=`~${km} km actual · ${billedKm>km?`Min ${packageKm} km billed (${days}×250)`:`${billedKm} km billed`} · +₹${days*300} driver allowance`;
   }
   set('bkrs-km', kmLabel);
+  const noteEl = document.getElementById('bkmNote');
+  if(noteEl){
+    noteEl.innerHTML = isRound
+      ? '💡 Fare includes driver charges. Toll, parking &amp; state permit extra. Balance paid to driver after trip.'
+      : '💡 All inclusive — nothing extra except parking.';
+  }
   const cabList = document.getElementById('bkmCabList');
   if(cabList) cabList.innerHTML = BKM_VEHICLES.map((v,i) => {
     const days=_bkmCalcDays();

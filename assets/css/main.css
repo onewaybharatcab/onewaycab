@@ -1220,7 +1220,7 @@ input:-webkit-autofill:focus {
 }
 .bkm-cab-rt{flex-direction:column;align-items:stretch}
 
-.bkm-note{background:rgba(200,90,0,.06);border:1px dashed rgba(200,90,0,.3);border-radius:8px;padding:9px 12px;font-size:.73rem;color:var(--bk-muted);margin-top:10px;line-height:1.5}
+.bkm-note{background:linear-gradient(135deg,#2d1a00,#4a2c00);border:1.5px solid rgba(255,180,90,.3);border-radius:10px;padding:11px 14px;font-size:.78rem;font-weight:700;color:#fff3e0;margin-top:10px;line-height:1.5;box-shadow:0 4px 14px rgba(45,26,0,.25)}
 
 /* OTP inputs */
 .bkm-otp-inputs{display:flex;gap:6px;justify-content:center;margin:16px 0}
