@@ -268,6 +268,15 @@ body{
 .finput:focus{ border-color:var(--sf); box-shadow:0 0 0 3px var(--sfg); }
 .finput::placeholder{ color:var(--ink-faint); }
 .finput:disabled{ opacity:.5; cursor:not-allowed; }
+/* Native <select> popups (Chrome/Edge/Firefox) ignore a translucent
+   background like the one above and silently fall back to the OS default
+   white-list/blue-highlight rendering — that's why the "Issue Type" and
+   "Booking ID" dropdown lists looked like a different, unthemed site.
+   Giving <option> its own solid (non-transparent) background/color makes
+   the browser render the open list in the dashboard's own palette instead. */
+select.finput option{ background:var(--base3); color:var(--wh); }
+select.finput option:checked,
+select.finput option:hover{ background:var(--sf3); color:var(--wh); }
 .form-card{ background:var(--base3); border:1px solid var(--line); border-radius:var(--r24); padding:24px; margin-bottom:18px; }
 .form-card-title{ font-family:'Cinzel',serif; font-size:15px; color:var(--wh); margin-bottom:20px; }
 .form-status{ font-size:12.5px; margin-top:10px; min-height:1px; }
