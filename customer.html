@@ -170,10 +170,22 @@
       <div class="form-card">
         <div class="form-card-title">Raise a Support Ticket</div>
         <div style="display:flex;flex-direction:column;gap:12px">
-          <div class="field"><label>Booking ID (optional)</label><select class="finput" id="tkBookingId"><option value="">— Not related to a specific booking —</option></select></div>
-          <div class="field"><label>Issue Type</label><select class="finput" id="tkIssueType">
-            <option>Driver didn't arrive</option><option>Wrong fare charged</option><option>Refund not received</option><option>Driver complaint</option><option>Payment issue</option><option>Other</option>
-          </select></div>
+          <div class="field"><label>Booking ID (optional)</label>
+            <div class="csel" id="tkBookingIdWrap">
+              <select class="finput csel-native" id="tkBookingId"><option value="">— Not related to a specific booking —</option></select>
+              <div class="csel-box"><span class="csel-val">— Not related to a specific booking —</span><span class="csel-arrow">▾</span></div>
+              <div class="csel-list"></div>
+            </div>
+          </div>
+          <div class="field"><label>Issue Type</label>
+            <div class="csel" id="tkIssueTypeWrap">
+              <select class="finput csel-native" id="tkIssueType">
+                <option>Driver didn't arrive</option><option>Wrong fare charged</option><option>Refund not received</option><option>Driver complaint</option><option>Payment issue</option><option>Other</option>
+              </select>
+              <div class="csel-box"><span class="csel-val">Driver didn't arrive</span><span class="csel-arrow">▾</span></div>
+              <div class="csel-list"></div>
+            </div>
+          </div>
           <div class="field"><label>Description</label><textarea class="finput" id="tkDescription" rows="3" style="resize:vertical;padding-top:10px" placeholder="Describe your issue..."></textarea></div>
           <button class="btn-sm btn-sf" onclick="submitTicket()" style="align-self:flex-start;padding:10px 22px">📨 Submit Ticket</button>
           <div class="form-status" id="ticketStatus"></div>
@@ -281,6 +293,8 @@ function startResendTimer(){
   }, 1000);
 }
 document.addEventListener('DOMContentLoaded', ()=>{
+  initCustomSelect('tkBookingId');
+  initCustomSelect('tkIssueType');
   const phoneInput = document.getElementById('loginPhone');
   if(phoneInput) phoneInput.addEventListener('input', ()=>{
     let digits = phoneInput.value.replace(/\D/g,'');
@@ -552,6 +566,50 @@ function populateTicketBookingDropdown(){
   const sel = document.getElementById('tkBookingId');
   sel.innerHTML = '<option value="">— Not related to a specific booking —</option>' +
     myBookings.map(b=>`<option value="${escapeHtml(b.id)}">${escapeHtml(b.id)} — ${escapeHtml(ticketRoute(b))}</option>`).join('');
+  refreshCustomSelect(sel);
+}
+
+/* ── Themed custom dropdown, replacing native <select> popups ──
+   The <select> stays in the DOM (hidden) purely as the value/source of
+   truth; submitTicket() etc. keep reading .value exactly as before. */
+function initCustomSelect(selectId){
+  const sel = document.getElementById(selectId);
+  const wrap = sel.closest('.csel');
+  const box = wrap.querySelector('.csel-box');
+  const valEl = wrap.querySelector('.csel-val');
+  const list = wrap.querySelector('.csel-list');
+
+  function renderList(){
+    list.innerHTML = Array.from(sel.options).map((o,i)=>
+      `<div class="csel-item${o.value===sel.value?' sel':''}" data-idx="${i}">${escapeHtml(o.textContent)}</div>`
+    ).join('');
+    list.querySelectorAll('.csel-item').forEach(item=>{
+      item.addEventListener('click', ()=>{
+        sel.selectedIndex = +item.dataset.idx;
+        valEl.textContent = sel.options[sel.selectedIndex].textContent;
+        sel.dispatchEvent(new Event('change'));
+        closeList();
+      });
+    });
+  }
+  function openList(){
+    document.querySelectorAll('.csel.open').forEach(o=>{ if(o!==wrap) o.classList.remove('open'); });
+    renderList();
+    wrap.classList.add('open');
+  }
+  function closeList(){ wrap.classList.remove('open'); }
+  box.addEventListener('click', (e)=>{
+    e.stopPropagation();
+    wrap.classList.contains('open') ? closeList() : openList();
+  });
+  document.addEventListener('click', (e)=>{ if(!wrap.contains(e.target)) closeList(); });
+
+  valEl.textContent = sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].textContent : '';
+  wrap._refresh = ()=>{ valEl.textContent = sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].textContent : ''; };
+}
+function refreshCustomSelect(sel){
+  const wrap = sel.closest('.csel');
+  if(wrap && wrap._refresh) wrap._refresh();
 }
 async function submitTicket(){
   const statusEl = document.getElementById('ticketStatus');
