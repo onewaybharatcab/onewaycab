@@ -281,6 +281,15 @@ function startResendTimer(){
   }, 1000);
 }
 document.addEventListener('DOMContentLoaded', ()=>{
+  const phoneInput = document.getElementById('loginPhone');
+  if(phoneInput) phoneInput.addEventListener('input', ()=>{
+    let digits = phoneInput.value.replace(/\D/g,'');
+    // If a country code was pasted in (e.g. "+91 98114 19926"), strip the
+    // leading 91 rather than blindly truncating to 10 digits — otherwise
+    // the last 2 real digits get cut off and silently swapped for "91".
+    if(digits.length > 10 && digits.startsWith('91')) digits = digits.slice(2);
+    phoneInput.value = digits.slice(0,10);
+  });
   const boxes = document.querySelectorAll('#otpRow input');
   boxes.forEach((box, i)=>{
     box.addEventListener('input', ()=>{
