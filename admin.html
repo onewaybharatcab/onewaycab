@@ -10,15 +10,22 @@
 <body>
 
 <!-- LOGIN SCREEN -->
-<div id="loginScreen" style="position:fixed;inset:0;z-index:200;background:var(--nv);display:flex;align-items:center;justify-content:center;font-family:'Nunito',sans-serif">
-  <form id="loginForm" style="background:var(--nv3);border:1px solid rgba(255,255,255,0.08);border-radius:var(--r20);padding:36px 32px;width:320px;text-align:center">
+<!-- Colors here intentionally match the public site's "Warm Peach Theme"
+     (see main.css / shared-chrome.css :root) rather than the admin
+     dashboard's dark navy palette below (var(--nv) etc.) — this is a
+     login page, so it should look like the site's brand, not a different
+     dark-mode app. Hardcoded (not var()) since these don't exist in
+     admin.css and shouldn't be added there, as the rest of the dashboard
+     stays dark navy on purpose. -->
+<div id="loginScreen" style="position:fixed;inset:0;z-index:200;background:#FFF0E8;display:flex;align-items:center;justify-content:center;font-family:'Nunito',sans-serif">
+  <form id="loginForm" style="background:#FFF8F0;border:1.5px solid rgba(180,90,0,.18);border-radius:var(--r20);padding:36px 32px;width:320px;text-align:center;box-shadow:0 20px 60px rgba(120,50,0,.18)">
     <div style="font-size:38px;margin-bottom:6px">🚕</div>
-    <div style="font-family:'Cinzel',serif;font-weight:700;font-size:18px;color:#fff;margin-bottom:2px">One-Way Bhaarat</div>
-    <div style="font-size:12px;color:rgba(255,255,255,0.45);margin-bottom:22px">Admin Panel Login</div>
-    <input id="loginUser" type="text" placeholder="Username" autocomplete="username" required style="width:100%;box-sizing:border-box;padding:11px 14px;border-radius:var(--r6);border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:#fff;font-size:14px;margin-bottom:10px;font-family:'Nunito',sans-serif">
-    <input id="loginPass" type="password" placeholder="Password" autocomplete="current-password" required style="width:100%;box-sizing:border-box;padding:11px 14px;border-radius:var(--r6);border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:#fff;font-size:14px;margin-bottom:14px;font-family:'Nunito',sans-serif">
+    <div style="font-family:'Cinzel',serif;font-weight:700;font-size:18px;color:#2D1A00;margin-bottom:2px">One-Way Bhaarat</div>
+    <div style="font-size:12px;color:#7A5030;margin-bottom:22px">Admin Panel Login</div>
+    <input id="loginUser" type="text" placeholder="Username" autocomplete="username" required style="width:100%;box-sizing:border-box;padding:11px 14px;border-radius:var(--r6);border:1px solid rgba(180,90,0,.25);background:#FFF3E6;color:#2D1A00;font-size:14px;margin-bottom:10px;font-family:'Nunito',sans-serif">
+    <input id="loginPass" type="password" placeholder="Password" autocomplete="current-password" required style="width:100%;box-sizing:border-box;padding:11px 14px;border-radius:var(--r6);border:1px solid rgba(180,90,0,.25);background:#FFF3E6;color:#2D1A00;font-size:14px;margin-bottom:14px;font-family:'Nunito',sans-serif">
     <button type="submit" class="btn-sm btn-sf" style="width:100%;padding:11px;font-size:13px;justify-content:center">Log In</button>
-    <div id="loginError" style="color:#f87171;font-size:12px;margin-top:12px;display:none"></div>
+    <div id="loginError" style="color:#C0392B;font-size:12px;margin-top:12px;display:none"></div>
   </form>
 </div>
 
