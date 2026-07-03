@@ -48,6 +48,23 @@ document.addEventListener('DOMContentLoaded', () => {
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') closeMobMenu();
   });
+
+  // ── Cross-page "Book Now" links ──────────────────────────────────────────
+  // Other pages (about, fleet, faq, routes, etc.) don't have a standalone
+  // booking page — the only booking flow is the modal here on index.html.
+  // Links to it use index.html#book (optionally with ?from=&to= to deep-link
+  // a specific route from routes.html); on arrival, open the modal
+  // automatically and prefill pickup/drop if those params are present.
+  // bkmOpen() itself no-ops safely if #bkModal isn't on the page, so this
+  // is harmless on pages where the modal markup doesn't exist.
+  if (window.location.hash === '#book' && typeof bkmOpen === 'function') {
+    const params = new URLSearchParams(window.location.search);
+    const fromParam = params.get('from');
+    const toParam = params.get('to');
+    if (fromParam) BKM.S.pu = fromParam;
+    if (toParam) BKM.S.dr = toParam;
+    bkmOpen({ prefill: !!(fromParam || toParam) });
+  }
 });
 
 // ── Trip type (hero widget) ─────────────────────────────────────────────────
@@ -779,7 +796,11 @@ function _bkmCalcDays(){
   const S=BKM.S;
   if(!S.date||!S.retdate) return 1;
   const d1=new Date(S.date),d2=new Date(S.retdate);
-  const diff=Math.ceil((d2-d1)/(1000*60*60*24));
+  // Inclusive day count: a trip from the 7th to the 10th engages the
+  // vehicle/driver on the 7th, 8th, 9th, AND 10th — 4 days, not 3. Plain
+  // (d2-d1) gives the number of nights/exclusive days between the two
+  // dates, which undercounts by one for any real multi-day package.
+  const diff=Math.ceil((d2-d1)/(1000*60*60*24)) + 1;
   return Math.max(1,diff);
 }
 
@@ -910,6 +931,39 @@ function _bkmInitPayPanel(){
   set('ppFull','₹'+S.totalFare.toLocaleString('en-IN'));
   set('bkmMinLabel',adv.toLocaleString('en-IN'));
   bkmSelectPayOpt('partial');
+  _bkmCheckWalletBalance();
+}
+
+// If the visitor previously logged into "My Bookings" (customer.html), a
+// session token sits in sessionStorage under a DIFFERENT key than the
+// booking widget's own state — purely additive: nobody is required to log
+// in to book, this only shows up for someone who already has a session.
+async function _bkmCheckWalletBalance(){
+  const token = sessionStorage.getItem('owb_customer_token');
+  const row = document.getElementById('bkmWalletRow');
+  if(!token || !row){ if(row) row.style.display='none'; return; }
+  try{
+    const res = await fetch('/api/customer/wallet', {headers:{'Authorization':'Bearer '+token}});
+    if(!res.ok) throw new Error();
+    const data = await res.json();
+    const bal = Number((data.wallet||{}).balance || 0);
+    if(bal > 0){
+      BKM.S.walletBalance = bal;
+      document.getElementById('bkmWalletBal').textContent = '₹'+bal.toLocaleString('en-IN');
+      row.style.display = 'block';
+    } else {
+      row.style.display = 'none';
+    }
+  }catch(e){
+    row.style.display = 'none';
+  }
+}
+function bkmToggleWallet(){
+  const checked = document.getElementById('bkmWalletToggle').checked;
+  BKM.S.walletApplied = checked ? Math.min(BKM.S.walletBalance||0, BKM.S.payAmt||0) : 0;
+  // Re-run the active mode's summary text so the "pay now" figure reflects
+  // the wallet discount immediately.
+  bkmSelectPayOpt(BKM.S.payMode);
 }
 
 function bkmSelectPayOpt(mode){
@@ -917,11 +971,18 @@ function bkmSelectPayOpt(mode){
   ['ppOpt10','ppOptCustom','ppOptFull'].forEach(id=>document.getElementById(id)?.classList.remove('on'));
   const customRow=document.getElementById('bkmCustomRow');
   const summary=document.getElementById('bkmPaySummary');
+  const walletOn = document.getElementById('bkmWalletToggle')?.checked;
+  const walletBal = BKM.S.walletBalance||0;
   if(mode==='partial'){
     document.getElementById('ppOpt10')?.classList.add('on');
     if(customRow) customRow.style.display='none';
     BKM.S.payAmt=BKM.S.advAmt;
-    if(summary) summary.textContent=`Pay ₹${BKM.S.advAmt.toLocaleString('en-IN')} now. Remaining ₹${(BKM.S.totalFare-BKM.S.advAmt).toLocaleString('en-IN')} to driver.`;
+    const walletUse = walletOn ? Math.min(walletBal, BKM.S.payAmt) : 0;
+    BKM.S.walletApplied = walletUse;
+    const toPay = Math.max(0, BKM.S.payAmt - walletUse);
+    if(summary) summary.textContent = walletUse>0
+      ? `₹${walletUse.toLocaleString('en-IN')} wallet credit applied. Pay ₹${toPay.toLocaleString('en-IN')} now. Remaining ₹${(BKM.S.totalFare-BKM.S.payAmt).toLocaleString('en-IN')} to driver.`
+      : `Pay ₹${BKM.S.advAmt.toLocaleString('en-IN')} now. Remaining ₹${(BKM.S.totalFare-BKM.S.advAmt).toLocaleString('en-IN')} to driver.`;
   } else if(mode==='custom'){
     document.getElementById('ppOptCustom')?.classList.add('on');
     if(customRow){ customRow.style.display='block'; const ci=document.getElementById('bkmCustomAmt'); if(ci){ ci.focus(); } }
@@ -930,7 +991,12 @@ function bkmSelectPayOpt(mode){
     document.getElementById('ppOptFull')?.classList.add('on');
     if(customRow) customRow.style.display='none';
     BKM.S.payAmt=BKM.S.totalFare;
-    if(summary) summary.textContent=`Full fare paid upfront. No balance due to driver.`;
+    const walletUse = walletOn ? Math.min(walletBal, BKM.S.payAmt) : 0;
+    BKM.S.walletApplied = walletUse;
+    const toPay = Math.max(0, BKM.S.payAmt - walletUse);
+    if(summary) summary.textContent = walletUse>0
+      ? `₹${walletUse.toLocaleString('en-IN')} wallet credit applied. Pay ₹${toPay.toLocaleString('en-IN')} now. No balance due to driver.`
+      : `Full fare paid upfront. No balance due to driver.`;
   }
 }
 
@@ -945,8 +1011,15 @@ function bkmValidateCustom(){
   } else {
     if(err) err.style.display='none';
     BKM.S.payAmt=v;
+    const walletOn = document.getElementById('bkmWalletToggle')?.checked;
+    const walletBal = BKM.S.walletBalance||0;
+    const walletUse = walletOn ? Math.min(walletBal, v) : 0;
+    BKM.S.walletApplied = walletUse;
+    const toPay = Math.max(0, v - walletUse);
     const summary=document.getElementById('bkmPaySummary');
-    if(summary) summary.textContent=`Pay ₹${v.toLocaleString('en-IN')} now. Balance ₹${(BKM.S.totalFare-v).toLocaleString('en-IN')} to driver.`;
+    if(summary) summary.textContent = walletUse>0
+      ? `₹${walletUse.toLocaleString('en-IN')} wallet credit applied. Pay ₹${toPay.toLocaleString('en-IN')} now. Balance ₹${(BKM.S.totalFare-v).toLocaleString('en-IN')} to driver.`
+      : `Pay ₹${v.toLocaleString('en-IN')} now. Balance ₹${(BKM.S.totalFare-v).toLocaleString('en-IN')} to driver.`;
   }
 }
 
@@ -958,6 +1031,13 @@ async function bkmTriggerRazorpay(){
   }
   const amt=BKM.S.payAmt;
   if(!amt){ bkmToast('⚠️ Please select a payment amount'); return; }
+  // Wallet credit reduces what actually needs to go through Razorpay, but
+  // Razorpay requires a minimum ₹1 charge — so even with full wallet
+  // coverage, at least ₹1 still goes through the gateway. The server
+  // verifies and debits the real wallet amount independently; this is just
+  // what we ask Razorpay to charge.
+  const walletApplied = Math.min(BKM.S.walletApplied||0, amt-1);
+  const chargeAmt = Math.max(1, amt - walletApplied);
   const statusEl=document.getElementById('bkmPayStatus');
   if(typeof Razorpay==='undefined'){
     bkmToast('⏳ Loading payment gateway, please wait…');
@@ -980,7 +1060,20 @@ async function bkmTriggerRazorpay(){
   try{
     let res, rawText;
     try{
-      res = await fetch('/api/payment/create-order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({amount:amt,bookingId:BKM.S.bookingId})});
+      const stopsForOrder = (BKM.S.extraCities||[]).filter(c=>c.trim()).length;
+      const custToken = sessionStorage.getItem('owb_customer_token');
+      res = await fetch('/api/payment/create-order',{method:'POST',headers:Object.assign({'Content-Type':'application/json'}, custToken?{'Authorization':'Bearer '+custToken}:{}),body:JSON.stringify({
+        amount:chargeAmt,
+        walletApplied:walletApplied,
+        bookingId:BKM.S.bookingId,
+        vehicle:BKM.S.vehicle,
+        tripType:BKM.S.trip,
+        distKm:BKM.S.distKm,
+        stops:stopsForOrder,
+        days:_bkmCalcDays(),
+        date:BKM.S.date,
+        retDate:BKM.S.retdate
+      })});
       rawText = await res.text();
       order = JSON.parse(rawText);
     }catch(fetchErr){
@@ -1028,6 +1121,11 @@ async function _bkmVerifyAndConfirm(response,statusEl){
     }
     bkmToast('✅ Payment successful! Booking confirmed.');
     if(statusEl){ statusEl.style.display='block'; statusEl.style.color='var(--gr-300)'; statusEl.textContent='✅ Payment successful! Booking ID: '+BKM.S.bookingId; }
+    // The worker only hands this back after checking the Razorpay signature
+    // AND looking up the amount it itself pinned when the order was created
+    // — booking/notify and booking/customer-confirm now require it before
+    // they'll treat anything as "paid", so it has to travel with the booking.
+    BKM.S.paymentToken = data.payment_token || '';
     // Lock the payment panel immediately so the booking can't be paid for
     // twice and the form doesn't look "still active" once it's done.
     _bkmLockPayPanel();
@@ -1129,16 +1227,22 @@ async function _bkmNotifyPayment(paymentId){
   // The old payload omitted from/to/date/time/extraCities, which caused
   // the WhatsApp template parameters to arrive as "—", triggering Meta
   // error 132000 (parameter mismatch) and silently dropping the message.
+  // verifyToken + paymentToken are required by worker.js on every call now
+  // (proof of OTP verification + proof of a real signature-checked
+  // payment) — without them the server rejects this as unconfirmed.
   const S=BKM.S; const stops=(S.extraCities||[]).filter(c=>c.trim());
   try{
-    await fetch('/api/booking/notify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({booking:{id:S.bookingId,paymentId,payAmt:S.payAmt,name:S.name,phone:S.phone,email:S.email,from:S.pu,to:S.dr,vehicle:S.vehicleName,tripType:S.trip,date:S.date,time:S.time,retdate:S.retdate,fare:S.totalFare,advance:S.advAmt,distKm:S.distKm,pax:S.pax,notes:S.notes,extraCities:stops,type:'payment'}})});
+    await fetch('/api/booking/notify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({verifyToken:S.verifyToken,paymentToken:S.paymentToken,booking:{id:S.bookingId,paymentId,paymentToken:S.paymentToken,payAmt:S.payAmt,name:S.name,phone:S.phone,email:S.email,from:S.pu,to:S.dr,vehicle:S.vehicleName,tripType:S.trip,date:S.date,time:S.time,retdate:S.retdate,fare:S.totalFare,advance:S.advAmt,distKm:S.distKm,pax:S.pax,notes:S.notes,extraCities:stops,type:'payment'}})});
   }catch(e){ /* non-critical */ }
 }
 
 async function _bkmNotifyCustomer(paymentId){
+  // paymentToken is required by worker.js — proof a real Razorpay payment
+  // was signature-verified for this booking before it'll tell the customer
+  // "payment completed".
   const S=BKM.S; const stops=(S.extraCities||[]).filter(c=>c.trim());
   try{
-    await fetch('/api/booking/customer-confirm',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({verifyToken:S.verifyToken,booking:{id:S.bookingId,name:S.name,phone:S.phone,from:S.pu,to:S.dr,vehicle:S.vehicleName,tripType:S.trip,date:S.date,time:S.time,retdate:S.retdate,fare:S.totalFare,advance:S.advAmt,payAmt:S.payAmt,distKm:S.distKm,pax:S.pax,notes:S.notes,extraCities:stops,paymentId:paymentId||''}})});
+    await fetch('/api/booking/customer-confirm',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({verifyToken:S.verifyToken,paymentToken:S.paymentToken,booking:{id:S.bookingId,name:S.name,phone:S.phone,from:S.pu,to:S.dr,vehicle:S.vehicleName,tripType:S.trip,date:S.date,time:S.time,retdate:S.retdate,fare:S.totalFare,advance:S.advAmt,payAmt:S.payAmt,distKm:S.distKm,pax:S.pax,notes:S.notes,extraCities:stops,paymentId:paymentId||'',paymentToken:S.paymentToken}})});
   }catch(e){ /* non-critical */ }
 }
 

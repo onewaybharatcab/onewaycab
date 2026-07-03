@@ -1,8 +1,8 @@
 # One-Way Bhaarat — AI-readable site summary
 # https://one-waybharat.com
 
-> One-Way Bhaarat Pvt. Ltd. is India's intercity one-way cab booking service,
-> operating since 2022 and serving 20,000+ locations across all Indian states.
+> One-Way Bhaarat is an intercity one-way cab booking service serving
+> 20,000+ locations across all Indian states.
 
 ## What We Do
 - One-way outstation cab bookings (no return charge)
@@ -11,8 +11,8 @@
 - Multi-stop outstation journeys
 
 ## Pricing
-- Starting from ₹13/km for sedans (one-way)
-- Vehicle types: Sedan (Hyundai Aura), SUV (Maruti Ertiga), Premium SUV (Toyota Innova Crysta), Tempo Traveller (Force Urbania)
+- Starting from ₹16/km for sedans (one-way); ₹11/km for sedans (round-trip)
+- Vehicle types: Sedan (Swift Dzire / Honda Amaze / Aspire), Ertiga (Maruti Ertiga / XL6, 6-seater), Innova Crysta (Toyota Innova Crysta, 7-seater), Tempo Traveller (12-seater Force / Mahindra)
 
 ## Coverage
 - 20,000+ Indian cities and towns
@@ -42,11 +42,10 @@
 5. Receive booking confirmation and driver details on WhatsApp
 
 ## Trust Signals
-- 50,000+ completed trips
-- 4.8★ average customer rating
-- Verified and background-checked drivers
-- No hidden charges — what you see is what you pay
+- Transparent, upfront fare shown before payment — no hidden charges
+- OTP-verified bookings before any payment is accepted
 - Instant WhatsApp confirmation for every booking
+- 24×7 direct phone/WhatsApp support
 
 ## Languages Supported
 - English, Hindi

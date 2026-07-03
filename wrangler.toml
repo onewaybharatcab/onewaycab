@@ -11,7 +11,13 @@ fallthrough = true
 SITE_ENV                   = "production"
 SITE_NAME                  = "One-Way Bhaarat"
 SITE_URL                   = "https://one-waybharat.com"
-WHATSAPP_OTP_TEMPLATE_NAME = "oneway_otp"
+WHATSAPP_OTP_TEMPLATE_NAME              = "oneway_otp"
+WHATSAPP_NOTIFY_TEMPLATE_NAME           = "oneway_notification_v2"
+WHATSAPP_CUSTOMER_CONFIRM_TEMPLATE_NAME = "oneway_booking_confirmed"
+WHATSAPP_CUSTOMER_ASSIGN_TEMPLATE_NAME  = "oneway_assignment_confirmed"
+WHATSAPP_DRIVER_ASSIGN_TEMPLATE_NAME    = "oneway_driver_assignment"
+WHATSAPP_REVIEW_REQUEST_TEMPLATE_NAME   = "oneway_review_request"
+WHATSAPP_ASSIGN_NOTIFY_TEMPLATE_NAME    = "oneway_notification"
 
 # KV namespace used for API rate limiting AND OTP storage in worker.js.
 # Create it with: npx wrangler kv namespace create RATE_LIMIT_KV
@@ -19,6 +25,14 @@ WHATSAPP_OTP_TEMPLATE_NAME = "oneway_otp"
 [[kv_namespaces]]
 binding = "RATE_LIMIT_KV"
 id      = "a01b1526f880448f957dc69b78078ee0"
+
+# KV namespace used for the CRM: duties/bookings, drivers, admin users,
+# and login sessions. Create it with:
+#   npx wrangler kv namespace create CRM_KV
+# then paste the returned id below (replace REPLACE_WITH_KV_NAMESPACE_ID).
+[[kv_namespaces]]
+binding = "CRM_KV"
+id      = "79bc5e496d66471582d79954c9eaaebe"
 
 # ── Routes — intercept /api/* on the main domain ─────────────────────────────
 [[routes]]
@@ -38,3 +52,21 @@ zone_name = "one-waybharat.com"
 #  Both live as Worker secrets only — worker.js reads them via env.RAZORPAY_KEY_ID
 #  and env.RAZORPAY_KEY_SECRET and hands the public key_id back to the browser
 #  per-order; the secret itself never leaves the server.)
+#
+# CRM / duty-assignment secrets — see CRM_SETUP.md for the full one-time setup
+# walkthrough (creating the first admin user, WhatsApp templates, etc).
+#   npx wrangler secret put SESSION_SECRET
+#   npx wrangler secret put WHATSAPP_DRIVER_ASSIGN_TEMPLATE_NAME   # optional, defaults to oneway_driver_assignment
+#   npx wrangler secret put WHATSAPP_CUSTOMER_ASSIGN_TEMPLATE_NAME # optional, defaults to oneway_assignment_confirmed
+#   npx wrangler secret put GOOGLE_REVIEW_LINK                     # REQUIRED for review requests — get from Google Business Profile
+#                                                                   # Format: https://g.page/r/YOUR_PLACE_ID/review
+# (SESSION_SECRET — any long random string, used to sign admin/driver login
+#  session tokens. Generate one with: openssl rand -hex 32)
+#
+# CRM / duty-assignment secrets — see CRM_SETUP.md for the full one-time setup
+# walkthrough (creating the first admin user, WhatsApp templates, etc).
+#   npx wrangler secret put SESSION_SECRET
+#   npx wrangler secret put WHATSAPP_DRIVER_ASSIGN_TEMPLATE_NAME   # optional, defaults to oneway_driver_assignment
+#   npx wrangler secret put WHATSAPP_CUSTOMER_ASSIGN_TEMPLATE_NAME # optional, defaults to oneway_assignment_confirmed
+# (SESSION_SECRET — any long random string used to sign admin/driver login
+#  session tokens. Generate one with: openssl rand -hex 32)

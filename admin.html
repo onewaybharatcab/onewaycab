@@ -40,6 +40,7 @@
     <div class="nav-sec">Finance</div>
     <div class="ni" onclick="showPanel('payments',this)"><span class="ni-ic">💳</span> Payments</div>
     <div class="ni" onclick="showPanel('refunds',this)"><span class="ni-ic">↩️</span> Refunds</div>
+    <div class="ni" onclick="showPanel('tickets',this)"><span class="ni-ic">💬</span> Support Tickets</div>
     <div class="ni" onclick="showPanel('gst',this)"><span class="ni-ic">🧾</span> GST Reports</div>
     <div class="ni" onclick="showPanel('coupons',this)"><span class="ni-ic">🎫</span> Coupons</div>
     <div class="nav-sec">Config</div>
@@ -283,6 +284,12 @@
       <div class="tbl-wrap"><div id="rfTbl"></div></div>
     </div>
 
+    <!-- SUPPORT TICKETS -->
+    <div class="panel" id="pn-tickets">
+      <div class="sec-hdr"><div class="sec-title">Support Tickets</div></div>
+      <div class="tbl-wrap"><div id="tkTbl"></div></div>
+    </div>
+
     <!-- GST -->
     <div class="panel" id="pn-gst">
       <div class="sec-hdr"><div class="sec-title">GST Reports</div></div>
@@ -431,16 +438,16 @@ function renderAllBookings(){
   if(!items.length){ el.innerHTML = '<div class="empty-state"><div class="es-ic">🗓️</div><div class="es-tx">No duties found</div></div>'; return; }
   el.innerHTML = '<table><thead><tr><th>Booking ID</th><th>Customer</th><th>Route</th><th>Date/Time</th><th>Fare</th><th>Driver</th><th>Status</th><th>Actions</th></tr></thead><tbody>' +
     items.map(d=>`<tr>
-      <td><span style="font-size:11px;font-family:monospace;color:#93c5fd">${d.id}</span></td>
-      <td><div style="font-weight:700">${escapeHtml(d.name)}</div><div style="font-size:11px;color:rgba(255,255,255,0.6)">${d.phone}</div></td>
+      <td><span style="font-size:11px;font-family:monospace;color:#93c5fd">${escapeHtml(d.id)}</span></td>
+      <td><div style="font-weight:700">${escapeHtml(d.name)}</div><div style="font-size:11px;color:rgba(255,255,255,0.6)">${escapeHtml(d.phone||'')}</div></td>
       <td style="font-weight:600;font-size:12px">${escapeHtml(dutyRoute(d))}</td>
       <td style="font-size:12px;color:rgba(255,255,255,0.72)">${escapeHtml(d.date||'')} ${escapeHtml(d.time||'')}</td>
       <td><div style="font-weight:700">₹${Number(d.fare||0).toLocaleString('en-IN')}</div></td>
       <td style="font-size:12px">${d.driverName ? escapeHtml(d.driverName)+'<br><span style=\"color:rgba(255,255,255,0.5)\">'+escapeHtml(d.vehicleNumber||'')+'</span>' : '<span style=\"color:rgba(255,255,255,0.35)\">Unassigned</span>'}</td>
       <td>${statusBadge(d.status)}</td>
       <td><div class="action-row">
-        ${(d.status==='new'||d.status==='assigned') ? `<button class="ab ab-v" onclick="openAssignModal('${d.id}')">${d.status==='new'?'Assign':'Reassign'}</button>` : ''}
-        ${d.status!=='cancelled' && d.status!=='completed' ? `<button class="ab ab-d" onclick="cancelDuty('${d.id}')">Cancel</button>` : ''}
+        ${(d.status==='new'||d.status==='assigned') ? `<button class="ab ab-v" data-id="${escapeHtml(d.id)}" onclick="openAssignModal(this.dataset.id)">${d.status==='new'?'Assign':'Reassign'}</button>` : ''}
+        ${d.status!=='cancelled' && d.status!=='completed' ? `<button class="ab ab-d" data-id="${escapeHtml(d.id)}" onclick="cancelDuty(this.dataset.id)">Cancel</button>` : ''}
       </div></td>
     </tr>`).join('') + '</tbody></table>';
 }
@@ -451,8 +458,8 @@ function renderRecentBookings(){
   if(!recent.length){ el.innerHTML = '<div class="empty-state"><div class="es-ic">🗓️</div><div class="es-tx">No bookings yet</div></div>'; return; }
   el.innerHTML = '<table><thead><tr><th>Booking ID</th><th>Customer</th><th>Route</th><th>Date</th><th>Fare</th><th>Status</th></tr></thead><tbody>' +
     recent.map(d=>`<tr>
-      <td><span style="font-size:11px;font-family:monospace;color:#93c5fd">${d.id}</span></td>
-      <td><div style="font-weight:700">${escapeHtml(d.name)}</div><div style="font-size:11px;color:rgba(255,255,255,0.80)">${d.phone}</div></td>
+      <td><span style="font-size:11px;font-family:monospace;color:#93c5fd">${escapeHtml(d.id)}</span></td>
+      <td><div style="font-weight:700">${escapeHtml(d.name)}</div><div style="font-size:11px;color:rgba(255,255,255,0.80)">${escapeHtml(d.phone||'')}</div></td>
       <td style="font-weight:600;font-size:12px">${escapeHtml(dutyRoute(d))}</td>
       <td style="font-size:12px;color:rgba(255,255,255,0.72)">${escapeHtml(d.date||'')}</td>
       <td style="font-weight:700">₹${Number(d.fare||0).toLocaleString('en-IN')}</td>
@@ -518,13 +525,13 @@ function openAssignModal(dutyId){
   assignDutyId = dutyId;
   document.getElementById('assignError').style.display='none';
   document.getElementById('assignDutySummary').innerHTML =
-    `<b>${escapeHtml(duty.name)}</b> (${duty.phone})<br>${escapeHtml(dutyRoute(duty))}<br>${escapeHtml(duty.date||'')} ${escapeHtml(duty.time||'')} · ₹${Number(duty.fare||0).toLocaleString('en-IN')}`;
+    `<b>${escapeHtml(duty.name)}</b> (${escapeHtml(duty.phone||'')})<br>${escapeHtml(dutyRoute(duty))}<br>${escapeHtml(duty.date||'')} ${escapeHtml(duty.time||'')} · ₹${Number(duty.fare||0).toLocaleString('en-IN')}`;
   const select = document.getElementById('assignDriverSelect');
   const activeDrivers = allDrivers.filter(d=>d.active);
   if(!activeDrivers.length){
     select.innerHTML = '<option value="">No active drivers — add one first</option>';
   } else {
-    select.innerHTML = activeDrivers.map(d=>`<option value="${d.phone}" data-veh="${escapeHtml(d.vehicleNumber||'')}">${escapeHtml(d.name)} — ${d.phone} (${escapeHtml(d.vehicleType||'')})</option>`).join('');
+    select.innerHTML = activeDrivers.map(d=>`<option value="${escapeHtml(d.phone)}" data-veh="${escapeHtml(d.vehicleNumber||'')}">${escapeHtml(d.name)} — ${escapeHtml(d.phone)} (${escapeHtml(d.vehicleType||'')})</option>`).join('');
   }
   select.onchange = ()=>{
     const opt = select.options[select.selectedIndex];
@@ -581,11 +588,11 @@ function renderDrivers(){
   if(!items.length){ el.innerHTML = '<div class="empty-state"><div class="es-ic">🚗</div><div class="es-tx">No drivers yet — click "+ Add Driver" to get started</div></div>'; return; }
   el.innerHTML = '<table><thead><tr><th>Phone (Login)</th><th>Name</th><th>Vehicle</th><th>Status</th><th>Actions</th></tr></thead><tbody>' +
     items.map(d=>`<tr>
-      <td style="font-size:12px;font-family:monospace;color:#93c5fd">${d.phone}</td>
+      <td style="font-size:12px;font-family:monospace;color:#93c5fd">${escapeHtml(d.phone||'')}</td>
       <td style="font-weight:700">${escapeHtml(d.name)}</td>
       <td style="font-size:12px">${escapeHtml(d.vehicleType||'—')} ${d.vehicleNumber? '· '+escapeHtml(d.vehicleNumber):''}</td>
       <td>${d.active ? '<span class="sbadge sb-act">Active</span>' : '<span class="sbadge sb-inact">Inactive</span>'}</td>
-      <td><div class="action-row"><button class="ab ab-e" onclick="openEditDriverModal('${d.phone}')">Edit</button></div></td>
+      <td><div class="action-row"><button class="ab ab-e" data-phone="${escapeHtml(d.phone||'')}" onclick="openEditDriverModal(this.dataset.phone)">Edit</button></div></td>
     </tr>`).join('') + '</tbody></table>';
 }
 
@@ -757,7 +764,7 @@ function showPanel(name,navEl){
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('act'));
   document.getElementById('pn-'+name).classList.add('act');
   if(navEl){document.querySelectorAll('.ni').forEach(n=>n.classList.remove('act'));navEl.classList.add('act');}
-  const titles={dashboard:'Dashboard',bookings:'Bookings',customers:'Customers',drivers:'Drivers',vehicles:'Vehicles',routes:'Routes',payments:'Payments',refunds:'Refunds',gst:'GST Reports',coupons:'Coupons',pricing:'Pricing',analytics:'Analytics'};
+  const titles={dashboard:'Dashboard',bookings:'Bookings',customers:'Customers',drivers:'Drivers',vehicles:'Vehicles',routes:'Routes',payments:'Payments',refunds:'Refunds',tickets:'Support Tickets',gst:'GST Reports',coupons:'Coupons',pricing:'Pricing',analytics:'Analytics'};
   document.getElementById('tbTitle').textContent=titles[name]||name;
   if(name==='bookings'){renderAllBookings();}
   if(name==='drivers'){renderDrivers();}
@@ -768,6 +775,7 @@ function showPanel(name,navEl){
   if(name==='routes'){renderRoutes();}
   if(name==='coupons'){renderCoupons();}
   if(name==='refunds'){renderRefunds();}
+  if(name==='tickets'){renderTickets();}
   if(name==='gst'){renderGst();}
   if(name==='dashboard'){loadDashboardStats();}
   if(name==='analytics'){renderAnalyticsPanel();}
@@ -817,7 +825,7 @@ async function renderVehicles(){
   try{
     const {vehicles}=await api('/vehicle/list');
     if(!vehicles.length){wrap.innerHTML='<div style="padding:60px;text-align:center"><div style="font-size:48px">🚗</div><div style="font-size:16px;color:rgba(255,255,255,0.4);margin-top:12px">No vehicles yet — click "+ Add Vehicle" to create one.</div></div>';return;}
-    wrap.innerHTML=`<table><thead><tr><th></th><th>Name</th><th>Capacity</th><th>Notes</th><th></th></tr></thead><tbody>${vehicles.map(v=>`<tr><td style="font-size:22px">${escapeHtml(v.icon)}</td><td style="font-weight:700">${escapeHtml(v.name)}</td><td>${escapeHtml(v.capacity)}</td><td style="color:rgba(255,255,255,.5)">${escapeHtml(v.notes||'—')}</td><td><button class="btn-sm btn-ol" onclick="deleteVehicle('${v.id}')">Delete</button></td></tr>`).join('')}</tbody></table>`;
+    wrap.innerHTML=`<table><thead><tr><th></th><th>Name</th><th>Capacity</th><th>Notes</th><th></th></tr></thead><tbody>${vehicles.map(v=>`<tr><td style="font-size:22px">${escapeHtml(v.icon)}</td><td style="font-weight:700">${escapeHtml(v.name)}</td><td>${escapeHtml(v.capacity)}</td><td style="color:rgba(255,255,255,.5)">${escapeHtml(v.notes||'—')}</td><td><button class="btn-sm btn-ol" data-id="${escapeHtml(v.id)}" onclick="deleteVehicle(this.dataset.id)">Delete</button></td></tr>`).join('')}</tbody></table>`;
   }catch(e){wrap.innerHTML=`<div style="padding:40px;text-align:center;color:#f87171">${escapeHtml(e.message)}</div>`;}
 }
 async function deleteVehicle(id){
@@ -843,7 +851,7 @@ async function renderRoutes(){
   try{
     const {routes}=await api('/route/list');
     if(!routes.length){wrap.innerHTML='<div style="padding:60px;text-align:center"><div style="font-size:48px">🗺️</div><div style="font-size:16px;color:rgba(255,255,255,0.4);margin-top:12px">No routes yet — click "+ Add Route" to create one.</div></div>';return;}
-    wrap.innerHTML=`<table><thead><tr><th>From</th><th>To</th><th>Distance</th><th>Notes</th><th></th></tr></thead><tbody>${routes.map(r=>`<tr><td style="font-weight:700">${escapeHtml(r.from)}</td><td style="font-weight:700">${escapeHtml(r.to)}</td><td>${r.distanceKm?r.distanceKm+' km':'—'}</td><td style="color:rgba(255,255,255,.5)">${escapeHtml(r.notes||'—')}</td><td><button class="btn-sm btn-ol" onclick="deleteRoute('${r.id}')">Delete</button></td></tr>`).join('')}</tbody></table>`;
+    wrap.innerHTML=`<table><thead><tr><th>From</th><th>To</th><th>Distance</th><th>Notes</th><th></th></tr></thead><tbody>${routes.map(r=>`<tr><td style="font-weight:700">${escapeHtml(r.from)}</td><td style="font-weight:700">${escapeHtml(r.to)}</td><td>${r.distanceKm?r.distanceKm+' km':'—'}</td><td style="color:rgba(255,255,255,.5)">${escapeHtml(r.notes||'—')}</td><td><button class="btn-sm btn-ol" data-id="${escapeHtml(r.id)}" onclick="deleteRoute(this.dataset.id)">Delete</button></td></tr>`).join('')}</tbody></table>`;
   }catch(e){wrap.innerHTML=`<div style="padding:40px;text-align:center;color:#f87171">${escapeHtml(e.message)}</div>`;}
 }
 async function deleteRoute(id){
@@ -870,7 +878,7 @@ async function renderCoupons(){
   try{
     const {coupons}=await api('/coupon/list');
     if(!coupons.length){wrap.innerHTML='<div style="padding:60px;text-align:center"><div style="font-size:48px">🎫</div><div style="font-size:16px;color:rgba(255,255,255,0.4);margin-top:12px">No coupons yet — click "+ Create Coupon" to add one.</div></div>';return;}
-    wrap.innerHTML=`<table><thead><tr><th>Code</th><th>Discount</th><th>Expires</th><th>Status</th><th></th></tr></thead><tbody>${coupons.map(c=>`<tr><td style="font-weight:700;font-family:monospace;color:#93c5fd">${escapeHtml(c.code)}</td><td style="font-weight:700;color:var(--gr3)">${c.discountPercent}%</td><td style="color:rgba(255,255,255,.5)">${c.expiresAt||'—'}</td><td>${badge(c.active?'Active':'Inactive')}</td><td style="display:flex;gap:6px"><button class="btn-sm btn-ol" onclick="toggleCoupon('${c.code}',${!c.active})">${c.active?'Deactivate':'Activate'}</button><button class="btn-sm btn-ol" onclick="deleteCoupon('${c.code}')">Delete</button></td></tr>`).join('')}</tbody></table>`;
+    wrap.innerHTML=`<table><thead><tr><th>Code</th><th>Discount</th><th>Expires</th><th>Status</th><th></th></tr></thead><tbody>${coupons.map(c=>`<tr><td style="font-weight:700;font-family:monospace;color:#93c5fd">${escapeHtml(c.code)}</td><td style="font-weight:700;color:var(--gr3)">${c.discountPercent}%</td><td style="color:rgba(255,255,255,.5)">${c.expiresAt||'—'}</td><td>${badge(c.active?'Active':'Inactive')}</td><td style="display:flex;gap:6px"><button class="btn-sm btn-ol" data-code="${escapeHtml(c.code)}" data-active="${!c.active}" onclick="toggleCoupon(this.dataset.code, this.dataset.active==='true')">${c.active?'Deactivate':'Activate'}</button><button class="btn-sm btn-ol" data-code="${escapeHtml(c.code)}" onclick="deleteCoupon(this.dataset.code)">Delete</button></td></tr>`).join('')}</tbody></table>`;
   }catch(e){wrap.innerHTML=`<div style="padding:40px;text-align:center;color:#f87171">${escapeHtml(e.message)}</div>`;}
 }
 async function toggleCoupon(code,active){
@@ -907,6 +915,36 @@ async function renderRefunds(){
 async function updateRefundStatus(id,status){
   if(!status)return;
   try{await api('/refund/update',{method:'POST',body:JSON.stringify({id,status})});renderRefunds();}catch(e){alert(e.message);}
+}
+
+// ── Support tickets ───────────────────────────────────────────────────────
+async function renderTickets(){
+  const wrap=document.getElementById('tkTbl');
+  wrap.innerHTML='<div style="padding:40px;text-align:center;color:rgba(255,255,255,.4)">Loading…</div>';
+  try{
+    const {tickets}=await api('/admin/tickets');
+    if(!tickets.length){wrap.innerHTML='<div style="padding:60px;text-align:center"><div style="font-size:48px">💬</div><div style="font-size:16px;color:rgba(255,255,255,0.4);margin-top:12px">No support tickets yet.</div></div>';return;}
+    const statusLabel={open:'Pending',in_progress:'Active',resolved:'Completed',closed:'Cancelled'};
+    wrap.innerHTML=`<table><thead><tr><th>Ticket</th><th>Customer</th><th>Booking</th><th>Issue</th><th>Description</th><th>Status</th><th></th></tr></thead><tbody>${tickets.map(t=>`<tr>
+      <td style="font-family:monospace;font-size:11px;color:#93c5fd">${escapeHtml(t.id)}</td>
+      <td>${escapeHtml(t.customerName||'—')}<br><span style="font-size:11px;color:rgba(255,255,255,.4)">+91 ${escapeHtml(t.phone)}</span></td>
+      <td style="font-family:monospace;font-size:11px">${escapeHtml(t.bookingId||'—')}</td>
+      <td>${escapeHtml(t.issueType)}</td>
+      <td style="max-width:260px;color:rgba(255,255,255,.6);font-size:12px">${escapeHtml(t.description)}</td>
+      <td>${badge(statusLabel[t.status])}</td>
+      <td><select class="finput" style="padding:4px 8px;font-size:12px" onchange="updateTicketStatus('${t.id}',this.value)">
+        <option value="">Update…</option>
+        <option value="open" ${t.status==='open'?'selected':''}>Open</option>
+        <option value="in_progress" ${t.status==='in_progress'?'selected':''}>In Progress</option>
+        <option value="resolved" ${t.status==='resolved'?'selected':''}>Resolved</option>
+        <option value="closed" ${t.status==='closed'?'selected':''}>Closed</option>
+      </select></td>
+    </tr>`).join('')}</tbody></table>`;
+  }catch(e){wrap.innerHTML=`<div style="padding:40px;text-align:center;color:#f87171">${escapeHtml(e.message)}</div>`;}
+}
+async function updateTicketStatus(id,status){
+  if(!status)return;
+  try{await api('/admin/ticket-update',{method:'POST',body:JSON.stringify({id,status})});renderTickets();}catch(e){alert(e.message);}
 }
 
 // ── GST summary ───────────────────────────────────────────────────────────

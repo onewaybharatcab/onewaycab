@@ -7,10 +7,11 @@
   <link rel="icon" href="./assets/images/favicon.ico" type="image/x-icon">
 <meta name="theme-color" content="#F47B00">
 <link rel="apple-touch-icon" href="./assets/images/apple-touch-icon.png">
-<meta name="description" content="Learn about One-Way Bhaarat Pvt. Ltd. — Ghaziabad-based intercity cab company serving 20,000+ Indian destinations. Our mission, values, and story of making one-way travel affordable.'s premium one-way taxi service, est. 2022, serving 20,000+ locations with verified drivers and transparent fares.">
+<meta name="description" content="Learn about One-Way Bhaarat Pvt. Ltd. — a Ghaziabad-based intercity cab service covering 20,000+ Indian destinations. Our mission, values, and story of making one-way travel affordable.">
 <link rel="canonical" href="https://one-waybharat.com/about.html">
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Nunito:wght@400;500;600;700&family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="./assets/css/about.css">
+<link rel="stylesheet" href="./assets/css/shared-chrome.css">
 
 <script type="application/ld+json">
 {
@@ -34,10 +35,59 @@
 </script>
 </head>
 <body>
-<header>
-  <a href="index.html" class="logo"><div class="lem">🚕</div><div><span class="ln">One-Way Bhaarat</span><span class="ls">Pvt. Ltd.</span></div></a>
-  <nav><a href="index.html">Home</a><a href="fleet.html">Fleet</a><a href="routes.html">Routes</a><a href="contact.html">Contact</a><a href="booking.html" class="ncta">Book Now</a></nav>
+<div style="height:68px" aria-hidden="true"></div>
+<header id="header">
+  <div class="header-inner">
+    <a href="index.html" class="logo">
+      <div class="logo-emblem">🚕</div>
+      <div>
+        <span class="logo-name">One-Way Bhaarat</span>
+        <span class="logo-subtitle">✦ One Destination, One Fare ✦</span>
+      </div>
+    </a>
+    <nav class="header-nav">
+      <a href="fleet.html"    class="nav-link">Fleet</a>
+      <a href="routes.html"   class="nav-link">Routes</a>
+      <a href="faq.html"      class="nav-link">FAQ</a>
+      <a href="about.html"    class="nav-link">About</a>
+      <a href="contact.html"  class="nav-link">Contact</a>
+      <a href="customer.html" class="nav-link">My Bookings</a>
+      <a href="index.html#book" class="nav-link nav-cta">🚕 Book Now</a>
+      <a href="tel:+919355757579" class="nav-link nav-phone">📞 +91-93557 57579</a>
+    </nav>
+    <button id="hamBtn" aria-label="Open menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
 </header>
+
+<div class="mob-overlay" id="mobOverlay" onclick="closeMobMenu()"></div>
+<div class="mob-drawer" id="mobDrawer" role="dialog" aria-label="Navigation menu">
+  <div class="mob-drawer-head">
+    <div class="mob-logo">
+      <span>🚕</span>
+      <span class="mob-logo-name">One-Way Bhaarat</span>
+    </div>
+    <button class="mob-close" onclick="closeMobMenu()" aria-label="Close menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
+  <nav class="mob-nav">
+    <a href="fleet.html"    class="mob-link">🚗 Fleet</a>
+    <a href="routes.html"   class="mob-link">🗺️ Routes</a>
+    <a href="faq.html"      class="mob-link">❓ FAQ</a>
+    <a href="about.html"    class="mob-link">ℹ️ About Us</a>
+    <a href="contact.html"  class="mob-link">📬 Contact</a>
+    <a href="customer.html" class="mob-link">👤 My Bookings</a>
+  </nav>
+  <div class="mob-actions">
+    <div class="mob-tricolor"><span></span><span></span><span></span></div>
+    <a href="index.html#book" class="mob-book-btn">🚕 Book Now</a>
+    <a href="tel:+919355757579" class="mob-call-btn">📞 +91-93557 57579</a>
+  </div>
+</div>
 
 <div class="hero">
   <div class="hero-inner">
@@ -45,14 +95,14 @@
       <div class="ptag">🇮🇳 Our Story</div>
       <h1 class="hero-h">Born from the <span class="accent">Roads of Bhaarat</span></h1>
       <p class="hero-p">We got tired of watching drivers charge for a return trip nobody asked for — so we built something better. Today, One-Way Bhaarat puts fair, flat-fare one-way cabs within reach of 20,000+ towns and cities, no haggling required.</p>
-      <div class="hero-btns"><a href="booking.html" class="btn-p">🚕 Book a Cab</a><a href="contact.html" class="btn-s">📞 Contact Us</a></div>
+      <div class="hero-btns"><a href="index.html#book" class="btn-p">🚕 Book a Cab</a><a href="contact.html" class="btn-s">📞 Contact Us</a></div>
     </div>
     <div class="stats-card">
       <div class="stats-grid">
-        <div class="sitem"><span class="snum">50K+</span><span class="slbl">Happy Riders</span></div>
         <div class="sitem"><span class="snum">20K+</span><span class="slbl">Locations</span></div>
         <div class="sitem"><span class="snum">500+</span><span class="slbl">Routes</span></div>
-        <div class="sitem"><span class="snum">4.8★</span><span class="slbl">Rating</span></div>
+        <div class="sitem"><span class="snum">4</span><span class="slbl">Vehicle Types</span></div>
+        <div class="sitem"><span class="snum">24×7</span><span class="slbl">Support</span></div>
       </div>
     </div>
   </div>
@@ -67,7 +117,7 @@
       <div class="story-text">
         <p>India is a country of incredible distances. Millions travel between cities, towns and villages every day for work, family and pilgrimage. Yet outstation cab travelers faced a persistent problem — <strong>being charged for the driver's return trip even on one-way journeys.</strong></p>
         <p>We founded One-Way Bhaarat to fix this. Our mission: connect passengers with verified drivers for one-way intercity trips at <strong>fair, transparent prices with no hidden charges</strong> and no forced round-trip billing.</p>
-        <p>Starting from Ghaziabad, UP, we've grown one satisfied customer at a time to serve <strong>50,000+ happy riders across 20,000+ locations</strong>. From metros to the smallest villages on Google Maps — if you need to go there, we'll get you there.</p>
+        <p>Starting from Ghaziabad, UP, we're building a network that already reaches <strong>20,000+ locations across India</strong> — from metros to the smallest villages on Google Maps. If you need to go there, we'll get you there.</p>
         <p>We are <strong>proudly Indian, proudly Make in India</strong>, committed to serving every corner of this great nation with dignity, safety and affordability.</p>
       </div>
       <div class="story-visual">
@@ -96,19 +146,18 @@
   </div>
 </section>
 
-<!-- Timeline -->
+<!-- What We Offer -->
 <section class="timeline-sec">
   <div class="sec-inner">
-    <div class="sec-tag">🏆 Milestones</div>
-    <h2 class="sec-title">Our <span class="accent">Journey So Far</span></h2>
-    <p class="sec-sub">From a small startup in Ghaziabad to India's fastest-growing one-way cab platform.</p>
+    <div class="sec-tag">🚀 What We Offer Today</div>
+    <h2 class="sec-title">Built for <span class="accent">Honest, Hassle-Free</span> Travel</h2>
+    <p class="sec-sub">A focused one-way cab platform — here's exactly what's live right now.</p>
     <div class="timeline">
-      <div class="mile"><div class="mile-year">2022 — Founded</div><div class="mile-title">One-Way Bhaarat Launched</div><div class="mile-text">Started operations from Ghaziabad, UP with 10 partner drivers and 5 routes in the NCR region.</div></div>
-      <div class="mile"><div class="mile-year">2022 — Growth</div><div class="mile-title">First 500 Completed Trips</div><div class="mile-text">Reached 500 trips milestone in 6 months. Expanded to the Delhi–Agra–Jaipur triangle.</div></div>
-      <div class="mile"><div class="mile-year">2023 — Expansion</div><div class="mile-title">Pan-India Coverage Begins</div><div class="mile-text">Expanded to Mumbai, Bangalore, Chennai and Hyderabad. Fleet grew to 50+ driver partners.</div></div>
-      <div class="mile"><div class="mile-year">2023 — Technology</div><div class="mile-title">Digital Platform Launch</div><div class="mile-text">Online booking website with OTP verification, fare calculator, and payment gateway integration. 5,000+ customers served.</div></div>
-      <div class="mile"><div class="mile-year">2024 — Achieved</div><div class="mile-title">50,000+ Happy Riders</div><div class="mile-text">Crossed 50,000 completed trips. Now serving 20,000+ locations across all Indian states. 4.8★ average rating.</div></div>
-      <div class="mile"><div class="mile-year">2026 — Expanding</div><div class="mile-title">AI & Corporate Expansion</div><div class="mile-text">Launching AI-powered fare prediction, corporate billing dashboards, and driver mobile app. Target: 1 Lakh trips by year end.</div></div>
+      <div class="mile"><div class="mile-year">Coverage</div><div class="mile-title">20,000+ Locations</div><div class="mile-text">Pickup and drop anywhere in India that Google Maps can route to — metros, towns, and everything in between.</div></div>
+      <div class="mile"><div class="mile-year">Fleet</div><div class="mile-title">4 Vehicle Types</div><div class="mile-text">Sedan, Ertiga, Innova Crysta, and Tempo Traveller — pick based on group size and comfort.</div></div>
+      <div class="mile"><div class="mile-year">Booking</div><div class="mile-title">OTP-Verified, Transparent Fares</div><div class="mile-text">Phone-verified bookings, an upfront fare shown before you pay, and instant WhatsApp confirmation.</div></div>
+      <div class="mile"><div class="mile-year">Payments</div><div class="mile-title">Secure Online Payment</div><div class="mile-text">Pay a partial advance or the full fare online via Razorpay, with the balance settled directly with your driver.</div></div>
+      <div class="mile"><div class="mile-year">Coming Soon</div><div class="mile-title">Driver App & Corporate Billing</div><div class="mile-text">A dedicated driver mobile app and corporate billing dashboards are in development.</div></div>
     </div>
   </div>
 </section>
@@ -119,11 +168,11 @@
     <div class="sec-tag">🌟 Trust Signals</div>
     <h2 class="sec-title">Built on <span class="accent">Trust & Transparency</span></h2>
     <div class="trust-grid">
-      <div class="tcard"><div class="tcard-icon">🏛️</div><div class="tcard-title">Registered Company</div><div class="tcard-sub">One-Way Bhaarat Pvt. Ltd.<br>CIN Registered, India</div></div>
-      <div class="tcard"><div class="tcard-icon">🔒</div><div class="tcard-title">Secure Payments</div><div class="tcard-sub">PCI-DSS Compliant<br>256-bit SSL Encrypted</div></div>
-      <div class="tcard"><div class="tcard-icon">✅</div><div class="tcard-title">Verified Drivers</div><div class="tcard-sub">Police Verified<br>License Checked</div></div>
+      <div class="tcard"><div class="tcard-icon">🏛️</div><div class="tcard-title">Registered Company</div><div class="tcard-sub">One-Way Bhaarat Pvt. Ltd.<br>Registered in India</div></div>
+      <div class="tcard"><div class="tcard-icon">🔒</div><div class="tcard-title">Secure Payments</div><div class="tcard-sub">Razorpay Payment Gateway<br>256-bit SSL Encrypted</div></div>
+      <div class="tcard"><div class="tcard-icon">✅</div><div class="tcard-title">Verified Drivers</div><div class="tcard-sub">Background Verified<br>License Checked</div></div>
       <div class="tcard"><div class="tcard-icon">📍</div><div class="tcard-title">GPS Tracking</div><div class="tcard-sub">Real-time every trip<br>Share with family</div></div>
-      <div class="tcard"><div class="tcard-icon">⭐</div><div class="tcard-title">4.8★ Rating</div><div class="tcard-sub">500+ verified reviews<br>Consistently rated</div></div>
+      <div class="tcard"><div class="tcard-icon">💰</div><div class="tcard-title">Transparent Pricing</div><div class="tcard-sub">Fare shown before you pay<br>no return-trip markup</div></div>
       <div class="tcard"><div class="tcard-icon">🧾</div><div class="tcard-title">GST Invoices</div><div class="tcard-sub">Valid tax invoices<br>Every booking</div></div>
     </div>
   </div>
@@ -131,13 +180,12 @@
 
 <div class="cta-sec">
   <h2>Your Next Trip Across <span class="accent">Bhaarat</span> Starts Here</h2>
-  <p>50,000+ riders already trust us to get them there — flat fare, zero drama. Your turn.</p>
-  <a href="booking.html" class="btn-p">🚕 Book Your Cab Now →</a>
+  <p>One flat fare, zero drama. Your turn.</p>
+  <a href="index.html#book" class="btn-p">🚕 Book Your Cab Now →</a>
 </div>
 
 <footer>
   <div class="footer-top">
-    <!-- Brand -->
     <div class="footer-brand">
       <span class="fb-name">🚕 One-Way Bhaarat</span>
       <p>One Destination, One Fare. One Way Bharat.</p>
@@ -146,36 +194,24 @@
       <div class="footer-contact-row"><span class="ic">✉️</span><a href="mailto:onewaybharatcab@gmail.com">onewaybharatcab@gmail.com</a></div>
       <div class="footer-contact-row"><span class="ic">🌐</span><a href="https://one-waybharat.com">one-waybharat.com</a></div>
       <div class="footer-socials">
-        <a href="https://www.facebook.com/profile.php?id=61590974556339" class="footer-social-btn fb" title="Facebook" aria-label="Facebook" target="_blank" rel="noopener">
-          <svg viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M22 12.06C22 6.5 17.52 2 12 2S2 6.5 2 12.06c0 5 3.66 9.15 8.44 9.94v-7.03H7.9v-2.91h2.54V9.41c0-2.51 1.49-3.89 3.77-3.89 1.09 0 2.23.2 2.23.2v2.45h-1.26c-1.24 0-1.63.78-1.63 1.57v1.87h2.78l-.45 2.91h-2.33V22c4.78-.79 8.44-4.94 8.44-9.94z"/></svg>
-        </a>
-        <a href="#" class="footer-social-btn ig" title="Instagram" aria-label="Instagram" target="_blank" rel="noopener">
-          <svg viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M12 2.16c3.2 0 3.58.01 4.85.07 3.25.15 4.77 1.69 4.92 4.92.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.15 3.23-1.66 4.77-4.92 4.92-1.27.06-1.64.07-4.85.07s-3.58-.01-4.85-.07c-3.26-.15-4.77-1.7-4.92-4.92-.06-1.27-.07-1.65-.07-4.85s.01-3.58.07-4.85C2.38 3.92 3.9 2.38 7.15 2.23 8.42 2.17 8.8 2.16 12 2.16zM12 0C8.74 0 8.33.01 7.05.07 2.7.27.27 2.7.07 7.05.01 8.33 0 8.74 0 12s.01 3.67.07 4.95c.2 4.35 2.62 6.78 6.98 6.98C8.33 23.99 8.74 24 12 24s3.67-.01 4.95-.07c4.35-.2 6.78-2.62 6.98-6.98.06-1.28.07-1.69.07-4.95s-.01-3.67-.07-4.95c-.2-4.35-2.62-6.78-6.98-6.98C15.67.01 15.26 0 12 0zm0 5.84a6.16 6.16 0 1 0 0 12.32 6.16 6.16 0 0 0 0-12.32zm0 10.16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.41-10.4a1.44 1.44 0 1 1-2.88 0 1.44 1.44 0 0 1 2.88 0z"/></svg>
-        </a>
-        <a href="#" class="footer-social-btn li" title="LinkedIn" aria-label="LinkedIn" target="_blank" rel="noopener">
-          <svg viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.34V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.38-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.07 2.07 0 1 1 0-4.13 2.07 2.07 0 0 1 0 4.13zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.73v20.54C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.73V1.73C24 .77 23.2 0 22.22 0z"/></svg>
-        </a>
-        <a href="https://x.com/onewayBharat" class="footer-social-btn x" title="X (Twitter)" aria-label="X (Twitter)" target="_blank" rel="noopener">
-          <svg viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M18.9 2H22l-7.2 8.23L23.3 22h-6.9l-5.4-7.06L4.6 22H1.5l7.7-8.8L1 2h7l4.9 6.5L18.9 2zm-2.4 18h1.9L7.6 4H5.6l10.9 16z"/></svg>
-        </a>
-        <a href="#" class="footer-social-btn yt" title="YouTube" aria-label="YouTube" target="_blank" rel="noopener">
-          <svg viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M23.5 6.19a3.02 3.02 0 0 0-2.12-2.14C19.51 3.5 12 3.5 12 3.5s-7.51 0-9.38.55A3.02 3.02 0 0 0 .5 6.19 31.6 31.6 0 0 0 0 12a31.6 31.6 0 0 0 .5 5.81 3.02 3.02 0 0 0 2.12 2.14C4.49 20.5 12 20.5 12 20.5s7.51 0 9.38-.55a3.02 3.02 0 0 0 2.12-2.14A31.6 31.6 0 0 0 24 12a31.6 31.6 0 0 0-.5-5.81zM9.6 15.5V8.5l6.2 3.5-6.2 3.5z"/></svg>
-        </a>
+        <a href="https://www.facebook.com/profile.php?id=61590974556339" class="footer-social-btn fb" title="Facebook" aria-label="Facebook" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M22 12.06C22 6.5 17.52 2 12 2S2 6.5 2 12.06c0 5 3.66 9.15 8.44 9.94v-7.03H7.9v-2.91h2.54V9.41c0-2.51 1.49-3.89 3.77-3.89 1.09 0 2.23.2 2.23.2v2.45h-1.26c-1.24 0-1.63.78-1.63 1.57v1.87h2.78l-.45 2.91h-2.33V22c4.78-.79 8.44-4.94 8.44-9.94z"/></svg></a>
+        <a href="https://www.instagram.com/onewaybharat?igsh=b3F4cGJsY3JwMW9i" class="footer-social-btn ig" title="Instagram" aria-label="Instagram" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M12 2.16c3.2 0 3.58.01 4.85.07 3.25.15 4.77 1.69 4.92 4.92.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.15 3.23-1.66 4.77-4.92 4.92-1.27.06-1.64.07-4.85.07s-3.58-.01-4.85-.07c-3.26-.15-4.77-1.7-4.92-4.92-.06-1.27-.07-1.65-.07-4.85s.01-3.58.07-4.85C2.38 3.92 3.9 2.38 7.15 2.23 8.42 2.17 8.8 2.16 12 2.16zM12 0C8.74 0 8.33.01 7.05.07 2.7.27.27 2.7.07 7.05.01 8.33 0 8.74 0 12s.01 3.67.07 4.95c.2 4.35 2.62 6.78 6.98 6.98C8.33 23.99 8.74 24 12 24s3.67-.01 4.95-.07c4.35-.2 6.78-2.62 6.98-6.98.06-1.28.07-1.69.07-4.95s-.01-3.67-.07-4.95c-.2-4.35-2.62-6.78-6.98-6.98C15.67.01 15.26 0 12 0zm0 5.84a6.16 6.16 0 1 0 0 12.32 6.16 6.16 0 0 0 0-12.32zm0 10.16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.41-10.4a1.44 1.44 0 1 1-2.88 0 1.44 1.44 0 0 1 2.88 0z"/></svg></a>
+        <a href="#" class="footer-social-btn li" title="LinkedIn" aria-label="LinkedIn" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.34V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.38-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.07 2.07 0 1 1 0-4.13 2.07 2.07 0 0 1 0 4.13zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.73v20.54C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.73V1.73C24 .77 23.2 0 22.22 0z"/></svg></a>
+        <a href="https://x.com/onewayBharat" class="footer-social-btn x" title="X (Twitter)" aria-label="X (Twitter)" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M18.9 2H22l-7.2 8.23L23.3 22h-6.9l-5.4-7.06L4.6 22H1.5l7.7-8.8L1 2h7l4.9 6.5L18.9 2zm-2.4 18h1.9L7.6 4H5.6l10.9 16z"/></svg></a>
+        <a href="#" class="footer-social-btn yt" title="YouTube" aria-label="YouTube" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M23.5 6.19a3.02 3.02 0 0 0-2.12-2.14C19.51 3.5 12 3.5 12 3.5s-7.51 0-9.38.55A3.02 3.02 0 0 0 .5 6.19 31.6 31.6 0 0 0 0 12a31.6 31.6 0 0 0 .5 5.81 3.02 3.02 0 0 0 2.12 2.14C4.49 20.5 12 20.5 12 20.5s7.51 0 9.38-.55a3.02 3.02 0 0 0 2.12-2.14A31.6 31.6 0 0 0 24 12a31.6 31.6 0 0 0-.5-5.81zM9.6 15.5V8.5l6.2 3.5-6.2 3.5z"/></svg></a>
       </div>
     </div>
-    <!-- Services -->
     <div class="footer-col">
       <h4>Services</h4>
       <ul>
-        <li><a href="booking.html">One Way Cabs</a></li>
-        <li><a href="booking.html">Round Trip</a></li>
-        <li><a href="booking.html">Airport Transfer</a></li>
-        <li><a href="booking.html">Corporate Cabs</a></li>
+        <li><a href="index.html#book">One Way Cabs</a></li>
+        <li><a href="index.html#book">Round Trip</a></li>
+        <li><a href="index.html#book">Airport Transfer</a></li>
+        <li><a href="index.html#book">Corporate Cabs</a></li>
         <li><a href="routes.html">All Routes</a></li>
         <li><a href="fleet.html">Our Fleet</a></li>
       </ul>
     </div>
-    <!-- Quick Links -->
     <div class="footer-col">
       <h4>Quick Links</h4>
       <ul>
@@ -183,15 +219,13 @@
         <li><a href="blog.html">Travel Blog</a></li>
         <li><a href="faq.html">FAQs</a></li>
         <li><a href="contact.html">Contact Us</a></li>
-        <li><a href="admin.html">Admin Panel</a></li>
-        <li><a href="driver.html">Driver Panel</a></li>
+        <li><a href="customer.html">My Bookings</a></li>
       </ul>
     </div>
-    <!-- Legal -->
     <div class="footer-col">
       <h4>Legal</h4>
       <ul>
-        <li><a href="policies.html">Terms & Conditions</a></li>
+        <li><a href="policies.html">Terms &amp; Conditions</a></li>
         <li><a href="policies.html">Privacy Policy</a></li>
         <li><a href="policies.html">Cancellation Policy</a></li>
         <li><a href="policies.html">Refund Policy</a></li>
@@ -199,7 +233,6 @@
       </ul>
     </div>
   </div>
-
   <div class="footer-bottom">
     <div class="fb-copy">© 2026 One-Way Bhaarat Private Limited. All rights reserved.</div>
     <div class="fb-made">
@@ -213,6 +246,18 @@
     </div>
   </div>
 </footer>
+
+<div class="float-actions">
+  <a href="tel:+919355757579" class="float-btn call" title="Call us" aria-label="Call us">
+    <span class="float-label">Call Us</span>
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6.62 10.79a15.05 15.05 0 0 0 6.59 6.59l2.2-2.2a1 1 0 0 1 1.01-.24c1.12.37 2.33.57 3.58.57a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1C10.61 21 3 13.39 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.46.57 3.58a1 1 0 0 1-.24 1.01l-2.21 2.2z" fill="white"/></svg>
+  </a>
+  <a href="https://wa.me/919355757579" class="float-btn whatsapp" title="Chat on WhatsApp" aria-label="Chat on WhatsApp" target="_blank" rel="noopener">
+    <span class="float-label">WhatsApp Us</span>
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17.47 14.38c-.29-.15-1.7-.84-1.96-.93-.27-.1-.46-.15-.65.15-.2.29-.75.93-.92 1.12-.17.2-.34.22-.63.07-.29-.14-1.2-.44-2.29-1.41-.85-.75-1.42-1.69-1.59-1.97-.17-.29-.02-.45.13-.6.15-.15.29-.34.44-.51.15-.17.2-.29.29-.49.1-.2.05-.36-.05-.51-.1-.15-.62-1.49-.85-2.04-.22-.54-.45-.46-.62-.47h-.53c-.18 0-.46.07-.7.34-.24.27-.93.91-.93 2.22 0 1.31.95 2.58 1.08 2.76.13.18 1.86 2.84 4.5 3.87 2.65 1.03 2.65.69 3.13.65.49-.05 1.59-.65 1.81-1.28.22-.62.22-1.15.15-1.27-.07-.12-.26-.18-.55-.32z" fill="white"/><path d="M12.04 2C6.55 2 2.07 6.48 2.07 11.96c0 1.86.5 3.6 1.37 5.1L2 22l5.07-1.34a9.93 9.93 0 0 0 4.97 1.34h.01c5.49 0 9.96-4.48 9.96-9.96C21.99 6.48 17.53 2 12.04 2zm0 18.06h-.01c-1.6 0-3.16-.43-4.51-1.24l-.32-.19-3.36.89.9-3.27-.21-.34a8.24 8.24 0 0 1-1.27-4.4c0-4.57 3.73-8.29 8.31-8.29 2.22 0 4.3.86 5.87 2.43a8.24 8.24 0 0 1 2.43 5.87c0 4.58-3.73 8.54-8.83 8.54z" fill="white"/></svg>
+  </a>
+</div>
+
 
 <!-- Floating Call + WhatsApp -->
 <div class="float-actions">
@@ -228,5 +273,6 @@
 
 
 
+<script defer src="./assets/js/main.js"></script>
 </body>
 </html>

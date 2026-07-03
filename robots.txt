@@ -17,7 +17,7 @@ Disallow: /assets/temp/
 Allow: /assets/css/
 Allow: /assets/js/
 Allow: /assets/images/
-# AI crawlers — explicitly allow
+# AI crawlers — explicitly allow, same disallow list as everyone else
 User-agent: GPTBot
 User-agent: ChatGPT-User
 User-agent: ClaudeBot
@@ -29,6 +29,14 @@ User-agent: CCBot
 User-agent: Applebot-Extended
 User-agent: cohere-ai
 User-agent: meta-externalagent
+Allow: /
+Disallow: /admin/
+Disallow: /admin.html
+Disallow: /driver.html
+Disallow: /customer.html
+Disallow: /api/
+Disallow: /database/
+Disallow: /assets/temp/
 # Sitemap and AI summary
 Sitemap: https://one-waybharat.com/sitemap.xml
 LLMs-txt: https://one-waybharat.com/llms.txt

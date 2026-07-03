@@ -2,54 +2,91 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>My Dashboard | One-Way Bhaarat</title>
+<title>My Bookings | One-Way Bhaarat</title>
 <meta name="robots" content="noindex, nofollow">
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Nunito:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="./assets/css/customer.css">
 </head>
 <body>
+
+<!-- Loader -->
+<div id="loader">
+  <div class="loader-emblem">🚕</div>
+  <div class="loader-brand">One-Way Bhaarat</div>
+  <div class="loader-bar"><div class="loader-bar-fill"></div></div>
+</div>
+
+<!-- ═══════════════════ LOGIN SCREEN ═══════════════════ -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-card">
+    <div class="login-emblem">🚕</div>
+    <div class="login-title">My Bookings</div>
+    <div class="login-sub" id="loginSub">Log in with your mobile number to see your real bookings, invoices, and wallet.</div>
+    <div class="login-error" id="loginError"></div>
+
+    <!-- Step 1: phone -->
+    <div id="loginStepPhone">
+      <input type="tel" inputmode="numeric" maxlength="10" class="login-input" id="loginPhone" placeholder="10-digit mobile number">
+      <button class="login-btn" id="sendOtpBtn" onclick="loginSendOtp()">Send OTP</button>
+    </div>
+
+    <!-- Step 2: OTP -->
+    <div id="loginStepOtp" style="display:none">
+      <div class="login-otp-row" id="otpRow">
+        <input type="tel" inputmode="numeric" maxlength="1">
+        <input type="tel" inputmode="numeric" maxlength="1">
+        <input type="tel" inputmode="numeric" maxlength="1">
+        <input type="tel" inputmode="numeric" maxlength="1">
+      </div>
+      <button class="login-btn" id="verifyOtpBtn" onclick="loginVerifyOtp()">Verify & Log In</button>
+      <div class="login-resend" id="loginResend">Resend OTP in <span id="resendTimer">30</span>s</div>
+      <div class="login-back" onclick="loginBackToPhone()">← Change number</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ DASHBOARD (hidden until logged in) ═══════════════════ -->
+<div id="appShell" style="display:none">
 <aside class="sidebar">
   <div class="sb-top">
-    <div class="sb-av">RK</div>
-    <div class="sb-name">Rahul Kapoor</div>
-    <div class="sb-mob">+91-98765 43210</div>
-    <div class="sb-badge">⭐ Frequent Traveler</div>
+    <div class="sb-av" id="sbAvatar">—</div>
+    <div class="sb-name" id="sbName">My Account</div>
+    <div class="sb-mob" id="sbPhone">—</div>
+    <div class="sb-badge" id="sbBadge" style="display:none">⭐ Frequent Traveler</div>
   </div>
   <nav class="sb-nav">
     <div class="ni act" onclick="showPanel('overview',this)"><span class="ni-ic">📊</span> Overview</div>
-    <div class="ni" onclick="showPanel('bookings',this)"><span class="ni-ic">🗓️</span> My Bookings <span class="ni-badge">5</span></div>
+    <div class="ni" onclick="showPanel('bookings',this)"><span class="ni-ic">🗓️</span> My Bookings <span class="ni-badge" id="navBookingBadge">0</span></div>
     <div class="ni" onclick="showPanel('wallet',this)"><span class="ni-ic">💰</span> Wallet</div>
     <div class="ni" onclick="showPanel('saved',this)"><span class="ni-ic">❤️</span> Saved Routes</div>
-    <div class="ni" onclick="showPanel('invoices',this)"><span class="ni-ic">🧾</span> Invoices</div>
     <div class="ni" onclick="showPanel('referral',this)"><span class="ni-ic">🎁</span> Refer & Earn</div>
     <div class="ni" onclick="showPanel('support',this)"><span class="ni-ic">💬</span> Support</div>
     <div class="ni" onclick="showPanel('profile',this)"><span class="ni-ic">👤</span> Profile</div>
   </nav>
-  <div class="sb-foot"><a href="index.html">🏠 Back to Website</a></div>
+  <div class="sb-foot">
+    <a href="#" onclick="doLogout();return false">🚪 Log Out</a><br>
+    <a href="index.html" style="margin-top:8px;display:inline-block">🏠 Back to Website</a>
+  </div>
 </aside>
+<div class="mob-overlay" id="mobOverlay" onclick="closeMobileSidebar()"></div>
+
 <div class="main">
   <div class="topbar">
-    <div class="tb-title" id="panelTitle">Overview</div>
-    <a href="booking.html" class="btn-book-top">🚕 Book New Cab</a>
+    <div style="display:flex;align-items:center;gap:12px">
+      <div class="mob-hamburger" id="mobHamburger" onclick="toggleMobileSidebar()">☰</div>
+      <div class="tb-title" id="panelTitle">Overview</div>
+    </div>
+    <a href="index.html#book" class="btn-book-top">🚕 Book New Cab</a>
   </div>
   <div class="content">
 
     <!-- OVERVIEW -->
     <div class="panel act" id="pn-overview">
       <div class="stats-row">
-        <div class="sc"><div class="sc-icon ic-o">🗓️</div><div><div class="sc-lbl">Total Trips</div><div class="sc-val">12</div></div></div>
-        <div class="sc"><div class="sc-icon ic-g">💰</div><div><div class="sc-lbl">Total Spent</div><div class="sc-val">₹54K</div></div></div>
-        <div class="sc"><div class="sc-icon ic-b">📍</div><div><div class="sc-lbl">km Traveled</div><div class="sc-val">3,842</div></div></div>
-        <div class="sc"><div class="sc-icon ic-gd">💳</div><div><div class="sc-lbl">Wallet Balance</div><div class="sc-val">₹480</div></div></div>
-      </div>
-      <div class="sec-hdr"><div class="sec-title">🔜 Upcoming Trip</div></div>
-      <div class="blist">
-        <div class="bcard upcoming">
-          <div class="btop"><div class="bid">OWB-2024-A1B2C</div><div class="bdate">📅 Tomorrow, 10:00 AM</div><span class="sbadge sb-conf">✓ Confirmed</span></div>
-          <div class="broute"><div class="bcity">Delhi</div><div class="barr">→</div><div class="bcity">Jaipur</div></div>
-          <div class="bmeta"><span>🚗 Sedan</span><span>📏 281 km</span><span>💰 ₹4,896</span><span>👤 Ravi Kumar</span><span>📞 +91-98765 12345</span></div>
-          <div class="bacts"><button class="ab ab-t">📍 Track Live</button><button class="ab ab-i">🧾 Invoice</button><button class="ab ab-c">✗ Cancel</button></div>
-        </div>
+        <div class="sc"><div class="sc-icon ic-o">🗓️</div><div><div class="sc-lbl">Total Trips</div><div class="sc-val" id="ovTrips">0</div></div></div>
+        <div class="sc"><div class="sc-icon ic-g">💰</div><div><div class="sc-lbl">Total Spent</div><div class="sc-val" id="ovSpent">₹0</div></div></div>
+        <div class="sc"><div class="sc-icon ic-b">📍</div><div><div class="sc-lbl">km Traveled</div><div class="sc-val" id="ovKm">0</div></div></div>
+        <div class="sc"><div class="sc-icon ic-gd">💳</div><div><div class="sc-lbl">Wallet Balance</div><div class="sc-val" id="ovWallet">₹0</div></div></div>
       </div>
       <div class="sec-hdr"><div class="sec-title">📋 Recent Bookings</div><span class="btn-sm btn-ol" onclick="showPanel('bookings',null)" style="cursor:pointer">View All →</span></div>
       <div id="recentList"></div>
@@ -57,7 +94,7 @@
 
     <!-- BOOKINGS -->
     <div class="panel" id="pn-bookings">
-      <div class="sec-hdr"><div class="sec-title">All My Bookings</div><a href="booking.html" class="btn-sm btn-sf">+ Book New</a></div>
+      <div class="sec-hdr"><div class="sec-title">All My Bookings</div><a href="index.html#book" class="btn-sm btn-sf">+ Book New</a></div>
       <div id="allBookingsList"></div>
     </div>
 
@@ -66,60 +103,58 @@
       <div class="sec-hdr"><div class="sec-title">My Wallet</div></div>
       <div class="wallet-card">
         <div class="wl">Available Balance</div>
-        <div class="wa">₹480</div>
-        <div class="wsub">Use for booking advances · Never expires</div>
-        <div class="wbtns"><button class="wbtn wb-add" onclick="alert('Add Money — UPI/Card integration coming soon!')">+ Add Money</button><button class="wbtn wb-out" onclick="alert('Withdrawal available after 3 completed trips.')">Withdraw</button></div>
+        <div class="wa" id="walBalance">₹0</div>
+        <div class="wsub">Credited from refunds and referral bonuses · Apply at checkout to reduce what you pay online</div>
+        <div class="wbtns">
+          <button class="wbtn wb-add" onclick="showPanel('referral',null)">🎁 Earn More — Refer a Friend</button>
+          <a href="index.html#book" class="wbtn wb-out" style="text-decoration:none;display:inline-block">Use on Next Booking</a>
+        </div>
       </div>
       <div class="sec-hdr"><div class="sec-title">Transaction History</div></div>
-      <div class="tbl-wrap"><table><thead><tr><th>Date</th><th>Description</th><th>Amount</th></tr></thead><tbody>
-        <tr><td style="color:rgba(255,255,255,.35);font-size:12px">12 Jan 2024</td><td>Refund – OWB-2024-C4D5E</td><td style="font-weight:700;color:var(--gr3)">+₹480</td></tr>
-        <tr><td style="color:rgba(255,255,255,.35);font-size:12px">10 Jan 2024</td><td>Advance – Delhi → Agra</td><td style="font-weight:700;color:#f87171">-₹390</td></tr>
-        <tr><td style="color:rgba(255,255,255,.35);font-size:12px">05 Jan 2024</td><td>Referral Bonus</td><td style="font-weight:700;color:var(--gr3)">+₹100</td></tr>
-      </tbody></table></div>
+      <div id="walletTxWrap"></div>
     </div>
 
     <!-- SAVED ROUTES -->
     <div class="panel" id="pn-saved">
-      <div class="sec-hdr"><div class="sec-title">❤️ Saved Routes</div><span style="font-size:12px;color:rgba(255,255,255,.35)">1-click re-booking</span></div>
-      <div class="sroutes">
-        <div class="srcard"><div class="sr-em">🏯</div><div><div class="sr-name">Delhi → Jaipur</div><div class="sr-meta">281 km · Sedan · ₹4,896</div></div><button class="sr-btn" onclick="window.location='booking.html'">Book Now</button></div>
-        <div class="srcard"><div class="sr-em">🕌</div><div><div class="sr-name">Delhi → Agra</div><div class="sr-meta">233 km · Sedan · ₹3,900</div></div><button class="sr-btn" onclick="window.location='booking.html'">Book Now</button></div>
-        <div class="srcard"><div class="sr-em">🙏</div><div><div class="sr-name">Delhi → Haridwar</div><div class="sr-meta">214 km · Sedan · ₹3,700</div></div><button class="sr-btn" onclick="window.location='booking.html'">Book Now</button></div>
+      <div class="sec-hdr"><div class="sec-title">❤️ Saved Routes</div><span style="font-size:12px;color:var(--ink-faint)">1-click re-booking</span></div>
+      <div id="savedRoutesList"></div>
+      <div class="save-route-prompt">
+        <div style="font-size:26px;margin-bottom:8px">➕</div>
+        <div style="font-size:14px;font-weight:600;color:var(--ink-soft);margin-bottom:10px">Save a route from any past booking</div>
+        <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+          <input class="finput" id="newRouteFrom" placeholder="From city" style="max-width:160px">
+          <input class="finput" id="newRouteTo" placeholder="To city" style="max-width:160px">
+          <button class="btn-sm btn-sf" onclick="saveNewRoute()">Save Route</button>
+        </div>
+        <div class="form-status" id="saveRouteStatus"></div>
       </div>
-      <div style="text-align:center;padding:24px;background:var(--nv3);border:1px dashed rgba(255,255,255,0.1);border-radius:var(--r20)">
-        <div style="font-size:28px;margin-bottom:8px">➕</div>
-        <div style="font-size:14px;font-weight:600;color:rgba(255,255,255,0.5)">Save a new route</div>
-        <div style="font-size:12px;color:rgba(255,255,255,0.3);margin-bottom:14px">Book a trip to save it here for quick future booking</div>
-        <a href="booking.html" class="btn-sm btn-sf">Book a Trip</a>
-      </div>
-    </div>
-
-    <!-- INVOICES -->
-    <div class="panel" id="pn-invoices">
-      <div class="sec-hdr"><div class="sec-title">🧾 Invoices & Receipts</div><button class="btn-sm btn-ol">⬇ Download All</button></div>
-      <div class="tbl-wrap"><table><thead><tr><th>Booking ID</th><th>Route</th><th>Date</th><th>Amount</th><th>Invoice</th></tr></thead><tbody id="invRows"></tbody></table></div>
     </div>
 
     <!-- REFERRAL -->
     <div class="panel" id="pn-referral">
       <div class="sec-hdr"><div class="sec-title">🎁 Refer & Earn</div></div>
       <div class="ref-card">
-        <div class="ref-title">Refer Friends, Earn ₹100!</div>
-        <div class="ref-sub">Share your code. When your friend completes their first booking, both of you get ₹100 wallet credit.</div>
-        <div class="ref-code-box"><div class="ref-code">RAHUL100</div><button class="btn-copy" onclick="copyCode()">📋 Copy</button></div>
+        <div class="ref-title">Refer Friends, Earn ₹150!</div>
+        <div class="ref-sub">Share your code. When your friend completes their first paid booking, you get ₹150 credited to your wallet automatically.</div>
+        <div class="ref-code-box">
+          <div class="ref-code" id="refCode">——————</div>
+          <button class="btn-copy" onclick="copyReferralCode()">📋 Copy</button>
+        </div>
         <div class="ref-stats">
-          <div><div class="rs-num">3</div><div class="rs-lbl">Referrals</div></div>
-          <div><div class="rs-num">₹300</div><div class="rs-lbl">Earned</div></div>
-          <div><div class="rs-num">2</div><div class="rs-lbl">Pending</div></div>
+          <div><div class="rs-num" id="refCount">0</div><div class="rs-lbl">Friends Referred</div></div>
+          <div><div class="rs-num" id="refEarned">₹0</div><div class="rs-lbl">Total Earned</div></div>
         </div>
+        <div class="ref-redeem-row" id="refRedeemRow">
+          <input class="finput" id="redeemCodeInput" placeholder="Have a friend's code? Enter it here" maxlength="10">
+          <button class="btn-sm btn-sf" onclick="redeemReferralCode()">Apply Code</button>
+        </div>
+        <div class="form-status" id="redeemStatus"></div>
       </div>
-      <div style="background:var(--nv3);border:1px solid rgba(255,255,255,0.06);border-radius:var(--r20);padding:22px">
-        <div style="font-family:'Cinzel',serif;font-size:14px;color:var(--wh);margin-bottom:16px">How It Works</div>
-        <div style="display:flex;flex-direction:column;gap:12px">
-          <div style="display:flex;gap:12px;align-items:flex-start"><div style="width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--sf),var(--sf3));color:var(--wh);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0">1</div><div><div style="font-weight:700;color:var(--wh);font-size:13px">Share your code RAHUL100</div><div style="font-size:12px;color:rgba(255,255,255,.4);margin-top:2px">Share via WhatsApp, SMS or social media.</div></div></div>
-          <div style="display:flex;gap:12px;align-items:flex-start"><div style="width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--sf),var(--sf3));color:var(--wh);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0">2</div><div><div style="font-weight:700;color:var(--wh);font-size:13px">Friend books their first trip</div><div style="font-size:12px;color:rgba(255,255,255,.4);margin-top:2px">They use your code while booking.</div></div></div>
-          <div style="display:flex;gap:12px;align-items:flex-start"><div style="width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--sf),var(--sf3));color:var(--wh);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0">3</div><div><div style="font-weight:700;color:var(--wh);font-size:13px">Both get ₹100 wallet credit</div><div style="font-size:12px;color:rgba(255,255,255,.4);margin-top:2px">Automatically credited after trip completion.</div></div></div>
-        </div>
+      <div class="how-card">
+        <div class="how-title">How It Works</div>
+        <div class="how-step"><div class="how-num">1</div><div><div class="how-step-title">Share your code</div><div class="how-step-sub">Send it via WhatsApp, SMS, or social media.</div></div></div>
+        <div class="how-step"><div class="how-num">2</div><div><div class="how-step-title">Friend books and pays for their first trip</div><div class="how-step-sub">They enter your code from their own account before booking.</div></div></div>
+        <div class="how-step"><div class="how-num">3</div><div><div class="how-step-title">You get ₹150 wallet credit</div><div class="how-step-sub">Credited automatically the moment their first payment is confirmed.</div></div></div>
       </div>
     </div>
 
@@ -128,80 +163,444 @@
       <div class="sec-hdr"><div class="sec-title">💬 Customer Support</div></div>
       <div class="sup-channels">
         <a href="tel:+919355757579" class="sup-ch" style="background:linear-gradient(135deg,var(--sf),var(--sf3));box-shadow:0 8px 24px var(--sfg)"><div class="sup-ch-icon">📞</div><div class="sup-ch-title">Call Us</div><div class="sup-ch-val">+91-93557 57579</div></a>
-        <a href="https://wa.me/919355757579" target="_blank" class="sup-ch" style="background:linear-gradient(135deg,#128C7E,#075E54)"><div class="sup-ch-icon">💬</div><div class="sup-ch-title">WhatsApp</div><div class="sup-ch-val">Chat instantly</div></a>
+        <a href="https://wa.me/919355757579" target="_blank" rel="noopener" class="sup-ch" style="background:linear-gradient(135deg,#128C7E,#075E54)"><div class="sup-ch-icon">💬</div><div class="sup-ch-title">WhatsApp</div><div class="sup-ch-val">Chat instantly</div></a>
       </div>
-      <div style="background:var(--nv3);border:1px solid rgba(255,255,255,0.06);border-radius:var(--r28);padding:24px">
-        <div style="font-family:'Cinzel',serif;font-size:15px;color:var(--wh);margin-bottom:18px">Raise a Support Ticket</div>
+      <div class="form-card">
+        <div class="form-card-title">Raise a Support Ticket</div>
         <div style="display:flex;flex-direction:column;gap:12px">
-          <div><label style="display:block;font-size:10px;font-weight:700;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Booking ID</label><input type="text" class="finput" placeholder="e.g. OWB-2024-XXXXX"></div>
-          <div><label style="display:block;font-size:10px;font-weight:700;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Issue Type</label><select class="finput"><option>Driver didn't arrive</option><option>Wrong fare charged</option><option>Refund not received</option><option>Driver complaint</option><option>Other</option></select></div>
-          <div><label style="display:block;font-size:10px;font-weight:700;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Description</label><textarea class="finput" rows="3" style="resize:vertical;padding-top:10px" placeholder="Describe your issue..."></textarea></div>
-          <button class="btn-sm btn-sf" onclick="alert('Ticket submitted! We will respond within 2 hours.')" style="align-self:flex-start;padding:10px 22px">📨 Submit Ticket</button>
+          <div class="field"><label>Booking ID (optional)</label><select class="finput" id="tkBookingId"><option value="">— Not related to a specific booking —</option></select></div>
+          <div class="field"><label>Issue Type</label><select class="finput" id="tkIssueType">
+            <option>Driver didn't arrive</option><option>Wrong fare charged</option><option>Refund not received</option><option>Driver complaint</option><option>Payment issue</option><option>Other</option>
+          </select></div>
+          <div class="field"><label>Description</label><textarea class="finput" id="tkDescription" rows="3" style="resize:vertical;padding-top:10px" placeholder="Describe your issue..."></textarea></div>
+          <button class="btn-sm btn-sf" onclick="submitTicket()" style="align-self:flex-start;padding:10px 22px">📨 Submit Ticket</button>
+          <div class="form-status" id="ticketStatus"></div>
         </div>
       </div>
+      <div class="sec-hdr"><div class="sec-title">Your Tickets</div></div>
+      <div id="ticketHistory"></div>
     </div>
 
     <!-- PROFILE -->
     <div class="panel" id="pn-profile">
       <div class="sec-hdr"><div class="sec-title">👤 My Profile</div></div>
-      <div style="background:var(--nv3);border:1px solid rgba(255,255,255,0.06);border-radius:var(--r28);padding:24px;margin-bottom:18px">
-        <div style="font-family:'Cinzel',serif;font-size:15px;color:var(--wh);margin-bottom:20px">Edit Profile</div>
+      <div class="form-card">
+        <div class="form-card-title">Edit Profile</div>
         <div class="pform">
-          <div class="field"><label>Full Name</label><input class="finput" type="text" value="Rahul Kapoor"></div>
-          <div class="field"><label>Mobile Number</label><input class="finput" type="tel" value="+91-98765 43210" readonly style="opacity:.5;cursor:not-allowed"></div>
-          <div class="field"><label>Email Address</label><input class="finput" type="email" value="rahul@email.com"></div>
-          <div class="field"><label>City</label><input class="finput" type="text" value="New Delhi"></div>
+          <div class="field"><label>Full Name</label><input class="finput" type="text" id="pfName" placeholder="Your name"></div>
+          <div class="field"><label>Mobile Number</label><input class="finput" type="tel" id="pfPhone" readonly style="opacity:.5;cursor:not-allowed"></div>
+          <div class="field"><label>Email Address</label><input class="finput" type="email" id="pfEmail" placeholder="you@email.com"></div>
+          <div class="field"><label>City</label><input class="finput" type="text" id="pfCity" placeholder="Your city"></div>
         </div>
-        <button class="btn-sm btn-sf" style="margin-top:18px;padding:10px 22px" onclick="alert('Profile saved!')">💾 Save Changes</button>
+        <button class="btn-sm btn-sf" style="margin-top:18px;padding:10px 22px" onclick="saveProfile()">💾 Save Changes</button>
+        <div class="form-status" id="profileStatus"></div>
       </div>
-      <div style="background:rgba(220,38,38,0.06);border:1px solid rgba(220,38,38,0.15);border-radius:var(--r20);padding:20px">
-        <div style="font-size:14px;font-weight:700;color:#f87171;margin-bottom:6px">⚠️ Delete Account</div>
-        <div style="font-size:12px;color:rgba(255,255,255,.4);margin-bottom:12px">Permanently delete your account and all booking history. Cannot be undone.</div>
-        <button class="btn-sm" style="background:rgba(220,38,38,0.15);color:#f87171;border:1px solid rgba(220,38,38,0.25)" onclick="alert('Please contact +91-93557 57579 to delete your account.')">Delete Account</button>
+      <div class="danger-zone">
+        <div class="dz-title">⚠️ Delete Account</div>
+        <div class="dz-sub">Permanently delete your account and all booking history. Cannot be undone.</div>
+        <button class="btn-sm btn-danger" onclick="alert('Please call +91-93557 57579 or WhatsApp us to request account deletion. We verify identity by phone before deleting any account data.')">Delete Account</button>
       </div>
     </div>
 
   </div>
 </div>
+</div>
+
+<!-- Floating Call + WhatsApp -->
+<div class="float-actions">
+  <a href="tel:+919355757579" class="float-btn call" title="Call us" aria-label="Call us">
+    <span class="float-label">Call Us</span>
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6.62 10.79a15.05 15.05 0 0 0 6.59 6.59l2.2-2.2a1 1 0 0 1 1.01-.24c1.12.37 2.33.57 3.58.57a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1C10.61 21 3 13.39 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.46.57 3.58a1 1 0 0 1-.24 1.01l-2.21 2.2z" fill="white"/></svg>
+  </a>
+  <a href="https://wa.me/919355757579" class="float-btn whatsapp" title="Chat on WhatsApp" aria-label="Chat on WhatsApp" target="_blank" rel="noopener">
+    <span class="float-label">WhatsApp Us</span>
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17.47 14.38c-.29-.15-1.7-.84-1.96-.93-.27-.1-.46-.15-.65.15-.2.29-.75.93-.92 1.12-.17.2-.34.22-.63.07-.29-.14-1.2-.44-2.29-1.41-.85-.75-1.42-1.69-1.59-1.97-.17-.29-.02-.45.13-.6.15-.15.29-.34.44-.51.15-.17.2-.29.29-.49.1-.2.05-.36-.05-.51-.1-.15-.62-1.49-.85-2.04-.22-.54-.45-.46-.62-.47h-.53c-.18 0-.46.07-.7.34-.24.27-.93.91-.93 2.22 0 1.31.95 2.58 1.08 2.76.13.18 1.86 2.84 4.5 3.87 2.65 1.03 2.65.69 3.13.65.49-.05 1.59-.65 1.81-1.28.22-.62.22-1.15.15-1.27-.07-.12-.26-.18-.55-.32z" fill="white"/><path d="M12.04 2C6.55 2 2.07 6.48 2.07 11.96c0 1.86.5 3.6 1.37 5.1L2 22l5.07-1.34a9.93 9.93 0 0 0 4.97 1.34h.01c5.49 0 9.96-4.48 9.96-9.96C21.99 6.48 17.53 2 12.04 2zm0 18.06h-.01c-1.6 0-3.16-.43-4.51-1.24l-.32-.19-3.36.89.9-3.27-.21-.34a8.24 8.24 0 0 1-1.27-4.4c0-4.57 3.73-8.29 8.31-8.29 2.22 0 4.3.86 5.87 2.43a8.24 8.24 0 0 1 2.43 5.87c0 4.58-3.73 8.54-8.83 8.54z" fill="white"/></svg>
+  </a>
+</div>
+
 <script>
-const bookings=[
-  {id:'OWB-2024-A1B2C',from:'Delhi',to:'Jaipur',veh:'Sedan',date:'2024-01-20',fare:'₹4,896',status:'confirmed'},
-  {id:'OWB-2024-D3E4F',from:'Delhi',to:'Agra',veh:'Sedan',date:'2024-01-10',fare:'₹3,900',status:'completed'},
-  {id:'OWB-2024-G5H6I',from:'Delhi',to:'Haridwar',veh:'Innova',date:'2024-01-05',fare:'₹6,900',status:'completed'},
-  {id:'OWB-2024-J7K8L',from:'Delhi',to:'Chandigarh',veh:'Ertiga',date:'2023-12-28',fare:'₹5,200',status:'completed'},
-  {id:'OWB-2024-M9N0O',from:'Delhi',to:'Mathura',veh:'Sedan',date:'2023-12-15',fare:'₹2,600',status:'cancelled'},
-];
-const smap={confirmed:'sb-conf',completed:'sb-comp',pending:'sb-pend',cancelled:'sb-canc'};
-const slbl={confirmed:'✓ Confirmed',completed:'Completed',pending:'Pending',cancelled:'Cancelled'};
-function renderBookings(data,id,lim){
-  const items=lim?data.slice(0,lim):data;
-  document.getElementById(id).innerHTML=`<div class="blist">${items.map(b=>`
-    <div class="bcard">
-      <div class="btop"><div class="bid">${b.id}</div><div class="bdate">📅 ${b.date}</div><span class="sbadge ${smap[b.status]}">${slbl[b.status]}</span></div>
-      <div class="broute"><div class="bcity">${b.from}</div><div class="barr">→</div><div class="bcity">${b.to}</div></div>
-      <div class="bmeta"><span>🚗 ${b.veh}</span><span>💰 ${b.fare}</span></div>
-      <div class="bacts">
-        <button class="ab ab-v">View</button>
-        <button class="ab ab-i" onclick="alert('Downloading invoice...')">🧾 Invoice</button>
-        ${b.status==='confirmed'?'<button class="ab ab-t">📍 Track</button><button class="ab ab-c" onclick="if(confirm(\'Cancel booking?\'))alert(\'Cancellation submitted\')">Cancel</button>':''}
+const API_BASE = '/api';
+let authToken = sessionStorage.getItem('owb_customer_token') || '';
+let customerPhone = sessionStorage.getItem('owb_customer_phone') || '';
+let myBookings = [];
+let pendingLoginPhone = '';
+let resendCountdown = null;
+
+async function api(path, opts={}){
+  const headers = Object.assign({'Content-Type':'application/json'}, opts.headers||{});
+  if(authToken) headers['Authorization'] = 'Bearer ' + authToken;
+  const res = await fetch(API_BASE + path, Object.assign({}, opts, {headers}));
+  let data = {};
+  try { data = await res.json(); } catch {}
+  if(res.status === 401){ doLogout(); throw new Error('Session expired — please log in again'); }
+  if(!res.ok) throw new Error(data.error || ('Request failed (' + res.status + ')'));
+  return data;
+}
+function escapeHtml(s){ return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+window.addEventListener('load', ()=>{ setTimeout(()=>document.getElementById('loader').classList.add('out'), 400); });
+
+async function loginSendOtp(){
+  const errEl = document.getElementById('loginError'); errEl.textContent = '';
+  const phoneInput = document.getElementById('loginPhone');
+  const phone = phoneInput.value.replace(/\D/g,'');
+  if(phone.length !== 10){ errEl.textContent = 'Enter a valid 10-digit mobile number'; return; }
+  const btn = document.getElementById('sendOtpBtn');
+  btn.disabled = true; btn.textContent = 'Sending…';
+  try{
+    await api('/otp/send', {method:'POST', body:JSON.stringify({phone})});
+    pendingLoginPhone = phone;
+    document.getElementById('loginStepPhone').style.display = 'none';
+    document.getElementById('loginStepOtp').style.display = 'block';
+    document.getElementById('loginSub').textContent = 'Enter the 4-digit code sent to +91 ' + phone;
+    document.querySelectorAll('#otpRow input')[0].focus();
+    startResendTimer();
+  }catch(e){
+    errEl.textContent = e.message;
+  }finally{
+    btn.disabled = false; btn.textContent = 'Send OTP';
+  }
+}
+function startResendTimer(){
+  let t = 30;
+  const resendEl = document.getElementById('loginResend');
+  const timerEl = document.getElementById('resendTimer');
+  resendEl.classList.remove('active');
+  resendEl.onclick = null;
+  if(resendCountdown) clearInterval(resendCountdown);
+  resendCountdown = setInterval(()=>{
+    t--; timerEl.textContent = t;
+    if(t <= 0){
+      clearInterval(resendCountdown);
+      resendEl.innerHTML = 'Resend OTP';
+      resendEl.classList.add('active');
+      resendEl.onclick = loginSendOtp;
+    }
+  }, 1000);
+}
+document.addEventListener('DOMContentLoaded', ()=>{
+  const boxes = document.querySelectorAll('#otpRow input');
+  boxes.forEach((box, i)=>{
+    box.addEventListener('input', ()=>{
+      box.value = box.value.replace(/\D/g,'').slice(0,1);
+      if(box.value && boxes[i+1]) boxes[i+1].focus();
+    });
+    box.addEventListener('keydown', (e)=>{
+      if(e.key === 'Backspace' && !box.value && boxes[i-1]) boxes[i-1].focus();
+    });
+  });
+});
+function loginBackToPhone(){
+  document.getElementById('loginStepOtp').style.display = 'none';
+  document.getElementById('loginStepPhone').style.display = 'block';
+  document.getElementById('loginSub').textContent = 'Log in with your mobile number to see your real bookings, invoices, and wallet.';
+  document.getElementById('loginError').textContent = '';
+  document.querySelectorAll('#otpRow input').forEach(b=>b.value='');
+  if(resendCountdown) clearInterval(resendCountdown);
+}
+async function loginVerifyOtp(){
+  const errEl = document.getElementById('loginError'); errEl.textContent = '';
+  const code = Array.from(document.querySelectorAll('#otpRow input')).map(b=>b.value).join('');
+  if(code.length !== 4){ errEl.textContent = 'Enter the full 4-digit code'; return; }
+  const btn = document.getElementById('verifyOtpBtn');
+  btn.disabled = true; btn.textContent = 'Verifying…';
+  try{
+    const verifyData = await api('/otp/verify', {method:'POST', body:JSON.stringify({phone:pendingLoginPhone, code})});
+    if(!verifyData.verified || !verifyData.token) throw new Error('Incorrect code. Please try again.');
+    const loginData = await api('/auth/customer-login', {method:'POST', body:JSON.stringify({phone:pendingLoginPhone, otpToken:verifyData.token})});
+    authToken = loginData.token; customerPhone = loginData.phone;
+    sessionStorage.setItem('owb_customer_token', authToken);
+    sessionStorage.setItem('owb_customer_phone', customerPhone);
+    enterDashboard();
+  }catch(e){
+    errEl.textContent = e.message;
+  }finally{
+    btn.disabled = false; btn.textContent = 'Verify & Log In';
+  }
+}
+function doLogout(){
+  authToken=''; customerPhone='';
+  sessionStorage.removeItem('owb_customer_token');
+  sessionStorage.removeItem('owb_customer_phone');
+  document.getElementById('appShell').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+  loginBackToPhone();
+}
+
+async function enterDashboard(){
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('appShell').style.display = 'block';
+  document.getElementById('sbPhone').textContent = '+91 ' + customerPhone;
+  document.getElementById('pfPhone').value = '+91 ' + customerPhone;
+  loadProfile().catch(()=>{});
+  loadBookings().catch(e=>console.error('bookings load failed', e));
+  loadWallet().catch(()=>{});
+}
+if(authToken && customerPhone){ enterDashboard(); }
+
+async function loadProfile(){
+  const {profile} = await api('/customer/profile');
+  document.getElementById('pfName').value = profile.name || '';
+  document.getElementById('pfEmail').value = profile.email || '';
+  document.getElementById('pfCity').value = profile.city || '';
+  const displayName = profile.name || ('+91 ' + customerPhone);
+  document.getElementById('sbName').textContent = displayName;
+  document.getElementById('sbAvatar').textContent = (profile.name||'??').trim().split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase() || '🚕';
+}
+async function saveProfile(){
+  const statusEl = document.getElementById('profileStatus');
+  statusEl.textContent = 'Saving…'; statusEl.style.color = 'var(--ink-soft)';
+  try{
+    await api('/customer/profile', {method:'POST', body:JSON.stringify({
+      name: document.getElementById('pfName').value.trim(),
+      email: document.getElementById('pfEmail').value.trim(),
+      city: document.getElementById('pfCity').value.trim()
+    })});
+    statusEl.textContent = '✅ Profile saved'; statusEl.style.color = 'var(--green)';
+    loadProfile().catch(()=>{});
+  }catch(e){
+    statusEl.textContent = e.message; statusEl.style.color = 'var(--red)';
+  }
+}
+
+const STATUS_LABEL = {new:'Pending Assignment', assigned:'Confirmed', ongoing:'Trip In Progress', completed:'Completed', cancelled:'Cancelled'};
+const STATUS_CLASS = {new:'status-new', assigned:'status-assigned', ongoing:'status-ongoing', completed:'status-completed', cancelled:'status-cancelled'};
+
+async function loadBookings(){
+  const {bookings} = await api('/customer/bookings');
+  myBookings = (bookings||[]).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+  document.getElementById('navBookingBadge').textContent = myBookings.length;
+  renderOverviewStats();
+  renderBookingList(myBookings.slice(0,3), 'recentList', true);
+  renderBookingList(myBookings, 'allBookingsList', false);
+  populateTicketBookingDropdown();
+  if(myBookings.length >= 3){
+    document.getElementById('sbBadge').style.display = 'inline-flex';
+  }
+}
+function renderOverviewStats(){
+  document.getElementById('ovTrips').textContent = myBookings.length;
+  const totalSpent = myBookings.reduce((s,b)=>s+Number(b.advance||0),0);
+  document.getElementById('ovSpent').textContent = '₹' + totalSpent.toLocaleString('en-IN');
+  const totalKm = myBookings.reduce((s,b)=>s+Number(b.distKm||0),0);
+  document.getElementById('ovKm').textContent = totalKm.toLocaleString('en-IN');
+}
+function ticketRoute(b){
+  const stops = (b.extraCities||[]).filter(Boolean);
+  return (b.from||'—') + (stops.length? ' → '+stops.join(' → ') : '') + ' → ' + (b.to||'—');
+}
+function renderBookingList(list, elId, compact){
+  const wrap = document.getElementById(elId);
+  if(!list.length){
+    wrap.innerHTML = '<div class="empty-state"><div class="es-icon">🗓️</div><div class="es-title">No bookings yet</div><div class="es-sub">Your trips will show up here as real boarding-pass tickets once you book.</div><a href="index.html#book" class="btn-sm btn-sf">Book Your First Cab</a></div>';
+    return;
+  }
+  wrap.innerHTML = '<div class="tlist">' + list.map(b=>{
+    const status = b.status || 'new';
+    const fare = Number(b.fare||0), paid = Number(b.advance||0);
+    const route = ticketRoute(b);
+    const canCancel = ['new','assigned'].includes(status);
+    return `<div class="ticket">
+      <div class="ticket-main">
+        <div class="t-eyebrow">Booking · ${escapeHtml(b.id)}</div>
+        <div class="t-route">${route.split(' → ').map((city,i)=>i===0?`<span class="t-city">${escapeHtml(city)}</span>`:`<span class="t-arrow">🚗 →</span><span class="t-city">${escapeHtml(city)}</span>`).join('')}</div>
+        <div class="t-sub">${escapeHtml(b.date||'—')} ${escapeHtml(b.time||'')}${b.distKm?' — '+Math.round(b.distKm)+' KM':''}</div>
+        <div class="t-meta">
+          <div class="t-meta-item"><span class="t-meta-lbl">Vehicle</span><span class="t-meta-val">${escapeHtml(b.vehicleType||'—')}</span></div>
+          ${b.driverName?`<div class="t-meta-item"><span class="t-meta-lbl">Driver</span><span class="t-meta-val">${escapeHtml(b.driverName)}</span></div>`:''}
+          ${b.driverPhone?`<div class="t-meta-item"><span class="t-meta-lbl">Driver Phone</span><span class="t-meta-val mono">+91 ${escapeHtml(b.driverPhone)}</span></div>`:''}
+          <div class="t-meta-item"><span class="t-meta-lbl">Paid</span><span class="t-meta-val">₹${paid.toLocaleString('en-IN')} / ₹${fare.toLocaleString('en-IN')}</span></div>
+        </div>
+        <div class="t-actions">
+          ${paid>0?`<button class="t-btn primary" onclick="downloadInvoice('${b.id}')">🧾 Invoice</button>`:''}
+          ${canCancel?`<button class="t-btn danger" onclick="alert('To cancel this booking, please call or WhatsApp +91-93557 57579 with your booking ID — cancellation policies apply, see the Policies page.')">✗ Cancel</button>`:''}
+        </div>
       </div>
-    </div>`).join('')}</div>`;
+      <div class="ticket-stub">
+        <div class="t-stub-status ${STATUS_CLASS[status]||'status-new'}">${STATUS_LABEL[status]||status}</div>
+        <div class="t-stub-fare">₹${fare.toLocaleString('en-IN')}</div>
+        <div class="t-stub-id">${escapeHtml(b.id)}</div>
+      </div>
+    </div>`;
+  }).join('') + '</div>';
 }
-function renderInvoices(){
-  document.getElementById('invRows').innerHTML=bookings.filter(b=>b.status!=='cancelled').map(b=>`
-    <tr><td style="font-size:11px;font-family:monospace;color:#93c5fd">${b.id}</td><td style="font-weight:600">${b.from} → ${b.to}</td><td style="font-size:12px;color:rgba(255,255,255,.4)">${b.date}</td><td style="font-weight:700">${b.fare}</td><td><button class="btn-sm btn-ol" onclick="alert('Downloading...')">⬇ PDF</button></td></tr>`).join('');
+async function downloadInvoice(bookingId){
+  try{
+    const res = await fetch(API_BASE + '/customer/invoice?id=' + encodeURIComponent(bookingId), {
+      headers: {'Authorization': 'Bearer ' + authToken}
+    });
+    if(!res.ok){
+      let msg = 'Could not download invoice';
+      try{ const data = await res.json(); msg = data.error || msg; }catch{}
+      throw new Error(msg);
+    }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'invoice-' + bookingId + '.pdf';
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+  }catch(e){
+    alert(e.message);
+  }
 }
-function showPanel(name,navEl){
+
+async function loadWallet(){
+  const {wallet, transactions} = await api('/customer/wallet');
+  const bal = Number(wallet.balance||0);
+  document.getElementById('walBalance').textContent = '₹' + bal.toLocaleString('en-IN');
+  document.getElementById('ovWallet').textContent = '₹' + bal.toLocaleString('en-IN');
+  const wrap = document.getElementById('walletTxWrap');
+  if(!transactions || !transactions.length){
+    wrap.innerHTML = '<div class="empty-state"><div class="es-icon">💳</div><div class="es-title">No wallet activity yet</div><div class="es-sub">Refund and referral credits will show up here.</div></div>';
+    return;
+  }
+  const sorted = transactions.slice().sort((a,b)=>b.createdAt-a.createdAt);
+  wrap.innerHTML = `<div class="tbl-wrap"><table><thead><tr><th>Date</th><th>Description</th><th>Amount</th></tr></thead><tbody>${sorted.map(t=>{
+    const d = new Date(t.createdAt).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+    const sign = t.type==='credit' ? '+' : '-';
+    const cls = t.type==='credit' ? 'tx-credit' : 'tx-debit';
+    return `<tr><td class="tx-date">${d}</td><td>${escapeHtml(t.reason||'—')}</td><td class="${cls}">${sign}₹${Number(t.amount).toLocaleString('en-IN')}</td></tr>`;
+  }).join('')}</tbody></table></div>`;
+}
+
+async function loadSavedRoutes(){
+  const wrap = document.getElementById('savedRoutesList');
+  wrap.innerHTML = '<div class="loading-row">Loading…</div>';
+  try{
+    const {routes} = await api('/customer/routes');
+    if(!routes.length){ wrap.innerHTML = ''; return; }
+    wrap.innerHTML = '<div class="sroutes">' + routes.map(r=>`
+      <div class="srcard">
+        <div class="sr-em">📍</div>
+        <div style="flex:1"><div class="sr-name">${escapeHtml(r.from)} → ${escapeHtml(r.to)}</div><div class="sr-meta">${escapeHtml(r.vehicle||'sedan')}</div></div>
+        <button class="sr-btn" onclick="window.location='index.html?from=${encodeURIComponent(r.from)}&to=${encodeURIComponent(r.to)}#book'">Book Now</button>
+        <button class="sr-del" title="Remove" onclick="deleteSavedRoute('${r.id}')">✕</button>
+      </div>`).join('') + '</div>';
+  }catch(e){
+    wrap.innerHTML = `<div class="error-row">${escapeHtml(e.message)}</div>`;
+  }
+}
+async function saveNewRoute(){
+  const statusEl = document.getElementById('saveRouteStatus');
+  const from = document.getElementById('newRouteFrom').value.trim();
+  const to = document.getElementById('newRouteTo').value.trim();
+  if(!from || !to){ statusEl.textContent = 'Enter both a from and to city'; statusEl.style.color = 'var(--red)'; return; }
+  statusEl.textContent = 'Saving…'; statusEl.style.color = 'var(--ink-soft)';
+  try{
+    await api('/customer/routes', {method:'POST', body:JSON.stringify({from, to})});
+    document.getElementById('newRouteFrom').value = '';
+    document.getElementById('newRouteTo').value = '';
+    statusEl.textContent = '✅ Route saved'; statusEl.style.color = 'var(--green)';
+    loadSavedRoutes();
+  }catch(e){
+    statusEl.textContent = e.message; statusEl.style.color = 'var(--red)';
+  }
+}
+async function deleteSavedRoute(id){
+  try{ await api('/customer/routes?id=' + encodeURIComponent(id), {method:'DELETE'}); loadSavedRoutes(); }
+  catch(e){ alert(e.message); }
+}
+
+async function loadReferral(){
+  try{
+    const data = await api('/customer/referral');
+    document.getElementById('refCode').textContent = data.code;
+    document.getElementById('refCount').textContent = data.referralCount;
+    document.getElementById('refEarned').textContent = '₹' + (data.referralCount * data.bonusPerReferral).toLocaleString('en-IN');
+    const redeemRow = document.getElementById('refRedeemRow');
+    if(data.redeemedCode){
+      redeemRow.innerHTML = `<div style="font-size:12.5px;color:var(--ink-soft)">You applied code <span class="mono" style="color:var(--sf2)">${escapeHtml(data.redeemedCode)}</span> — thanks!</div>`;
+    }
+  }catch(e){
+    document.getElementById('refCode').textContent = '—';
+  }
+}
+function copyReferralCode(){
+  const code = document.getElementById('refCode').textContent;
+  navigator.clipboard.writeText(code).then(
+    ()=>alert('Code ' + code + ' copied!'),
+    ()=>alert('Your referral code: ' + code)
+  );
+}
+async function redeemReferralCode(){
+  const statusEl = document.getElementById('redeemStatus');
+  const code = document.getElementById('redeemCodeInput').value.trim();
+  if(!code){ statusEl.textContent = 'Enter a code first'; statusEl.style.color = 'var(--red)'; return; }
+  statusEl.textContent = 'Applying…'; statusEl.style.color = 'var(--ink-soft)';
+  try{
+    await api('/customer/referral', {method:'POST', body:JSON.stringify({code})});
+    statusEl.textContent = '✅ Code applied!'; statusEl.style.color = 'var(--green)';
+    loadReferral();
+  }catch(e){
+    statusEl.textContent = e.message; statusEl.style.color = 'var(--red)';
+  }
+}
+
+function populateTicketBookingDropdown(){
+  const sel = document.getElementById('tkBookingId');
+  sel.innerHTML = '<option value="">— Not related to a specific booking —</option>' +
+    myBookings.map(b=>`<option value="${escapeHtml(b.id)}">${escapeHtml(b.id)} — ${escapeHtml(ticketRoute(b))}</option>`).join('');
+}
+async function submitTicket(){
+  const statusEl = document.getElementById('ticketStatus');
+  const description = document.getElementById('tkDescription').value.trim();
+  if(!description){ statusEl.textContent = 'Please describe the issue'; statusEl.style.color = 'var(--red)'; return; }
+  statusEl.textContent = 'Submitting…'; statusEl.style.color = 'var(--ink-soft)';
+  try{
+    await api('/customer/ticket-create', {method:'POST', body:JSON.stringify({
+      bookingId: document.getElementById('tkBookingId').value,
+      issueType: document.getElementById('tkIssueType').value,
+      description
+    })});
+    document.getElementById('tkDescription').value = '';
+    statusEl.textContent = '✅ Ticket submitted — our team will reach out soon'; statusEl.style.color = 'var(--green)';
+    loadTickets();
+  }catch(e){
+    statusEl.textContent = e.message; statusEl.style.color = 'var(--red)';
+  }
+}
+const TICKET_STATUS_LABEL = {open:'Open', in_progress:'In Progress', resolved:'Resolved', closed:'Closed'};
+async function loadTickets(){
+  const wrap = document.getElementById('ticketHistory');
+  wrap.innerHTML = '<div class="loading-row">Loading…</div>';
+  try{
+    const {tickets} = await api('/customer/tickets');
+    if(!tickets.length){ wrap.innerHTML = '<div class="empty-state"><div class="es-icon">💬</div><div class="es-title">No tickets yet</div><div class="es-sub">Raise one above if you run into an issue.</div></div>'; return; }
+    wrap.innerHTML = tickets.map(t=>{
+      const d = new Date(t.createdAt).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+      return `<div class="ticket-history-item">
+        <div class="thi-top"><span class="thi-type">${escapeHtml(t.issueType)}</span><span class="t-stub-status status-${t.status==='resolved'||t.status==='closed'?'completed':(t.status==='in_progress'?'ongoing':'pending')}">${TICKET_STATUS_LABEL[t.status]||t.status}</span></div>
+        <div class="thi-desc">${escapeHtml(t.description)}</div>
+        ${t.bookingId?`<div class="thi-date mono">Booking: ${escapeHtml(t.bookingId)}</div>`:''}
+        <div class="thi-date">${d}</div>
+      </div>`;
+    }).join('');
+  }catch(e){
+    wrap.innerHTML = `<div class="error-row">${escapeHtml(e.message)}</div>`;
+  }
+}
+
+function toggleMobileSidebar(){
+  document.querySelector('.sidebar').classList.toggle('open');
+  document.getElementById('mobOverlay').classList.toggle('show');
+}
+function closeMobileSidebar(){
+  document.querySelector('.sidebar').classList.remove('open');
+  document.getElementById('mobOverlay').classList.remove('show');
+}
+
+function showPanel(name, navEl){
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('act'));
   document.getElementById('pn-'+name).classList.add('act');
-  if(navEl){document.querySelectorAll('.ni').forEach(n=>n.classList.remove('act'));navEl.classList.add('act');}
-  const titles={overview:'Overview',bookings:'My Bookings',wallet:'My Wallet',saved:'Saved Routes',invoices:'Invoices',referral:'Refer & Earn',support:'Support',profile:'My Profile'};
-  document.getElementById('panelTitle').textContent=titles[name]||name;
-  if(name==='invoices')renderInvoices();
+  if(navEl){ document.querySelectorAll('.ni').forEach(n=>n.classList.remove('act')); navEl.classList.add('act'); }
+  const titles = {overview:'Overview', bookings:'My Bookings', wallet:'My Wallet', saved:'Saved Routes', referral:'Refer & Earn', support:'Support', profile:'My Profile'};
+  document.getElementById('panelTitle').textContent = titles[name] || name;
+  if(name==='saved') loadSavedRoutes();
+  if(name==='referral') loadReferral();
+  if(name==='support') loadTickets();
+  closeMobileSidebar();
 }
-function copyCode(){navigator.clipboard.writeText('RAHUL100').then(()=>alert('Code RAHUL100 copied!')).catch(()=>alert('Your referral code: RAHUL100'));}
-renderBookings(bookings,'recentList',3);
-renderBookings(bookings,'allBookingsList');
 </script>
 </body>
 </html>

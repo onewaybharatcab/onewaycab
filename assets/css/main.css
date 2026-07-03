@@ -397,7 +397,7 @@ header.scrolled {
   width: 100%; padding: 13px 14px 13px 42px;
   background: rgba(255,255,255,0.90);
   border: 1px solid rgba(60,25,5,0.14);
-  border-radius: var(--r-md); font-size: 14px; font-weight: 600;
+  border-radius: var(--r-md); font-size: 16px; font-weight: 600;
   color: var(--wh); font-family: 'Nunito', sans-serif;
   transition: all 0.25s; outline: none;
   -webkit-appearance: none;
@@ -1138,7 +1138,7 @@ input:-webkit-autofill:focus {
 /* Form fields */
 .bkm-fg{margin-bottom:12px;position:relative}
 .bkm-fg label{display:block;font-size:.65rem;font-weight:800;text-transform:uppercase;letter-spacing:.9px;color:var(--bk-muted);margin-bottom:5px}
-.bkm-fg input,.bkm-fg select{width:100%;border:1.5px solid var(--bk-input-bdr);border-radius:10px;padding:11px 14px;font-size:.9rem;font-family:'Nunito',sans-serif;color:var(--bk-text);background:var(--bk-input-bg);transition:.2s;outline:none;-webkit-appearance:none;box-sizing:border-box}
+.bkm-fg input,.bkm-fg select{width:100%;border:1.5px solid var(--bk-input-bdr);border-radius:10px;padding:11px 14px;font-size:1rem;font-family:'Nunito',sans-serif;color:var(--bk-text);background:var(--bk-input-bg);transition:.2s;outline:none;-webkit-appearance:none;box-sizing:border-box}
 .bkm-fg input::placeholder{color:var(--bk-muted2);font-weight:400}
 .bkm-fg input:focus,.bkm-fg select:focus{border-color:var(--bk-accent);background:var(--bk-input-bg);box-shadow:0 0 0 3px rgba(200,90,0,.1)}
 .bkm-fg select option{background:#fff;color:var(--bk-text)}
@@ -1252,7 +1252,7 @@ input:-webkit-autofill:focus {
 .bkm-custom-row label{font-size:.65rem;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:var(--bk-muted);display:block;margin-bottom:4px}
 .bkm-custom-inp-wrap{display:flex;gap:7px;align-items:center}
 .bkm-rupee{font-size:1.1rem;font-weight:800;color:var(--bk-text)}
-.bkm-custom-inp{flex:1;border:1.5px solid var(--bk-input-bdr);border-radius:10px;padding:9px 12px;font-size:.92rem;font-weight:700;font-family:'Nunito',sans-serif;outline:none;color:var(--bk-text);background:var(--bk-input-bg)}
+.bkm-custom-inp{flex:1;border:1.5px solid var(--bk-input-bdr);border-radius:10px;padding:9px 12px;font-size:1rem;font-weight:700;font-family:'Nunito',sans-serif;outline:none;color:var(--bk-text);background:var(--bk-input-bg)}
 .bkm-custom-inp:focus{border-color:var(--bk-accent);background:var(--bk-input-bg)}
 .bkm-custom-err{display:none;font-size:.67rem;color:var(--bk-red);margin-top:4px;font-weight:600}
 .bkm-pay-summary{font-size:.76rem;color:var(--bk-muted2);margin-bottom:10px;min-height:16px;font-weight:600}
@@ -1523,7 +1523,7 @@ input:-webkit-autofill:focus {
   .trip-tab { font-size: 13px; padding: 11px 12px; }
   .row-2 { grid-template-columns: 1fr 1fr; gap: 8px; }
   .search-btn { font-size: 14px; padding: 14px; }
-  .field-input { font-size: 13px; padding: 12px 12px 12px 38px; }
+  .field-input { font-size: 16px; padding: 12px 12px 12px 38px; }
   .field-icon  { font-size: 14px; left: 12px; }
 
   .hero-eyebrow { font-size: 8.5px; letter-spacing: 1.2px; padding: 6px 12px; white-space: normal; text-align: center; line-height: 1.5; }

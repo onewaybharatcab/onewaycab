@@ -63,6 +63,19 @@ function validatePhone(raw) {
   return digits.length === 10 ? digits : null;
 }
 
+// Normalise any Indian phone number to a WhatsApp-ready E.164 string (91XXXXXXXXXX).
+// Rules:
+//   - Strip all non-digits first
+//   - If result is 10 digits → prepend 91
+//   - If result is 12 digits starting with 91 → use as-is
+//   - Anything else → return null (caller should abort the WA send)
+function toWaNum(raw) {
+  const digits = String(raw || "").replace(/\D/g, "");
+  if (digits.length === 10) return `91${digits}`;
+  if (digits.length === 12 && digits.startsWith("91")) return digits;
+  return null; // invalid — do not send
+}
+
 var worker_default = {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
@@ -107,6 +120,35 @@ var worker_default = {
     }
     if (url.pathname.includes("auth/me")) {
       return addSecurityHeaders(await withRateLimit(request, env, ctx, "me", () => handleMe(request, env, allowOrigin), allowOrigin))
+    }
+    if (url.pathname.includes("auth/customer-login")) {
+      return addSecurityHeaders(await withRateLimit(request, env, ctx, "customer-login", () => handleCustomerLogin(request, env, allowOrigin), allowOrigin, LOGIN_RATE_LIMIT_MAX))
+    }
+
+    // ── Customer: own bookings ───────────────────────────────────────────────
+    if (url.pathname.includes("customer/bookings")) {
+      return addSecurityHeaders(await withRateLimit(request, env, ctx, "customer-bookings", () => handleCustomerBookings(request, env, allowOrigin), allowOrigin))
+    }
+    if (url.pathname.includes("customer/invoice")) {
+      return addSecurityHeaders(await withRateLimit(request, env, ctx, "customer-invoice", () => handleCustomerInvoice(request, env, allowOrigin), allowOrigin))
+    }
+    if (url.pathname.includes("customer/wallet")) {
+      return addSecurityHeaders(await withRateLimit(request, env, ctx, "customer-wallet", () => handleCustomerWallet(request, env, allowOrigin), allowOrigin))
+    }
+    if (url.pathname.includes("customer/routes")) {
+      return addSecurityHeaders(await withRateLimit(request, env, ctx, "customer-routes", () => handleCustomerRoutes(request, env, allowOrigin), allowOrigin))
+    }
+    if (url.pathname.includes("customer/referral")) {
+      return addSecurityHeaders(await withRateLimit(request, env, ctx, "customer-referral", () => handleCustomerReferral(request, env, allowOrigin), allowOrigin))
+    }
+    if (url.pathname.includes("customer/profile")) {
+      return addSecurityHeaders(await withRateLimit(request, env, ctx, "customer-profile", () => handleCustomerProfile(request, env, allowOrigin), allowOrigin))
+    }
+    if (url.pathname.includes("customer/ticket-create")) {
+      return addSecurityHeaders(await withRateLimit(request, env, ctx, "customer-ticket-create", () => handleCustomerTicketCreate(request, env, allowOrigin), allowOrigin))
+    }
+    if (url.pathname.includes("customer/tickets")) {
+      return addSecurityHeaders(await withRateLimit(request, env, ctx, "customer-tickets", () => handleCustomerTicketList(request, env, allowOrigin), allowOrigin))
     }
 
     // ── CRM: duties (bookings) ───────────────────────────────────────────────
@@ -187,6 +229,12 @@ var worker_default = {
     }
     if (url.pathname.includes("refund/update")) {
       return addSecurityHeaders(await withRateLimit(request, env, ctx, "refund-update", () => handleRefundUpdate(request, env, allowOrigin), allowOrigin))
+    }
+    if (url.pathname.includes("admin/tickets")) {
+      return addSecurityHeaders(await withRateLimit(request, env, ctx, "admin-tickets", () => handleAdminTicketList(request, env, allowOrigin), allowOrigin))
+    }
+    if (url.pathname.includes("admin/ticket-update")) {
+      return addSecurityHeaders(await withRateLimit(request, env, ctx, "admin-ticket-update", () => handleAdminTicketUpdate(request, env, allowOrigin), allowOrigin))
     }
 
     // ── Admin: settings (pricing rates + GST config — persisted, not yet wired
@@ -550,12 +598,72 @@ async function handleBookingNotify(request, env, allowOrigin) {
     return jsonResponse({ error: "Missing required booking fields" }, 400, allowOrigin);
   }
 
+  // ── Trust gate ──────────────────────────────────────────────────────────
+  // This endpoint has no login (it's called by anonymous site visitors), so
+  // it must not take the booking's contents on faith. Two things are now
+  // required before we'll persist a duty or fire a "your booking" WhatsApp
+  // message:
+  //   1. verifyToken — proves whoever is calling actually completed OTP
+  //      verification for this exact phone number (set by handleVerifyOtp).
+  //   2. payment_token — ONLY for type:"payment" calls. Proves a real,
+  //      signature-verified Razorpay payment exists for this booking (set
+  //      by handleVerifyPayment). Without this, anyone could POST
+  //      type:"payment" with a made-up payAmt and trigger a false
+  //      "Payment Completed" message to the admin and the customer.
+  const claimedPhone = validatePhone(b.phone);
+  if (!claimedPhone) {
+    return jsonResponse({ error: "Invalid phone number" }, 400, allowOrigin);
+  }
+  if (env.RATE_LIMIT_KV) {
+    try {
+      const storedToken = await env.RATE_LIMIT_KV.get(`verified:${claimedPhone}`);
+      if (!storedToken || storedToken !== String(body.verifyToken || "")) {
+        return jsonResponse({ error: "Phone number not verified. Please verify via OTP first." }, 403, allowOrigin);
+      }
+    } catch (err) {
+      console.error("verifyToken check failed:", err.message);
+      return jsonResponse({ error: "Could not verify request. Please try again." }, 500, allowOrigin);
+    }
+  } else {
+    console.error("RATE_LIMIT_KV not bound — cannot enforce verifyToken, rejecting");
+    return jsonResponse({ error: "Service temporarily unavailable" }, 500, allowOrigin);
+  }
+
+  const isPaymentDone = b.type === "payment";
+  let pinnedPaidAmount = 0;
+  if (isPaymentDone) {
+    if (!env.RATE_LIMIT_KV) {
+      return jsonResponse({ error: "Service temporarily unavailable" }, 500, allowOrigin);
+    }
+    try {
+      const raw = await env.RATE_LIMIT_KV.get(`payconfirm:${b.id}`);
+      const confirm = raw ? JSON.parse(raw) : null;
+      if (!confirm || confirm.token !== String(b.paymentToken || body.paymentToken || "")) {
+        console.warn("handleBookingNotify: missing/invalid payment_token for booking", b.id);
+        return jsonResponse({ error: "Payment could not be confirmed for this booking." }, 403, allowOrigin);
+      }
+      pinnedPaidAmount = Number(confirm.amountRupees) || 0;
+    } catch (err) {
+      console.error("payconfirm check failed:", err.message);
+      return jsonResponse({ error: "Could not verify payment. Please try again." }, 500, allowOrigin);
+    }
+  }
+
   // Persist the duty so it shows up in the admin panel for assignment.
   // This is best-effort — a KV hiccup here should never block the WhatsApp
   // alert from going out, since that's the part the business depends on most.
   if (env.CRM_KV) {
-    try { await saveDutyFromBooking(env, b); }
+    try { await saveDutyFromBooking(env, b, pinnedPaidAmount); }
     catch (err) { console.error("Duty persist failed:", err.message); }
+  }
+
+  // Referral bonus check — only meaningful once a real payment has landed,
+  // and only does anything if this turns out to be the customer's first
+  // ever paid booking (see maybeCreditReferralBonus for the guard logic).
+  // Never blocks the WhatsApp notification below if it fails.
+  if (isPaymentDone && env.CRM_KV) {
+    try { await maybeCreditReferralBonus(env, claimedPhone, b.id); }
+    catch (err) { console.error("Referral bonus check failed:", err.message); }
   }
 
   const adminNumber   = env.ADMIN_WHATSAPP_NUMBER || "919355757579";
@@ -580,7 +688,6 @@ async function handleBookingNotify(request, env, allowOrigin) {
   // {{1}} Payment status   {{2}} Booking ID   {{3}} Name      {{4}} Phone
   // {{5}} Vehicle          {{6}} Trip type    {{7}} Pickup    {{8}} Drop
   // {{9}} Trip timing      {{10}} Paid amt    {{11}} Due amt  {{12}} Support number
-  const isPaymentDone = b.type === "payment";
   const paymentStatus = isPaymentDone ? "Payment Completed" : "Payment Pending";
   const isRoundTrip= b.tripType === "roundtrip";
   const pickupLoc  = `${b.from || "—"}${stops.length ? " → " + stops.join(" → ") : ""}`;
@@ -590,9 +697,10 @@ async function handleBookingNotify(request, env, allowOrigin) {
   // Before payment actually completes, nothing has been paid yet — b.advance
   // at that point is the INTENDED amount the customer is about to pay, not
   // money already received, so it must not be shown as "Paid". Only the
-  // post-payment call (type:"payment", carrying payAmt from a real Razorpay
-  // success) reflects money actually collected.
-  const actuallyPaid = isPaymentDone ? Number(b.payAmt || b.advance || 0) : 0;
+  // post-payment call (type:"payment") reflects money actually collected,
+  // and now uses pinnedPaidAmount (from handleVerifyPayment's KV record)
+  // rather than the client-supplied payAmt, which can no longer be spoofed.
+  const actuallyPaid = isPaymentDone ? pinnedPaidAmount : 0;
   const paidAmt    = `₹${actuallyPaid.toLocaleString("en-IN")}`;
   const dueAmt     = `₹${Number((b.fare || 0) - actuallyPaid).toLocaleString("en-IN")}`;
   const tripTiming = isRoundTrip && b.retdate
@@ -604,7 +712,7 @@ async function handleBookingNotify(request, env, allowOrigin) {
     { type: "text", text: paymentStatus },
     { type: "text", text: String(b.id) },
     { type: "text", text: String(b.name) },
-    { type: "text", text: `+91${b.phone}` },
+    { type: "text", text: `+91${String(b.phone).replace(/^91/, "")}` },
     { type: "text", text: vehicleType },
     { type: "text", text: tripType },
     { type: "text", text: pickupLoc },
@@ -618,7 +726,7 @@ async function handleBookingNotify(request, env, allowOrigin) {
   const legacyPayload = (to) => ({ messaging_product: "whatsapp", to, type: "template", template: { name: "oneway_notification", language: { code: "en" }, components: [{ type: "body", parameters: [
     { type: "text", text: String(b.id) },
     { type: "text", text: String(b.name) },
-    { type: "text", text: `+91${b.phone}` },
+    { type: "text", text: `+91${String(b.phone).replace(/^91/, "")}` },
     { type: "text", text: pickupLoc },
     { type: "text", text: dropLoc },
     { type: "text", text: paidAmt },
@@ -660,26 +768,109 @@ async function handleBookingNotify(request, env, allowOrigin) {
     return false;
   };
 
-  // Send to admin
+  // Send to admin first (required), then also to customer (best-effort)
+  let adminOk = false;
   try {
-    const ok = await trySend(adminNumber, "Admin");
-    if (!ok) {
-      return jsonResponse({ sent: false, reason: "upstream_error" }, 200, allowOrigin);
+    adminOk = await trySend(adminNumber, "Admin");
+    if (!adminOk) {
+      console.warn("Admin WA notify failed — still attempting customer notify");
     }
   } catch (err) {
     console.error("Admin WA notify exception:", err.message);
-    return jsonResponse({ sent: false, reason: err.message }, 200, allowOrigin);
   }
 
-  return jsonResponse({ sent: true }, 200, allowOrigin);
+  // Customer booking confirmation — send same template to customer number
+  const customerNumber = toWaNum(b.phone);
+  if (customerNumber) {
+    try {
+      await trySend(customerNumber, "Customer");
+    } catch (err) {
+      console.error("Customer WA notify exception:", err.message);
+    }
+  } else {
+    console.warn("handleBookingNotify: invalid customer phone:", b.phone);
+  }
+
+  return jsonResponse({ sent: adminOk }, 200, allowOrigin);
 }
 __name(handleBookingNotify, "handleBookingNotify");
+
+// ── Fare rate table — MUST mirror BKM_VEHICLES in assets/js/main.js. ─────────
+// This is the server's independent source of truth for "what should this
+// trip cost", used to sanity-check the amount the client asks to charge.
+// If you change a rate here, change it in main.js too (and vice versa).
+const FARE_VEHICLES = {
+  sedan:  { ow: 16, rt: 11, minFare: 1500 },
+  ertiga: { ow: 21, rt: 15, minFare: 1700 },
+  innova: { ow: 30, rt: 20, minFare: 2000 },
+  tempo:  { ow: 42, rt: 35, minFare: 4000 },
+};
+
+// Independent server-side day count for round-trip packages — mirrors
+// _bkmCalcDays() in main.js exactly (inclusive of both pickup and return
+// dates: 7th to 10th is 4 days, not 3, since the vehicle/driver is engaged
+// every calendar day in between including both ends). Returns null if
+// either date is missing/unparseable, so callers can fall back safely.
+function computeDaysFromDates(dateStr, retDateStr) {
+  if (!dateStr || !retDateStr) return null;
+  const d1 = new Date(dateStr);
+  const d2 = new Date(retDateStr);
+  if (isNaN(d1) || isNaN(d2)) return null;
+  const diff = Math.ceil((d2 - d1) / (1000 * 60 * 60 * 24)) + 1;
+  return Math.max(1, diff);
+}
+__name(computeDaysFromDates, "computeDaysFromDates");
+
+// Recompute the fare the same way the booking widget does (see _bkmBuildCabs
+// in main.js) from server-trusted inputs only (vehicle key, trip type,
+// distance, stop count, round-trip day count). Returns null if the vehicle
+// key isn't recognised, so callers can fail closed.
+//
+// dayCount prefers an independent recomputation from date/retDate (so a
+// client can't just send an arbitrary "days" number to shrink the fare
+// floor) and only falls back to the client-supplied `days` field when no
+// dates were sent at all.
+function computeExpectedFare({ vehicle, tripType, distKm, stops = 0, days = 1, date = null, retDate = null }) {
+  const v = FARE_VEHICLES[String(vehicle || "").toLowerCase()];
+  if (!v) return null;
+  const km = Math.max(0, Number(distKm) || 0);
+  const stopCount = Math.max(0, Number(stops) || 0);
+  const datesDayCount = computeDaysFromDates(date, retDate);
+  const dayCount = datesDayCount != null ? datesDayCount : Math.max(1, Number(days) || 1);
+
+  if (tripType === "roundtrip") {
+    const packageKm = 250 * dayCount;
+    const billedKm = Math.max(km, packageKm);
+    return Math.ceil(billedKm * v.rt) + dayCount * 300;
+  }
+  const perKm = Math.ceil(km * v.ow);
+  const base = km < 100 ? Math.max(perKm, v.minFare) : perKm;
+  return stopCount ? Math.ceil(base * (1 + 0.15 * stopCount)) : base;
+}
+__name(computeExpectedFare, "computeExpectedFare");
+
+// How far the client-claimed amount is allowed to drift from our own
+// recomputation before we reject it outright. Generous on purpose — Google
+// Distance Matrix can return slightly different km between calls, and we'd
+// rather allow a few rupees of rounding drift than block a real customer.
+// A spoofed amount (e.g. ₹1 instead of ₹4,896) will be nowhere close to this.
+const FARE_TOLERANCE_RUPEES = 50;
+const FARE_TOLERANCE_RATIO = 0.1; // 10%
 
 // ── Razorpay: create order ───────────────────────────────────────────────────
 // Frontend calls this BEFORE opening the Razorpay checkout widget. Creating
 // the order server-side (rather than trusting a client-supplied amount)
 // means the amount that gets charged is always the amount we set, and gives
 // us an order_id we can later use to verify the payment signature.
+//
+// SECURITY: amountRupees alone used to be trusted outright (clamped only to
+// a 1–500000 sanity range), which meant anyone could open devtools and pay
+// any amount they liked for a real booking. We now also recompute the
+// expected fare server-side from vehicle/tripType/distKm/stops/days and
+// reject if the claimed amount is implausibly far from it. The order amount
+// actually sent to Razorpay is then PINNED in RATE_LIMIT_KV keyed by the
+// Razorpay order id, so handleBookingNotify/handleCustomerConfirm can later
+// check what was *actually* paid rather than trusting the client again.
 async function handleCreateOrder(request, env, allowOrigin) {
   if (request.method !== "POST") return jsonResponse({ error: "Method not allowed" }, 405, allowOrigin);
 
@@ -700,6 +891,74 @@ async function handleCreateOrder(request, env, allowOrigin) {
   if (!keyId || !keySecret) {
     console.error("Razorpay secrets not configured (RAZORPAY_KEY_ID / RAZORPAY_KEY_SECRET)");
     return jsonResponse({ error: "Payment service is not yet configured" }, 500, allowOrigin);
+  }
+
+  // Optional wallet credit applied toward this payment. Only honoured if
+  // the request actually has a valid customer session AND that wallet
+  // really has at least this much balance — never trusts a client-supplied
+  // "I have ₹X in my wallet" claim. The wallet is debited for real here,
+  // immediately, so it can't be "applied" twice across two separate
+  // create-order calls for the same booking. Any failure path below this
+  // point must roll the debit back (see walletApplied/walletPhone checks
+  // further down) so a rejected or failed order never actually costs the
+  // customer wallet money.
+  let walletApplied = 0;
+  let walletPhone = null;
+  const claimedWalletUse = Math.max(0, Number(body.walletApplied) || 0);
+  if (claimedWalletUse > 0) {
+    const session = await getSession(env, request);
+    if (session && session.role === "customer" && env.CRM_KV) {
+      walletPhone = session.id;
+      const wallet = await getWallet(env, session.id);
+      walletApplied = Math.min(claimedWalletUse, wallet.balance);
+      if (walletApplied > 0) {
+        await applyWalletTransaction(
+          env, session.id, "debit", walletApplied,
+          `Applied to booking ${String(body.bookingId || "").slice(0, 40)}`,
+          body.bookingId
+        );
+      }
+    }
+  }
+  async function rollbackWallet() {
+    if (walletApplied > 0 && walletPhone) {
+      await applyWalletTransaction(env, walletPhone, "credit", walletApplied, "Reversed — order not created").catch(() => {});
+    }
+  }
+
+  // Independent fare check. Only enforced when the client sends enough
+  // context to compute it (vehicle + distKm) — requests with no vehicle
+  // info fail closed rather than silently skipping the check. date/retDate
+  // let the server recompute round-trip day count itself rather than
+  // trusting a client-supplied "days" number, which would otherwise let
+  // someone shrink the fare floor by sending a lower day count than their
+  // actual trip dates imply.
+  const expectedFare = computeExpectedFare({
+    vehicle: body.vehicle,
+    tripType: body.tripType,
+    distKm: body.distKm,
+    stops: body.stops,
+    days: body.days,
+    date: body.date,
+    retDate: body.retDate
+  });
+  if (expectedFare == null) {
+    await rollbackWallet();
+    return jsonResponse({ error: "Missing trip details for fare verification" }, 400, allowOrigin);
+  }
+  // amountRupees here is the amount the customer chose to pay NOW (advance
+  // or full), not necessarily the full fare — so the check allows anywhere
+  // from a small advance up to the full fare (+tolerance). This still
+  // catches "pay ₹1 for a ₹4,896 booking" without breaking the legitimate
+  // 10%-advance flow. walletApplied widens the floor downward by exactly
+  // the amount actually debited above — e.g. a ₹450 advance with ₹100 of
+  // real wallet credit only needs to send ₹350 to Razorpay.
+  const minAcceptable = Math.max(1, Math.floor(expectedFare * 0.05) - FARE_TOLERANCE_RUPEES - walletApplied);
+  const maxAcceptable = Math.ceil(expectedFare * (1 + FARE_TOLERANCE_RATIO)) + FARE_TOLERANCE_RUPEES;
+  if (amountRupees < minAcceptable || amountRupees > maxAcceptable) {
+    console.warn(`Fare check failed — claimed ₹${amountRupees}, expected ~₹${expectedFare} (band ₹${minAcceptable}-₹${maxAcceptable})`);
+    await rollbackWallet();
+    return jsonResponse({ error: "Payment amount does not match the quoted fare. Please refresh and try again." }, 400, allowOrigin);
   }
 
   const bookingId = String(body.bookingId || "").slice(0, 40);
@@ -725,7 +984,24 @@ async function handleCreateOrder(request, env, allowOrigin) {
     const rpData = await rpRes.json();
     if (!rpRes.ok) {
       console.error("Razorpay order creation failed:", JSON.stringify(rpData));
+      await rollbackWallet();
       return jsonResponse({ error: "Could not initiate payment. Please try again." }, 502, allowOrigin);
+    }
+
+    // Pin this order's id -> claimed amount (and how much wallet credit was
+    // applied) so a later "payment completed" notification can be checked
+    // against what we actually told Razorpay to charge, instead of trusting
+    // a second client-supplied number.
+    if (env.RATE_LIMIT_KV && bookingId) {
+      try {
+        await env.RATE_LIMIT_KV.put(
+          `order-amt:${rpData.id}`,
+          JSON.stringify({ bookingId, amountRupees, walletApplied }),
+          { expirationTtl: 86400 } // 24h — plenty of time to finish checkout
+        );
+      } catch (err) {
+        console.error("order-amt KV write failed:", err.message);
+      }
     }
 
     // key_id (the Razorpay "Key ID") is the public half of the pair — safe to
@@ -734,11 +1010,13 @@ async function handleCreateOrder(request, env, allowOrigin) {
       order_id: rpData.id,
       amount: rpData.amount,
       currency: rpData.currency,
-      key_id: keyId
+      key_id: keyId,
+      walletApplied
     }, 200, allowOrigin);
 
   } catch (err) {
     console.error("Razorpay order request failed:", err.message);
+    await rollbackWallet();
     return jsonResponse({ error: "Could not initiate payment. Please try again." }, 502, allowOrigin);
   }
 }
@@ -783,7 +1061,59 @@ async function handleVerifyPayment(request, env, allowOrigin) {
       return jsonResponse({ verified: false }, 200, allowOrigin);
     }
 
-    return jsonResponse({ verified: true, order_id: orderId, payment_id: paymentId }, 200, allowOrigin);
+    // Signature checks out — this request really did come from a completed
+    // Razorpay payment. Now look up what we actually told Razorpay to charge
+    // when the order was created (handleCreateOrder pinned this), and issue a
+    // one-time "payment confirmed" token carrying that real amount + booking
+    // id. handleBookingNotify/handleCustomerConfirm require this token for
+    // type:"payment" calls, so a forged "I paid!" WhatsApp trigger is no
+    // longer possible — the only way to get this token is a signature that
+    // only Razorpay (holder of the real payment) could have produced.
+    let paidAmountRupees = null;
+    let bookingId = null;
+    let walletApplied = 0;
+    if (env.RATE_LIMIT_KV) {
+      try {
+        const pinnedRaw = await env.RATE_LIMIT_KV.get(`order-amt:${orderId}`);
+        if (pinnedRaw) {
+          const pinned = JSON.parse(pinnedRaw);
+          paidAmountRupees = Number(pinned.amountRupees) || null;
+          bookingId = pinned.bookingId || null;
+          walletApplied = Number(pinned.walletApplied) || 0;
+        }
+      } catch (err) {
+        console.error("order-amt KV read failed:", err.message);
+      }
+    }
+
+    // Total actually paid = what Razorpay charged + whatever wallet credit
+    // was applied at create-order time (already debited for real then).
+    const totalPaidRupees = paidAmountRupees != null ? paidAmountRupees + walletApplied : null;
+
+    let paymentToken = null;
+    if (env.RATE_LIMIT_KV && bookingId && totalPaidRupees != null) {
+      paymentToken = generateToken();
+      try {
+        await env.RATE_LIMIT_KV.put(
+          `payconfirm:${bookingId}`,
+          JSON.stringify({ token: paymentToken, paymentId, orderId, amountRupees: totalPaidRupees }),
+          { expirationTtl: 1800 } // 30 min — enough to finish the post-payment notify calls
+        );
+      } catch (err) {
+        console.error("payconfirm KV write failed:", err.message);
+        paymentToken = null;
+      }
+    } else {
+      console.warn("handleVerifyPayment: no pinned order-amt found for order", orderId, "— notify will fail closed");
+    }
+
+    return jsonResponse({
+      verified: true,
+      order_id: orderId,
+      payment_id: paymentId,
+      booking_id: bookingId,
+      payment_token: paymentToken
+    }, 200, allowOrigin);
   } catch (err) {
     console.error("Payment verification failed:", err.message);
     return jsonResponse({ verified: false, error: "Verification failed" }, 500, allowOrigin);
@@ -887,6 +1217,30 @@ async function handleCustomerConfirm(request, env, allowOrigin) {
     return jsonResponse({ error: "Missing required booking fields" }, 400, allowOrigin);
   }
 
+  // ── Trust gate ──────────────────────────────────────────────────────────
+  // This message unconditionally says "Payment Completed" to the customer,
+  // so it must require proof a real payment happened — the same payconfirm
+  // record handleBookingNotify checks (written only by handleVerifyPayment
+  // after a real Razorpay signature check). Without this, anyone could POST
+  // an arbitrary phone number here and have it receive a fake payment
+  // confirmation message.
+  if (!env.RATE_LIMIT_KV) {
+    return jsonResponse({ error: "Service temporarily unavailable" }, 500, allowOrigin);
+  }
+  let verifiedPaidAmount = 0;
+  try {
+    const raw = await env.RATE_LIMIT_KV.get(`payconfirm:${b.id}`);
+    const confirm = raw ? JSON.parse(raw) : null;
+    if (!confirm || confirm.token !== String(b.paymentToken || body.paymentToken || "")) {
+      console.warn("handleCustomerConfirm: missing/invalid payment_token for booking", b.id);
+      return jsonResponse({ error: "Payment could not be confirmed for this booking." }, 403, allowOrigin);
+    }
+    verifiedPaidAmount = Number(confirm.amountRupees) || 0;
+  } catch (err) {
+    console.error("payconfirm check failed:", err.message);
+    return jsonResponse({ error: "Could not verify payment. Please try again." }, 500, allowOrigin);
+  }
+
   const accessToken   = env.WHATSAPP_ACCESS_TOKEN;
   const phoneNumberId = env.WHATSAPP_PHONE_NUMBER_ID;
   const supportNumber = env.ADMIN_SUPPORT_NUMBER || env.ADMIN_WHATSAPP_NUMBER || "919355757579";
@@ -897,11 +1251,12 @@ async function handleCustomerConfirm(request, env, allowOrigin) {
   }
 
   const stops = Array.isArray(b.extraCities) ? b.extraCities.filter(c => c.trim()) : [];
-  const customerNumber = `91${b.phone}`;
-  // Same v2 template as the admin alert, so there's only one template to
-  // maintain in Meta Business Manager. Falls back to the old 8-param
-  // template if WHATSAPP_NOTIFY_TEMPLATE_NAME still points at it.
-  const notifTemplate  = env.WHATSAPP_NOTIFY_TEMPLATE_NAME || "oneway_notification_v2";
+  const customerNumber = toWaNum(b.phone);
+  if (!customerNumber) { console.warn("Invalid customer phone:", b.phone); return jsonResponse({ sent: false, reason: "invalid_phone" }, 200, allowOrigin); }
+  // Use a dedicated customer-confirmation template (lighter, customer-facing).
+  // Falls back to the admin v2 template if the customer template isn't set up yet.
+  const customerConfirmTemplate = env.WHATSAPP_CUSTOMER_CONFIRM_TEMPLATE_NAME || "oneway_booking_confirmed";
+  const notifTemplate = customerConfirmTemplate;
 
   // Template variables — must match oneway_notification_v2 exactly (12 params):
   // {{1}} Payment status   {{2}} Booking ID   {{3}} Name      {{4}} Phone
@@ -912,8 +1267,10 @@ async function handleCustomerConfirm(request, env, allowOrigin) {
   const dropLoc     = isRoundTrip ? "Same as pickup (round trip)" : (b.to || "—");
   const vehicleType = b.vehicle || "—";
   const tripType    = isRoundTrip ? "Round Trip" : "One Way";
-  const paidAmt     = `₹${Number(b.payAmt || 0).toLocaleString("en-IN")}`;
-  const dueAmt      = `₹${Number((b.fare || 0) - (b.payAmt || 0)).toLocaleString("en-IN")}`;
+  // paidAmt now comes from the server-verified payconfirm record, not the
+  // client-supplied b.payAmt, so it can no longer be spoofed.
+  const paidAmt     = `₹${verifiedPaidAmount.toLocaleString("en-IN")}`;
+  const dueAmt      = `₹${Number((b.fare || 0) - verifiedPaidAmount).toLocaleString("en-IN")}`;
   const tripTiming  = isRoundTrip && b.retdate
     ? `${b.date || "—"} ${b.time || ""}`.trim() + ` → Return ${b.retdate}`
     : `${b.date || "—"} ${b.time || ""}`.trim();
@@ -923,7 +1280,7 @@ async function handleCustomerConfirm(request, env, allowOrigin) {
     { type: "text", text: "Payment Completed" },
     { type: "text", text: String(b.id) },
     { type: "text", text: String(b.name) },
-    { type: "text", text: `+91${b.phone}` },
+    { type: "text", text: `+91${String(b.phone).replace(/^91/, "")}` },
     { type: "text", text: vehicleType },
     { type: "text", text: tripType },
     { type: "text", text: pickupLoc },
@@ -937,7 +1294,7 @@ async function handleCustomerConfirm(request, env, allowOrigin) {
   const legacyPayload = { messaging_product: "whatsapp", to: customerNumber, type: "template", template: { name: "oneway_notification", language: { code: "en" }, components: [{ type: "body", parameters: [
     { type: "text", text: String(b.id) },
     { type: "text", text: String(b.name) },
-    { type: "text", text: `+91${b.phone}` },
+    { type: "text", text: `+91${String(b.phone).replace(/^91/, "")}` },
     { type: "text", text: pickupLoc },
     { type: "text", text: dropLoc },
     { type: "text", text: paidAmt },
@@ -1080,6 +1437,419 @@ async function removeFromIndex(env, key, id) {
 }
 __name(removeFromIndex, "removeFromIndex");
 
+// ── Customer wallet ──────────────────────────────────────────────────────────
+// Real KV-backed balance + ledger, not a UI mockup. There is deliberately
+// NO endpoint that lets a customer add money to their own wallet directly —
+// every credit must come from a legitimate server-side event (an admin
+// approving a refund, or a referral bonus once a referred friend's first
+// paid trip completes) so the balance can't be inflated by calling an API
+// with a made-up amount. Debits happen when wallet balance is applied
+// toward a new booking's advance payment.
+async function getWallet(env, phone) {
+  try {
+    const raw = await env.CRM_KV.get(`wallet:${phone}`);
+    if (raw) return JSON.parse(raw);
+  } catch (err) {
+    console.error("Wallet read failed for", phone, ":", err.message);
+  }
+  return { phone, balance: 0, updatedAt: null };
+}
+__name(getWallet, "getWallet");
+
+// `type` is 'credit' or 'debit'. Returns the updated wallet. Debits are
+// clamped so balance never goes negative (extra is silently capped, never
+// charged elsewhere) — this only ever moves real previously-credited money,
+// never creates new money on a debit.
+async function applyWalletTransaction(env, phone, type, amount, reason, relatedBookingId = null) {
+  const amt = Math.abs(Number(amount) || 0);
+  if (!phone || !amt) return null;
+
+  const wallet = await getWallet(env, phone);
+  let delta = type === "credit" ? amt : -Math.min(amt, wallet.balance);
+  wallet.balance = Math.max(0, Math.round((wallet.balance + delta) * 100) / 100);
+  wallet.phone = phone;
+  wallet.updatedAt = Date.now();
+  await env.CRM_KV.put(`wallet:${phone}`, JSON.stringify(wallet));
+
+  const txId = "wtx_" + generateToken().slice(0, 12);
+  const tx = {
+    id: txId, phone, type, amount: Math.abs(delta), reason: sanitizeString(reason || "", 200),
+    relatedBookingId: relatedBookingId ? sanitizeString(String(relatedBookingId), 40) : null,
+    createdAt: Date.now()
+  };
+  await env.CRM_KV.put(`wallet-tx:${txId}`, JSON.stringify(tx));
+  await addToIndex(env, `wallet-tx-index:${phone}`, txId);
+
+  return wallet;
+}
+__name(applyWalletTransaction, "applyWalletTransaction");
+
+async function handleCustomerWallet(request, env, allowOrigin) {
+  const auth = await requireRole(env, request, "customer");
+  if (auth.error) return auth.error;
+  if (!env.CRM_KV) return jsonResponse({ wallet: { balance: 0 }, transactions: [] }, 200, allowOrigin);
+
+  const phone = auth.session.id;
+  const wallet = await getWallet(env, phone);
+  const txIds = await readIndex(env, `wallet-tx-index:${phone}`);
+  const records = await Promise.all(txIds.map(id => env.CRM_KV.get(`wallet-tx:${id}`)));
+  const transactions = records.filter(Boolean).map(r => JSON.parse(r));
+
+  return jsonResponse({ wallet, transactions }, 200, allowOrigin);
+}
+__name(handleCustomerWallet, "handleCustomerWallet");
+
+// ── Saved routes ──────────────────────────────────────────────────────────────
+// Real per-customer KV list, not a UI mockup. A "saved route" is just a
+// from/to/vehicle combination the customer wants to quick-book again later
+// — no fare is stored (fares are recomputed fresh, server-side, at booking
+// time, same as every other booking) so a saved route can never go stale
+// or be used to lock in an old/wrong price.
+// ── Referral program ──────────────────────────────────────────────────────────
+// Real, KV-backed — not a fake "your code is ABC123" display with no logic
+// behind it. Design:
+//   - Every customer's referral code is DERIVED deterministically from their
+//     phone number (first 6 hex chars of HMAC-SHA256(phone)), so there's no
+//     separate "generate code" step and it's stable across logins/devices.
+//   - The first time a customer ever views their own code (GET below), we
+//     write a reverse lookup (code -> phone) so other customers can redeem
+//     it. This makes redemption self-bootstrapping with no separate "claim
+//     my code" step the customer has to remember to do.
+//   - A new customer can redeem someone else's code once. This just records
+//     who referred them — no money moves yet.
+//   - The actual bonus is credited later, by maybeCreditReferralBonus()
+//     (called from handleBookingNotify), the moment the REFERRED customer's
+//     first ever PAID booking is confirmed. That's the only point real
+//     money is on the table, so it's the only point a bonus can be earned —
+//     a code can't be redeemed for free money with no real trip behind it.
+const REFERRAL_BONUS_RUPEES = 150;
+const REFERRAL_SECRET = "owb-referral-v1"; // namespacing salt, not a real secret
+
+async function getReferralCode(env, phone) {
+  const hex = await hmacSha256Hex(REFERRAL_SECRET, phone);
+  return hex.slice(0, 6).toUpperCase();
+}
+__name(getReferralCode, "getReferralCode");
+
+async function handleCustomerReferral(request, env, allowOrigin) {
+  const auth = await requireRole(env, request, "customer");
+  if (auth.error) return auth.error;
+  if (!env.CRM_KV) return jsonResponse({ error: "CRM not configured" }, 500, allowOrigin);
+  const phone = auth.session.id;
+
+  if (request.method === "GET") {
+    const code = await getReferralCode(env, phone);
+    // Bootstrap the reverse lookup the first time this customer checks their
+    // own code, so others can redeem it without a separate "claim" step.
+    try { await env.CRM_KV.put(`referral-code-owner:${code}`, phone); } catch {}
+
+    const raw = await env.CRM_KV.get(`referral:${phone}`);
+    const record = raw ? JSON.parse(raw) : { phone, redeemedCode: null, createdAt: null };
+    const useIds = await readIndex(env, `referral-uses:${phone}`);
+    return jsonResponse({
+      code,
+      redeemedCode: record.redeemedCode,
+      referralCount: useIds.length,
+      bonusPerReferral: REFERRAL_BONUS_RUPEES
+    }, 200, allowOrigin);
+  }
+
+  if (request.method === "POST") {
+    let body;
+    try { body = await request.json(); } catch { return jsonResponse({ error: "Invalid JSON" }, 400, allowOrigin); }
+    const enteredCode = sanitizeString(body.code, 10).toUpperCase();
+    if (!enteredCode) return jsonResponse({ error: "Referral code required" }, 400, allowOrigin);
+
+    const ownCode = await getReferralCode(env, phone);
+    if (enteredCode === ownCode) {
+      return jsonResponse({ error: "You can't refer yourself." }, 400, allowOrigin);
+    }
+
+    const existingRaw = await env.CRM_KV.get(`referral:${phone}`);
+    const existing = existingRaw ? JSON.parse(existingRaw) : null;
+    if (existing && existing.redeemedCode) {
+      return jsonResponse({ error: "A referral code has already been applied to this account." }, 400, allowOrigin);
+    }
+
+    const referrerPhone = await env.CRM_KV.get(`referral-code-owner:${enteredCode}`);
+    if (!referrerPhone) {
+      return jsonResponse({ error: "Referral code not recognised. Ask your friend to open their Referrals tab first." }, 400, allowOrigin);
+    }
+    if (referrerPhone === phone) {
+      return jsonResponse({ error: "You can't refer yourself." }, 400, allowOrigin);
+    }
+
+    await env.CRM_KV.put(`referral:${phone}`, JSON.stringify({
+      phone, redeemedCode: enteredCode, referrerPhone, createdAt: Date.now(), bonusPaid: false
+    }));
+    await addToIndex(env, `referral-uses:${referrerPhone}`, phone);
+
+    return jsonResponse({ redeemed: true, code: enteredCode }, 200, allowOrigin);
+  }
+
+  return jsonResponse({ error: "Method not allowed" }, 405, allowOrigin);
+}
+__name(handleCustomerReferral, "handleCustomerReferral");
+
+// Called from handleBookingNotify on every successful payment — checks
+// whether this is the paying customer's FIRST ever paid booking, and if so,
+// whether they redeemed a referral code, and if so, pays the referrer their
+// bonus exactly once (guarded by referral.bonusPaid).
+async function maybeCreditReferralBonus(env, phone, bookingId) {
+  if (!env.CRM_KV) return;
+  try {
+    const referralRaw = await env.CRM_KV.get(`referral:${phone}`);
+    if (!referralRaw) return; // this customer never redeemed a code
+    const referral = JSON.parse(referralRaw);
+    if (referral.bonusPaid || !referral.referrerPhone) return;
+
+    // "First paid booking" = exactly one paid duty exists for this phone
+    // right now (this current one). We check the customer-duties index and
+    // count how many of those duties already have advance > 0.
+    const dutyIds = await readIndex(env, `customer-duties:${phone}`);
+    const records = await Promise.all(dutyIds.map(id => env.CRM_KV.get(`duty:${id}`)));
+    const paidCount = records.filter(Boolean).map(r => JSON.parse(r)).filter(d => Number(d.advance || 0) > 0).length;
+    if (paidCount !== 1) return; // not their first paid booking
+
+    await applyWalletTransaction(
+      env, referral.referrerPhone, "credit", REFERRAL_BONUS_RUPEES,
+      `Referral bonus — ${phone} completed their first paid booking`, bookingId
+    );
+    referral.bonusPaid = true;
+    await env.CRM_KV.put(`referral:${phone}`, JSON.stringify(referral));
+  } catch (err) {
+    console.error("Referral bonus credit failed:", err.message);
+  }
+}
+__name(maybeCreditReferralBonus, "maybeCreditReferralBonus");
+
+// ── Customer profile ──────────────────────────────────────────────────────────
+// A real, separate KV record — name/email/city the customer can edit
+// themselves, distinct from whatever name was typed into any one booking
+// form. Phone number itself is never editable here (it's literally the
+// session identity), same as why driver.html keeps phone read-only.
+async function handleCustomerProfile(request, env, allowOrigin) {
+  const auth = await requireRole(env, request, "customer");
+  if (auth.error) return auth.error;
+  if (!env.CRM_KV) return jsonResponse({ error: "CRM not configured" }, 500, allowOrigin);
+  const phone = auth.session.id;
+
+  if (request.method === "GET") {
+    const raw = await env.CRM_KV.get(`customer-profile:${phone}`);
+    let profile = raw ? JSON.parse(raw) : null;
+
+    // First-ever visit: no profile saved yet. Rather than show a blank
+    // form, prefill name/email from their most recent booking (if any) so
+    // it doesn't feel like starting from zero — but this is just a
+    // starting suggestion; nothing is written until they hit Save.
+    if (!profile) {
+      const dutyIds = await readIndex(env, `customer-duties:${phone}`);
+      let latestName = "", latestEmail = "";
+      if (dutyIds.length) {
+        const records = await Promise.all(dutyIds.map(id => env.CRM_KV.get(`duty:${id}`)));
+        const duties = records.filter(Boolean).map(r => JSON.parse(r)).sort((a, b) => b.createdAt - a.createdAt);
+        if (duties[0]) { latestName = duties[0].name || ""; latestEmail = duties[0].email || ""; }
+      }
+      profile = { phone, name: latestName, email: latestEmail, city: "", updatedAt: null, saved: false };
+    } else {
+      profile.saved = true;
+    }
+    return jsonResponse({ profile }, 200, allowOrigin);
+  }
+
+  if (request.method === "POST" || request.method === "PUT") {
+    let body;
+    try { body = await request.json(); } catch { return jsonResponse({ error: "Invalid JSON" }, 400, allowOrigin); }
+    const name = sanitizeString(body.name, 100);
+    const email = sanitizeString(body.email, 150);
+    const city = sanitizeString(body.city, 80);
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return jsonResponse({ error: "Please enter a valid email address" }, 400, allowOrigin);
+    }
+    const profile = { phone, name, email, city, updatedAt: Date.now(), saved: true };
+    await env.CRM_KV.put(`customer-profile:${phone}`, JSON.stringify(profile));
+    return jsonResponse({ profile }, 200, allowOrigin);
+  }
+
+  return jsonResponse({ error: "Method not allowed" }, 405, allowOrigin);
+}
+__name(handleCustomerProfile, "handleCustomerProfile");
+
+// ── Support tickets ───────────────────────────────────────────────────────────
+// Real KV-backed tickets, visible to admin (handleAdminTicketList /
+// handleAdminTicketUpdate below) — not a fake "ticket submitted!" alert
+// that goes nowhere. Also fires a WhatsApp alert to the admin number, same
+// as a new booking does, so a real ticket gets real, immediate attention
+// rather than waiting for someone to happen to check a dashboard.
+const TICKET_STATUSES = ["open", "in_progress", "resolved", "closed"];
+
+async function handleCustomerTicketCreate(request, env, allowOrigin) {
+  const auth = await requireRole(env, request, "customer");
+  if (auth.error) return auth.error;
+  if (!env.CRM_KV) return jsonResponse({ error: "CRM not configured" }, 500, allowOrigin);
+  const phone = auth.session.id;
+
+  let body;
+  try { body = await request.json(); } catch { return jsonResponse({ error: "Invalid JSON" }, 400, allowOrigin); }
+  const bookingId = sanitizeString(body.bookingId, 40);
+  const issueType = sanitizeString(body.issueType, 60) || "Other";
+  const description = sanitizeString(body.description, 1000);
+  if (!description) return jsonResponse({ error: "Please describe the issue" }, 400, allowOrigin);
+
+  // If a bookingId is given, it must actually belong to this customer —
+  // otherwise drop it rather than let someone reference a stranger's
+  // booking in a ticket.
+  let verifiedBookingId = "";
+  if (bookingId) {
+    const raw = await env.CRM_KV.get(`duty:${bookingId}`);
+    if (raw) {
+      const duty = JSON.parse(raw);
+      if (duty.phone === phone) verifiedBookingId = bookingId;
+    }
+  }
+
+  const profileRaw = await env.CRM_KV.get(`customer-profile:${phone}`);
+  const profile = profileRaw ? JSON.parse(profileRaw) : null;
+
+  const id = "tkt_" + generateToken().slice(0, 12);
+  const ticket = {
+    id, phone, customerName: profile?.name || "", bookingId: verifiedBookingId,
+    issueType, description, status: "open", createdAt: Date.now(), resolvedAt: null, adminNote: ""
+  };
+  await env.CRM_KV.put(`ticket:${id}`, JSON.stringify(ticket));
+  await addToIndex(env, "ticket-index", id);
+  await addToIndex(env, `customer-tickets:${phone}`, id);
+
+  // Best-effort WhatsApp alert to admin — a KV/WhatsApp hiccup here should
+  // never stop the ticket itself from being saved (that already happened above).
+  try {
+    const accessToken = env.WHATSAPP_ACCESS_TOKEN;
+    const phoneNumberId = env.WHATSAPP_PHONE_NUMBER_ID;
+    const adminNumber = env.ADMIN_WHATSAPP_NUMBER || "919355757579";
+    if (accessToken && phoneNumberId) {
+      await fetch(`https://graph.facebook.com/v19.0/${phoneNumberId}/messages`, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${accessToken}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messaging_product: "whatsapp",
+          to: adminNumber,
+          type: "text",
+          text: { body: `New support ticket ${id}\nFrom: +91 ${phone}\nIssue: ${issueType}\nBooking: ${verifiedBookingId || "—"}\n\n${description.slice(0, 300)}` }
+        })
+      });
+    }
+  } catch (err) {
+    console.error("Ticket WhatsApp alert failed:", err.message);
+  }
+
+  return jsonResponse({ ticket }, 200, allowOrigin);
+}
+__name(handleCustomerTicketCreate, "handleCustomerTicketCreate");
+
+async function handleCustomerTicketList(request, env, allowOrigin) {
+  const auth = await requireRole(env, request, "customer");
+  if (auth.error) return auth.error;
+  if (!env.CRM_KV) return jsonResponse({ tickets: [] }, 200, allowOrigin);
+  const phone = auth.session.id;
+
+  const ids = await readIndex(env, `customer-tickets:${phone}`);
+  const records = await Promise.all(ids.map(id => env.CRM_KV.get(`ticket:${id}`)));
+  const tickets = records.filter(Boolean).map(r => JSON.parse(r)).sort((a, b) => b.createdAt - a.createdAt);
+  return jsonResponse({ tickets }, 200, allowOrigin);
+}
+__name(handleCustomerTicketList, "handleCustomerTicketList");
+
+// Admin-side: list all tickets, and update status/note — same role-gated
+// pattern as handleRefundList/handleRefundUpdate.
+async function handleAdminTicketList(request, env, allowOrigin) {
+  const auth = await requireRole(env, request, "admin");
+  if (auth.error) return auth.error;
+  if (!env.CRM_KV) return jsonResponse({ error: "CRM not configured" }, 500, allowOrigin);
+
+  const ids = await readIndex(env, "ticket-index");
+  const records = await Promise.all(ids.map(id => env.CRM_KV.get(`ticket:${id}`)));
+  const tickets = records.filter(Boolean).map(r => JSON.parse(r)).sort((a, b) => b.createdAt - a.createdAt);
+  return jsonResponse({ tickets }, 200, allowOrigin);
+}
+__name(handleAdminTicketList, "handleAdminTicketList");
+
+async function handleAdminTicketUpdate(request, env, allowOrigin) {
+  const auth = await requireRole(env, request, "admin");
+  if (auth.error) return auth.error;
+  if (!env.CRM_KV) return jsonResponse({ error: "CRM not configured" }, 500, allowOrigin);
+
+  let body;
+  try { body = await request.json(); } catch { return jsonResponse({ error: "Invalid JSON" }, 400, allowOrigin); }
+  const id = sanitizeString(body.id, 40);
+  if (!id) return jsonResponse({ error: "Ticket id is required" }, 400, allowOrigin);
+  if (!TICKET_STATUSES.includes(body.status)) {
+    return jsonResponse({ error: `status must be one of: ${TICKET_STATUSES.join(", ")}` }, 400, allowOrigin);
+  }
+
+  const raw = await env.CRM_KV.get(`ticket:${id}`);
+  if (!raw) return jsonResponse({ error: "Ticket not found" }, 404, allowOrigin);
+  const ticket = JSON.parse(raw);
+
+  ticket.status = body.status;
+  ticket.adminNote = sanitizeString(body.adminNote || ticket.adminNote || "", 500);
+  ticket.resolvedAt = ["resolved", "closed"].includes(body.status) ? Date.now() : null;
+  await env.CRM_KV.put(`ticket:${id}`, JSON.stringify(ticket));
+  return jsonResponse({ ticket }, 200, allowOrigin);
+}
+__name(handleAdminTicketUpdate, "handleAdminTicketUpdate");
+
+async function handleCustomerRoutes(request, env, allowOrigin) {
+  const auth = await requireRole(env, request, "customer");
+  if (auth.error) return auth.error;
+  if (!env.CRM_KV) return jsonResponse({ error: "CRM not configured" }, 500, allowOrigin);
+  const phone = auth.session.id;
+
+  if (request.method === "GET") {
+    const ids = await readIndex(env, `saved-routes:${phone}`);
+    const records = await Promise.all(ids.map(id => env.CRM_KV.get(`saved-route:${id}`)));
+    const routes = records.filter(Boolean).map(r => JSON.parse(r)).sort((a, b) => b.createdAt - a.createdAt);
+    return jsonResponse({ routes }, 200, allowOrigin);
+  }
+
+  if (request.method === "POST") {
+    let body;
+    try { body = await request.json(); } catch { return jsonResponse({ error: "Invalid JSON" }, 400, allowOrigin); }
+    const from = sanitizeString(body.from, 120);
+    const to = sanitizeString(body.to, 120);
+    const vehicle = sanitizeString(body.vehicle, 30);
+    if (!from || !to) return jsonResponse({ error: "from and to are required" }, 400, allowOrigin);
+
+    const ids = await readIndex(env, `saved-routes:${phone}`);
+    if (ids.length >= 25) {
+      return jsonResponse({ error: "You can save up to 25 routes. Remove one before adding another." }, 400, allowOrigin);
+    }
+
+    const id = "route_" + generateToken().slice(0, 12);
+    const route = { id, phone, from, to, vehicle: vehicle || "sedan", createdAt: Date.now() };
+    await env.CRM_KV.put(`saved-route:${id}`, JSON.stringify(route));
+    await addToIndex(env, `saved-routes:${phone}`, id);
+    return jsonResponse({ route }, 200, allowOrigin);
+  }
+
+  if (request.method === "DELETE") {
+    const url = new URL(request.url);
+    const id = String(url.searchParams.get("id") || "");
+    if (!id) return jsonResponse({ error: "Missing route id" }, 400, allowOrigin);
+
+    const raw = await env.CRM_KV.get(`saved-route:${id}`);
+    if (!raw) return jsonResponse({ error: "Route not found" }, 404, allowOrigin);
+    const route = JSON.parse(raw);
+    if (route.phone !== phone) return jsonResponse({ error: "Not authorized" }, 403, allowOrigin);
+
+    await env.CRM_KV.delete(`saved-route:${id}`);
+    await removeFromIndex(env, `saved-routes:${phone}`, id);
+    return jsonResponse({ deleted: true }, 200, allowOrigin);
+  }
+
+  return jsonResponse({ error: "Method not allowed" }, 405, allowOrigin);
+}
+__name(handleCustomerRoutes, "handleCustomerRoutes");
+
 // ── Admin login ───────────────────────────────────────────────────────────────
 async function handleAdminLogin(request, env, allowOrigin) {
   if (request.method !== "POST") return jsonResponse({ error: "Method not allowed" }, 405, allowOrigin);
@@ -1158,6 +1928,89 @@ async function handleMe(request, env, allowOrigin) {
 }
 __name(handleMe, "handleMe");
 
+// ── Customer login ────────────────────────────────────────────────────────
+// Customers don't have passwords — logging in to "My Bookings" reuses the
+// SAME OTP flow as the booking widget (otp/send + otp/verify). The frontend
+// sends the phone + the `token` it got back from otp/verify; we check that
+// against the verified:<phone> record (set by handleVerifyOtp) exactly the
+// way handleBookingNotify does, then issue a normal CRM session with
+// role:"customer" so requireRole()/getSession() work unchanged for this
+// role too.
+async function handleCustomerLogin(request, env, allowOrigin) {
+  if (request.method !== "POST") return jsonResponse({ error: "Method not allowed" }, 405, allowOrigin);
+  if (!env.RATE_LIMIT_KV) return jsonResponse({ error: "Service temporarily unavailable" }, 500, allowOrigin);
+
+  let body;
+  try { body = await request.json(); } catch { return jsonResponse({ error: "Invalid JSON" }, 400, allowOrigin); }
+
+  const phone = validatePhone(body.phone);
+  const otpToken = String(body.otpToken || body.verifyToken || "");
+  if (!phone || !otpToken) return jsonResponse({ error: "Phone and verification token required" }, 400, allowOrigin);
+
+  try {
+    const storedToken = await env.RATE_LIMIT_KV.get(`verified:${phone}`);
+    if (!storedToken || storedToken !== otpToken) {
+      return jsonResponse({ error: "Phone not verified. Please verify via OTP first." }, 403, allowOrigin);
+    }
+  } catch (err) {
+    console.error("Customer login verify check failed:", err.message);
+    return jsonResponse({ error: "Could not verify request. Please try again." }, 500, allowOrigin);
+  }
+
+  const token = await createSession(env, "customer", phone);
+  return jsonResponse({ token, phone, role: "customer" }, 200, allowOrigin);
+}
+__name(handleCustomerLogin, "handleCustomerLogin");
+
+// A logged-in customer's own bookings, newest first — looked up via the
+// customer-duties:<phone> index saveDutyFromBooking() maintains. Scoped
+// strictly to the session's own phone number; there is no way to pass in
+// someone else's phone and see their bookings.
+async function handleCustomerBookings(request, env, allowOrigin) {
+  const auth = await requireRole(env, request, "customer");
+  if (auth.error) return auth.error;
+  if (!env.CRM_KV) return jsonResponse({ bookings: [] }, 200, allowOrigin);
+
+  const phone = auth.session.id;
+  const ids = await readIndex(env, `customer-duties:${phone}`);
+  const records = await Promise.all(ids.map(id => env.CRM_KV.get(`duty:${id}`)));
+  const bookings = records.filter(Boolean).map(r => JSON.parse(r));
+
+  return jsonResponse({ bookings, phone }, 200, allowOrigin);
+}
+__name(handleCustomerBookings, "handleCustomerBookings");
+
+// Real PDF invoice for one of the logged-in customer's own bookings.
+// `?id=<dutyId>` — ownership is checked against the session's phone, NOT
+// against anything the client claims, so one customer can never download
+// another's invoice by guessing/incrementing booking IDs.
+async function handleCustomerInvoice(request, env, allowOrigin) {
+  const auth = await requireRole(env, request, "customer");
+  if (auth.error) return auth.error;
+  if (!env.CRM_KV) return jsonResponse({ error: "CRM not configured" }, 500, allowOrigin);
+
+  const url = new URL(request.url);
+  const dutyId = String(url.searchParams.get("id") || "");
+  if (!dutyId) return jsonResponse({ error: "Missing booking id" }, 400, allowOrigin);
+
+  const raw = await env.CRM_KV.get(`duty:${dutyId}`);
+  if (!raw) return jsonResponse({ error: "Booking not found" }, 404, allowOrigin);
+
+  let duty;
+  try { duty = JSON.parse(raw); } catch { return jsonResponse({ error: "Booking data corrupted" }, 500, allowOrigin); }
+
+  if (duty.phone !== auth.session.id) {
+    return jsonResponse({ error: "Not authorized to view this invoice" }, 403, allowOrigin);
+  }
+  if (Number(duty.advance || 0) <= 0) {
+    return jsonResponse({ error: "No payment recorded yet for this booking — invoice not available." }, 400, allowOrigin);
+  }
+
+  const pdf = buildInvoicePdf(duty);
+  return pdfResponse(pdf, `invoice-${dutyId}.pdf`, allowOrigin);
+}
+__name(handleCustomerInvoice, "handleCustomerInvoice");
+
 // ── Duties ────────────────────────────────────────────────────────────────────
 // A duty record looks like:
 // {
@@ -1165,15 +2018,15 @@ __name(handleMe, "handleMe");
 //   vehicleType, status: 'new'|'assigned'|'ongoing'|'completed'|'cancelled',
 //   driverId, driverName, driverPhone, vehicleNumber, createdAt, assignedAt
 // }
-async function saveDutyFromBooking(env, b) {
+// `verifiedPaidAmount` is the amount handleBookingNotify already confirmed
+// via the payconfirm KV record (itself only written after a real Razorpay
+// signature check) — NOT read from `b` here, since `b` is client-supplied
+// and the whole point of this parameter is to not trust that for money.
+async function saveDutyFromBooking(env, b, verifiedPaidAmount = 0) {
   const id = String(b.id);
   const existingRaw = await env.CRM_KV.get(`duty:${id}`);
   const isPaymentDone = b.type === "payment";
-  // Only the post-payment call (type:"payment") reflects money actually
-  // collected. The pre-payment call's b.advance is the INTENDED amount the
-  // customer is about to pay — recording that as paid would make a duty
-  // look paid even if the customer abandons checkout and never pays at all.
-  const actuallyPaid = isPaymentDone ? Number(b.payAmt || b.advance || 0) : 0;
+  const actuallyPaid = isPaymentDone ? Number(verifiedPaidAmount || 0) : 0;
 
   if (existingRaw) {
     // Duty already exists (created by the earlier pre-payment call). Keep
@@ -1217,6 +2070,7 @@ async function saveDutyFromBooking(env, b) {
   };
   await env.CRM_KV.put(`duty:${id}`, JSON.stringify(duty));
   await addToIndex(env, "duty-index", id);
+  if (duty.phone) await addToIndex(env, `customer-duties:${duty.phone}`, id);
   return duty;
 }
 __name(saveDutyFromBooking, "saveDutyFromBooking");
@@ -1330,10 +2184,27 @@ async function handleDutyStatus(request, env, allowOrigin) {
       console.error("Review request send failed:", err.message);
       return false;
     });
+    // Mark flag BEFORE the KV write so the persisted record reflects whether
+    // the message was sent — prevents a double-send if this handler is retried.
     duty.reviewRequestSent = reviewRequestSent;
   }
 
+  // Always persist duty state (status + reviewRequestSent flag) before responding.
   await env.CRM_KV.put(`duty:${dutyId}`, JSON.stringify(duty));
+
+  // If review send failed (e.g. template not approved yet), retry once after
+  // persisting — this way the duty is already saved as completed even if the
+  // review WA call hangs or errors a second time.
+  if (newStatus === "completed" && !wasAlreadyCompleted && !reviewRequestSent) {
+    sendReviewRequest(env, duty).then(ok => {
+      if (ok) {
+        duty.reviewRequestSent = true;
+        env.CRM_KV.put(`duty:${dutyId}`, JSON.stringify(duty)).catch(() => {});
+        console.log("Review request sent on retry");
+      }
+    }).catch(() => {});
+  }
+
   return jsonResponse({ duty, reviewRequestSent }, 200, allowOrigin);
 }
 __name(handleDutyStatus, "handleDutyStatus");
@@ -1349,8 +2220,13 @@ async function sendReviewRequest(env, duty) {
   if (!accessToken || !phoneNumberId || !duty.phone) return false;
 
   const reviewTemplate = env.WHATSAPP_REVIEW_REQUEST_TEMPLATE_NAME || "oneway_review_request";
-  const reviewLink = env.GOOGLE_REVIEW_LINK || "https://g.page/r/REPLACE_WITH_REAL_LINK/review";
-  const customerNumber = `91${duty.phone}`;
+  const reviewLink = env.GOOGLE_REVIEW_LINK;
+  if (!reviewLink) {
+    console.warn("GOOGLE_REVIEW_LINK secret not set — skipping review request to avoid sending placeholder link");
+    return false;
+  }
+  const customerNumber = toWaNum(duty.phone);
+  if (!customerNumber) { console.warn("Review: invalid customer phone:", duty.phone); return false; }
 
   const payload = {
     messaging_product: "whatsapp", to: customerNumber, type: "template",
@@ -1474,11 +2350,14 @@ async function sendAssignmentNotifications(env, duty, driver) {
     }
   };
 
-  // 1) Driver — gets full duty-slip style message
-  results.driver = await send(`91${duty.driverPhone}`, driverTemplate, [
+  // 1) Driver — driverPhone is stored as the raw number (no country code prefix),
+  // matching how it was saved from driverId. Prefix 91 for WhatsApp.
+  const driverWaNum = toWaNum(duty.driverPhone);
+  if (!driverWaNum) { console.warn("Assignment: invalid driver phone:", duty.driverPhone); results.driver = false; }
+  results.driver = await send(driverWaNum, driverTemplate, [
     { type: "text", text: String(duty.id) },
     { type: "text", text: String(duty.name) },
-    { type: "text", text: `+91${duty.phone}` },
+    { type: "text", text: `+91${String(duty.phone).replace(/^91/, "")}` },
     { type: "text", text: pickup },
     { type: "text", text: duty.to || "—" },
     { type: "text", text: tripTiming },
@@ -1487,10 +2366,12 @@ async function sendAssignmentNotifications(env, duty, driver) {
   ], "Driver");
 
   // 2) Customer — gets driver + vehicle confirmation
-  results.customer = await send(`91${duty.phone}`, customerTemplate, [
+  const customerWaNum = toWaNum(duty.phone);
+  if (!customerWaNum) { console.warn("Assignment: invalid customer phone:", duty.phone); results.customer = false; }
+  results.customer = await send(customerWaNum, customerTemplate, [
     { type: "text", text: String(duty.id) },
     { type: "text", text: String(duty.driverName) },
-    { type: "text", text: `+91${duty.driverPhone}` },
+    { type: "text", text: `+91${String(duty.driverPhone).replace(/^91/, "")}` },
     { type: "text", text: vehicleLabel },
     { type: "text", text: pickup },
     { type: "text", text: tripTiming }
@@ -1500,7 +2381,7 @@ async function sendAssignmentNotifications(env, duty, driver) {
   results.admin = await send(adminNumber, adminTemplate, [
     { type: "text", text: String(duty.id) },
     { type: "text", text: `Assigned: ${duty.driverName}` },
-    { type: "text", text: `+91${duty.driverPhone}` },
+    { type: "text", text: `+91${String(duty.driverPhone).replace(/^91/, "")}` },
     { type: "text", text: pickup },
     { type: "text", text: duty.to || "—" },
     { type: "text", text: vehicleLabel },
@@ -1941,6 +2822,23 @@ async function handleRefundUpdate(request, env, allowOrigin) {
   refund.status = body.status;
   refund.resolvedAt = body.status === "pending" ? null : Date.now();
   await env.CRM_KV.put(`refund:${id}`, JSON.stringify(refund));
+
+  // Refund approved -> credit the customer's wallet for real. Guarded by
+  // refund.walletCredited so re-saving an already-processed refund (e.g.
+  // admin re-submits the same status) can't double-credit the wallet.
+  if (body.status === "processed" && !refund.walletCredited && refund.customerPhone) {
+    try {
+      await applyWalletTransaction(
+        env, refund.customerPhone, "credit", refund.amount,
+        `Refund — Booking ${refund.bookingId}`, refund.bookingId
+      );
+      refund.walletCredited = true;
+      await env.CRM_KV.put(`refund:${id}`, JSON.stringify(refund));
+    } catch (err) {
+      console.error("Wallet credit on refund failed:", err.message);
+    }
+  }
+
   return jsonResponse({ refund }, 200, allowOrigin);
 }
 __name(handleRefundUpdate, "handleRefundUpdate");
@@ -2128,6 +3026,130 @@ async function handleAnalytics(request, env, allowOrigin) {
   return jsonResponse({ monthlyBookings, vehicleDistribution, totalBookings: duties.length }, 200, allowOrigin);
 }
 __name(handleAnalytics, "handleAnalytics");
+
+// ── Minimal PDF generator ─────────────────────────────────────────────────
+// Workers run as a single bundled file with no native deps and no
+// filesystem — pulling in a full PDF library isn't practical here, and
+// isn't needed for a simple one-page text invoice. This hand-writes valid
+// PDF 1.4 syntax directly: a handful of objects (catalog, pages, page, two
+// base-14 fonts, one content stream) plus an xref table. No external
+// dependency, no embedded font program, no images — just text positioned
+// with absolute Tm coordinates and a couple of ruled lines.
+//
+// NOTE: standard PDF base fonts (Helvetica/Helvetica-Bold) don't include
+// the ₹ glyph without embedding a custom font program, which would add a
+// lot of complexity for a one-page invoice. We use "Rs." in the PDF text
+// instead — the rest of the site keeps using ₹ in HTML, where it renders
+// fine as UTF-8.
+function pdfEscape(str) {
+  return String(str).replace(/\\/g, "\\\\").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
+}
+__name(pdfEscape, "pdfEscape");
+
+function buildSimplePdf(drawFn) {
+  const ops = [];
+  const api = {
+    text(x, y, str, font = "F1", size = 10) {
+      ops.push(`BT /${font} ${size} Tf 1 0 0 1 ${x} ${y} Tm (${pdfEscape(str)}) Tj ET`);
+    },
+    line(x1, y1, x2, y2, w = 0.5) {
+      ops.push(`${w} w ${x1} ${y1} m ${x2} ${y2} l S`);
+    }
+  };
+  drawFn(api);
+
+  const content = ops.join("\n");
+  const contentBytes = new TextEncoder().encode(content);
+
+  const objects = [
+    `<< /Type /Catalog /Pages 2 0 R >>`,
+    `<< /Type /Pages /Kids [3 0 R] /Count 1 >>`,
+    `<< /Type /Page /Parent 2 0 R /Resources << /Font << /F1 4 0 R /F2 5 0 R >> >> /MediaBox [0 0 612 792] /Contents 6 0 R >>`,
+    `<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>`,
+    `<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>`,
+    `<< /Length ${contentBytes.length} >>\nstream\n${content}\nendstream`
+  ];
+
+  let pdf = "%PDF-1.4\n";
+  const offsets = [];
+  objects.forEach((obj, i) => {
+    offsets.push(pdf.length);
+    pdf += `${i + 1} 0 obj\n${obj}\nendobj\n`;
+  });
+  const xrefOffset = pdf.length;
+  pdf += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
+  offsets.forEach(off => { pdf += String(off).padStart(10, "0") + " 00000 n \n"; });
+  pdf += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`;
+  return pdf;
+}
+__name(buildSimplePdf, "buildSimplePdf");
+
+// Builds the actual invoice layout for one duty record. `d.fare` is treated
+// as GST-inclusive (matches what policies.html tells customers: the fare
+// shown already includes GST + state taxes), so GST here is a derived
+// reverse-calculation at a flat 5%, not a stored per-booking tax field —
+// same honesty caveat as handleGstSummary: a basic breakdown, not a
+// GSTR-1-compliant tax document.
+function buildInvoicePdf(d) {
+  const fare = Number(d.fare || 0);
+  const paid = Number(d.advance || 0);
+  const due = Math.max(0, fare - paid);
+  const baseFare = Math.round((fare / 1.05) * 100) / 100;
+  const gst = Math.round((fare - baseFare) * 100) / 100;
+  const fmt = n => Number(n).toLocaleString("en-IN", { maximumFractionDigits: 0 });
+  const route = `${d.from || "—"}${(d.extraCities||[]).filter(Boolean).length ? " -> " + d.extraCities.filter(Boolean).join(" -> ") : ""} -> ${d.to || "—"}`;
+  const invoiceDate = new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+
+  return buildSimplePdf(({ text, line }) => {
+    let y = 760;
+    text(50, y, "One-Way Bhaarat Pvt. Ltd.", "F2", 16); y -= 16;
+    text(50, y, "Tax Invoice", "F2", 11); y -= 20;
+    text(50, y, `Invoice No: INV-${d.id}`, "F1", 9);
+    text(350, y, `Date: ${invoiceDate}`, "F1", 9); y -= 14;
+    text(50, y, `Booking ID: ${d.id}`, "F1", 9); y -= 20;
+
+    line(50, y, 562, y); y -= 16;
+    text(50, y, "Billed To:", "F2", 10); y -= 14;
+    text(50, y, d.name || "—", "F1", 9); y -= 12;
+    text(50, y, d.phone ? `+91 ${d.phone}` : "—", "F1", 9); y -= 20;
+
+    line(50, y, 562, y); y -= 16;
+    text(50, y, "Trip Details", "F2", 10); y -= 16;
+    text(50, y, "Route:", "F1", 9); text(150, y, route, "F1", 9); y -= 14;
+    text(50, y, "Vehicle:", "F1", 9); text(150, y, d.vehicleType || "—", "F1", 9); y -= 14;
+    text(50, y, "Date:", "F1", 9); text(150, y, `${d.date || "—"} ${d.time || ""}`.trim(), "F1", 9); y -= 14;
+    text(50, y, "Trip Type:", "F1", 9); text(150, y, d.tripType === "roundtrip" ? "Round Trip" : "One Way", "F1", 9); y -= 20;
+
+    line(50, y, 562, y); y -= 16;
+    text(50, y, "Charges", "F2", 10); y -= 16;
+    text(50, y, "Base Fare", "F1", 9); text(450, y, `Rs. ${fmt(baseFare)}`, "F1", 9); y -= 14;
+    text(50, y, "GST (5%, incl.)", "F1", 9); text(450, y, `Rs. ${fmt(gst)}`, "F1", 9); y -= 8;
+    line(400, y, 562, y, 0.5); y -= 8;
+    text(50, y, "Total Fare", "F2", 9); text(450, y, `Rs. ${fmt(fare)}`, "F2", 9); y -= 14;
+    text(50, y, "Amount Paid", "F1", 9); text(450, y, `Rs. ${fmt(paid)}`, "F1", 9); y -= 14;
+    text(50, y, "Balance Due", "F1", 9); text(450, y, `Rs. ${fmt(due)}`, "F1", 9); y -= 24;
+
+    text(50, y, "This is a computer-generated invoice and does not require a signature.", "F1", 8); y -= 12;
+    text(50, y, "Basic GST breakdown derived from the total fare at a flat 5% rate — not a GSTR-1-compliant filing document.", "F1", 7);
+  });
+}
+__name(buildInvoicePdf, "buildInvoicePdf");
+
+function pdfResponse(pdfString, filename, allowOrigin = null) {
+  const headers = {
+    "Content-Type": "application/pdf",
+    "Content-Disposition": `attachment; filename="${filename}"`,
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization"
+  };
+  if (allowOrigin) headers["Access-Control-Allow-Origin"] = allowOrigin;
+  // PDF content is latin1-safe (we only ever write ASCII into it above), so
+  // a plain byte-for-byte encode is enough — no need for base64 round-tripping.
+  const bytes = new Uint8Array(pdfString.length);
+  for (let i = 0; i < pdfString.length; i++) bytes[i] = pdfString.charCodeAt(i) & 0xff;
+  return new Response(bytes, { status: 200, headers });
+}
+__name(pdfResponse, "pdfResponse");
 
 function jsonResponse(data, status = 200, allowOrigin = null) {
   const headers = {
