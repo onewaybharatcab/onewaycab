@@ -76,6 +76,16 @@ function toWaNum(raw) {
   return null; // invalid — do not send
 }
 
+// Returns the bare 10-digit local number, with no "91" or "+91" prefix.
+// Use this (not a manually-prefixed "+91...") when filling a WhatsApp
+// template parameter whose template text already renders "+91 {{n}}" as
+// static text — prefixing here too was producing a doubled "+91+91..."
+// in the New Booking Alert / assignment messages.
+function localPhoneDigits(raw) {
+  const digits = String(raw || "").replace(/\D/g, "");
+  return (digits.length === 12 && digits.startsWith("91")) ? digits.slice(2) : digits;
+}
+
 var worker_default = {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
@@ -712,7 +722,7 @@ async function handleBookingNotify(request, env, allowOrigin) {
     { type: "text", text: paymentStatus },
     { type: "text", text: String(b.id) },
     { type: "text", text: String(b.name) },
-    { type: "text", text: `+91${String(b.phone).replace(/^91/, "")}` },
+    { type: "text", text: localPhoneDigits(b.phone) },
     { type: "text", text: vehicleType },
     { type: "text", text: tripType },
     { type: "text", text: pickupLoc },
@@ -726,7 +736,7 @@ async function handleBookingNotify(request, env, allowOrigin) {
   const legacyPayload = (to) => ({ messaging_product: "whatsapp", to, type: "template", template: { name: "oneway_notification", language: { code: "en" }, components: [{ type: "body", parameters: [
     { type: "text", text: String(b.id) },
     { type: "text", text: String(b.name) },
-    { type: "text", text: `+91${String(b.phone).replace(/^91/, "")}` },
+    { type: "text", text: localPhoneDigits(b.phone) },
     { type: "text", text: pickupLoc },
     { type: "text", text: dropLoc },
     { type: "text", text: paidAmt },
@@ -1280,7 +1290,7 @@ async function handleCustomerConfirm(request, env, allowOrigin) {
     { type: "text", text: "Payment Completed" },
     { type: "text", text: String(b.id) },
     { type: "text", text: String(b.name) },
-    { type: "text", text: `+91${String(b.phone).replace(/^91/, "")}` },
+    { type: "text", text: localPhoneDigits(b.phone) },
     { type: "text", text: vehicleType },
     { type: "text", text: tripType },
     { type: "text", text: pickupLoc },
@@ -1294,7 +1304,7 @@ async function handleCustomerConfirm(request, env, allowOrigin) {
   const legacyPayload = { messaging_product: "whatsapp", to: customerNumber, type: "template", template: { name: "oneway_notification", language: { code: "en" }, components: [{ type: "body", parameters: [
     { type: "text", text: String(b.id) },
     { type: "text", text: String(b.name) },
-    { type: "text", text: `+91${String(b.phone).replace(/^91/, "")}` },
+    { type: "text", text: localPhoneDigits(b.phone) },
     { type: "text", text: pickupLoc },
     { type: "text", text: dropLoc },
     { type: "text", text: paidAmt },
@@ -2357,7 +2367,7 @@ async function sendAssignmentNotifications(env, duty, driver) {
   results.driver = await send(driverWaNum, driverTemplate, [
     { type: "text", text: String(duty.id) },
     { type: "text", text: String(duty.name) },
-    { type: "text", text: `+91${String(duty.phone).replace(/^91/, "")}` },
+    { type: "text", text: localPhoneDigits(duty.phone) },
     { type: "text", text: pickup },
     { type: "text", text: duty.to || "—" },
     { type: "text", text: tripTiming },
@@ -2371,7 +2381,7 @@ async function sendAssignmentNotifications(env, duty, driver) {
   results.customer = await send(customerWaNum, customerTemplate, [
     { type: "text", text: String(duty.id) },
     { type: "text", text: String(duty.driverName) },
-    { type: "text", text: `+91${String(duty.driverPhone).replace(/^91/, "")}` },
+    { type: "text", text: localPhoneDigits(duty.driverPhone) },
     { type: "text", text: vehicleLabel },
     { type: "text", text: pickup },
     { type: "text", text: tripTiming }
@@ -2381,7 +2391,7 @@ async function sendAssignmentNotifications(env, duty, driver) {
   results.admin = await send(adminNumber, adminTemplate, [
     { type: "text", text: String(duty.id) },
     { type: "text", text: `Assigned: ${duty.driverName}` },
-    { type: "text", text: `+91${String(duty.driverPhone).replace(/^91/, "")}` },
+    { type: "text", text: localPhoneDigits(duty.driverPhone) },
     { type: "text", text: pickup },
     { type: "text", text: duty.to || "—" },
     { type: "text", text: vehicleLabel },

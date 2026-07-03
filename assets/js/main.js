@@ -600,7 +600,6 @@ function _bkmRenderLiveFares(){
       const perKm = Math.ceil(km * v.ow);
       fare = km < 100 ? Math.max(perKm, v.minFare) : perKm;
     }
-    const hasExtra = isRound && Math.max(km, 250*_bkmCalcDays()) > 1000;
     return `<div class="bkm-lf-row" onclick="_bkmPreSelectVehicle('${v.key}')">
       <div class="bkm-lf-left">
         <span class="bkm-lf-icon">${v.icon}</span>
@@ -609,7 +608,7 @@ function _bkmRenderLiveFares(){
           <div class="bkm-lf-sub">${v.sub}</div>
         </div>
       </div>
-      <div class="bkm-lf-price">₹${fare.toLocaleString('en-IN')}${hasExtra?'<span style="font-size:.6rem;color:#c85a00;display:block">⚠️ >1000 km</span>':''}</div>
+      <div class="bkm-lf-price">₹${fare.toLocaleString('en-IN')}</div>
     </div>`;
   }).join('');
   panel.classList.add('show');
@@ -728,22 +727,18 @@ function _bkmBuildCabs(){
     const days=_bkmCalcDays();
     const packageKm=250*days;
     const billedKm=Math.max(km,packageKm);
-    const extraKm=billedKm>1000?billedKm-1000:0;
-    kmLabel=`~${km} km actual · ${billedKm>km?`Min ${packageKm} km billed (${days}×250)`:`${billedKm} km billed`} · +₹${days*300} driver allowance`
-           +(extraKm>0?` · ⚠️ ${extraKm} km >1000 km`:'');
+    kmLabel=`~${km} km actual · ${billedKm>km?`Min ${packageKm} km billed (${days}×250)`:`${billedKm} km billed`} · +₹${days*300} driver allowance`;
   }
   set('bkrs-km', kmLabel);
   const cabList = document.getElementById('bkmCabList');
   if(cabList) cabList.innerHTML = BKM_VEHICLES.map((v,i) => {
     const days=_bkmCalcDays();
-    let fare, billedKm, isMin=false, extraKm=0;
+    let fare, billedKm, isMin=false;
     if(isRound){
       const packageKm = 250 * days;          // minimum guaranteed km
       billedKm = Math.max(km, packageKm);    // always bill at least packageKm
       const driverAllow = days * 300;
       fare = Math.ceil(billedKm * v.rt) + driverAllow;
-      // Extra km surcharge: if actual route > 1000 km, note it (already included in billedKm fare)
-      if(billedKm > 1000) extraKm = billedKm - 1000;
     } else {
       const perKm=Math.ceil(km*v.ow); const base=km<100?Math.max(perKm,v.minFare):perKm;
       const stops=(S.extraCities||[]).filter(c=>c.trim()).length;
@@ -769,7 +764,7 @@ function _bkmBuildCabs(){
         </div>
         <div class="bkm-cab-fare">
           <div class="bkm-cab-total">₹${fare.toLocaleString('en-IN')}</div>
-          <div class="bkm-cab-rate">${isMin?'Minimum fare':extraKm>0?'⚠️ Extra km applies':'Est. total'}</div>
+          <div class="bkm-cab-rate">${isMin?'Minimum fare':'Est. total'}</div>
           <div class="bkm-cab-adv">10% adv: ₹${adv}</div>
           <button type="button" class="bkm-cab-selbtn">SELECT</button>
         </div>
@@ -781,7 +776,6 @@ function _bkmBuildCabs(){
         }</span>
         <span>${billedKm.toLocaleString('en-IN')} km billed = ₹${Math.ceil(billedKm*rate).toLocaleString('en-IN')}</span>
         <span>🧑 Driver allowance: +₹${driverAllow.toLocaleString('en-IN')}</span>
-        ${extraKm>0?`<span style="color:#c85a00;font-weight:800">⚠️ Route >1000 km: ${extraKm.toLocaleString('en-IN')} extra km already included</span>`:''}
       </div>`:''}
     </div>`;
   }).join('');
@@ -1374,6 +1368,12 @@ function _bkmFmtDate(s){
   const d=new Date(s+'T00:00:00');
   return d.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});
 }
+// Returns a Date object's calendar date as YYYY-MM-DD in LOCAL time.
+// Do NOT use toISOString() for this — it converts to UTC first, which
+// rolls back a day for IST users (UTC+5:30) between 12:00–5:30 AM.
+function _bkmLocalDateStr(d){
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
 function _bkmFmtTime(s){
   if(!s) return '—';
   const [h,m]=s.split(':');
@@ -1389,10 +1389,13 @@ document.addEventListener('DOMContentLoaded', () => {
   // Date/time defaults (hero widget)
   const pdateEl = document.getElementById('pdate');
   const ptimeEl = document.getElementById('ptime');
-  const todayStr = new Date().toISOString().split('T')[0];
+  // Derive date AND time from the same now+75min instant so they can never
+  // disagree (previously the date used toISOString(), which is UTC and
+  // rolls back a calendar day for IST users between 12:00–5:30 AM).
+  const defaultTime = new Date(Date.now() + 75 * 60 * 1000);
+  const todayStr = _bkmLocalDateStr(defaultTime);
   if(pdateEl){ pdateEl.min = todayStr; pdateEl.value = todayStr; }
   if(ptimeEl){
-    const defaultTime = new Date(Date.now() + 75 * 60 * 1000);
     const defHH = String(defaultTime.getHours()).padStart(2, '0');
     const defMM = String(defaultTime.getMinutes()).padStart(2, '0');
     ptimeEl.value = `${defHH}:${defMM}`;
@@ -1439,11 +1442,11 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Modal date defaults
-  const todayDate = new Date().toISOString().split('T')[0];
+  const modalDefaultTime = new Date(Date.now() + 2 * 60 * 60 * 1000);
+  const todayDate = _bkmLocalDateStr(modalDefaultTime);
   ['bk-dt','bk-ret'].forEach(id => { const el=document.getElementById(id); if(el) el.min=todayDate; });
   const bkDt=document.getElementById('bk-dt'); if(bkDt&&!bkDt.value) bkDt.value=todayDate;
-  const t=new Date(Date.now()+2*60*60*1000);
-  const hh=String(t.getHours()).padStart(2,'0'); const mm=String(t.getMinutes()).padStart(2,'0');
+  const hh=String(modalDefaultTime.getHours()).padStart(2,'0'); const mm=String(modalDefaultTime.getMinutes()).padStart(2,'0');
   const bkTm=document.getElementById('bk-tm'); if(bkTm&&!bkTm.value) bkTm.value=`${hh}:${mm}`;
 
   // Modal AC
