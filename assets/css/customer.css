@@ -352,14 +352,18 @@ tr:last-child td{ border-bottom:none; }
   font-family:'Nunito',sans-serif; box-shadow:0 6px 18px var(--sfg); transition:all .2s;
 }
 .login-btn:disabled{ opacity:.5; cursor:not-allowed; }
-.login-otp-row{ display:flex; gap:8px; justify-content:center; margin-bottom:14px; }
+.login-otp-row{ display:flex; gap:6px; justify-content:center; margin-bottom:14px; }
 .login-otp-row input{
-  width:42px; height:52px; border-radius:var(--r10); border:1.5px solid var(--line);
-  background:rgba(255,255,255,0.04); text-align:center; font-size:20px; font-weight:800; color:var(--wh);
+  width:38px; height:48px; border-radius:var(--r10); border:1.5px solid var(--line);
+  background:rgba(255,255,255,0.04); text-align:center; font-size:18px; font-weight:800; color:var(--wh);
   font-family:'JetBrains Mono',monospace; outline:none; transition:.2s; -moz-appearance:textfield;
 }
 .login-otp-row input::-webkit-outer-spin-button,.login-otp-row input::-webkit-inner-spin-button{ -webkit-appearance:none; }
 .login-otp-row input:focus{ border-color:var(--sf); box-shadow:0 0 0 3px var(--sfg); }
+@media(max-width:360px){
+  .login-otp-row{ gap:5px; }
+  .login-otp-row input{ width:32px; height:44px; font-size:16px; }
+}
 .login-back{ font-size:12px; color:var(--ink-soft); cursor:pointer; margin-top:14px; text-decoration:underline; display:inline-block; }
 .login-error{ font-size:12.5px; color:var(--red); margin-bottom:12px; min-height:1px; }
 .login-resend{ font-size:12px; color:var(--ink-faint); margin-top:10px; }

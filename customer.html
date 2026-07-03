@@ -37,6 +37,8 @@
         <input type="tel" inputmode="numeric" maxlength="1">
         <input type="tel" inputmode="numeric" maxlength="1">
         <input type="tel" inputmode="numeric" maxlength="1">
+        <input type="tel" inputmode="numeric" maxlength="1">
+        <input type="tel" inputmode="numeric" maxlength="1">
       </div>
       <button class="login-btn" id="verifyOtpBtn" onclick="loginVerifyOtp()">Verify & Log In</button>
       <div class="login-resend" id="loginResend">Resend OTP in <span id="resendTimer">30</span>s</div>
@@ -252,7 +254,7 @@ async function loginSendOtp(){
     pendingLoginPhone = phone;
     document.getElementById('loginStepPhone').style.display = 'none';
     document.getElementById('loginStepOtp').style.display = 'block';
-    document.getElementById('loginSub').textContent = 'Enter the 4-digit code sent to +91 ' + phone;
+    document.getElementById('loginSub').textContent = 'Enter the 6-digit code sent to +91 ' + phone;
     document.querySelectorAll('#otpRow input')[0].focus();
     startResendTimer();
   }catch(e){
@@ -301,7 +303,7 @@ function loginBackToPhone(){
 async function loginVerifyOtp(){
   const errEl = document.getElementById('loginError'); errEl.textContent = '';
   const code = Array.from(document.querySelectorAll('#otpRow input')).map(b=>b.value).join('');
-  if(code.length !== 4){ errEl.textContent = 'Enter the full 4-digit code'; return; }
+  if(code.length !== 6){ errEl.textContent = 'Enter the full 6-digit code'; return; }
   const btn = document.getElementById('verifyOtpBtn');
   btn.disabled = true; btn.textContent = 'Verifying…';
   try{
