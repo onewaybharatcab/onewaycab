@@ -34,6 +34,25 @@
   ]
 }
 </script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  "itemListElement": [
+    {"@type":"ListItem","position":1,"name":"Delhi to Jaipur by Cab: The Complete 2026 Travel Guide","url":"https://one-waybharat.com/blog/delhi-to-jaipur-cab-guide.html"},
+    {"@type":"ListItem","position":2,"name":"Delhi to Agra: Complete Cab Travel Guide for 2026","url":"https://one-waybharat.com/blog/delhi-to-agra-cab-guide.html"},
+    {"@type":"ListItem","position":3,"name":"Mumbai to Goa Road Trip: Route, Stops & Cab Tips","url":"https://one-waybharat.com/blog/mumbai-to-goa-road-trip.html"},
+    {"@type":"ListItem","position":4,"name":"Delhi to Shimla: Best Time, Route & Cab Booking Guide","url":"https://one-waybharat.com/blog/delhi-to-shimla-cab-guide.html"},
+    {"@type":"ListItem","position":5,"name":"Bangalore to Coorg: India's Coffee Country by Cab","url":"https://one-waybharat.com/blog/bangalore-to-coorg-cab-guide.html"},
+    {"@type":"ListItem","position":6,"name":"Delhi to Haridwar & Rishikesh: Sacred Journey Guide","url":"https://one-waybharat.com/blog/delhi-haridwar-rishikesh-guide.html"},
+    {"@type":"ListItem","position":7,"name":"Jaipur to Udaipur: A Royal Road Trip Through Rajasthan","url":"https://one-waybharat.com/blog/jaipur-to-udaipur-road-trip.html"},
+    {"@type":"ListItem","position":8,"name":"Kochi to Munnar: God's Own Country by Cab","url":"https://one-waybharat.com/blog/kochi-to-munnar-guide.html"},
+    {"@type":"ListItem","position":9,"name":"Varanasi to Bodhgaya: Pilgrimage Cab Guide","url":"https://one-waybharat.com/blog/varanasi-to-bodhgaya-pilgrimage-guide.html"},
+    {"@type":"ListItem","position":10,"name":"5 Tips for Booking Airport Cab Transfers in India","url":"https://one-waybharat.com/blog/airport-cab-transfer-tips.html"},
+    {"@type":"ListItem","position":11,"name":"How to Save Money on Outstation Cab Bookings","url":"https://one-waybharat.com/blog/save-money-outstation-cabs.html"}
+  ]
+}
+</script>
 </head>
 <body>
 <div style="height:68px" aria-hidden="true"></div>
@@ -49,6 +68,7 @@
     <nav class="header-nav">
       <a href="fleet.html"    class="nav-link">Fleet</a>
       <a href="routes.html"   class="nav-link">Routes</a>
+      <a href="destinations.html" class="nav-link">Destinations</a>
       <a href="faq.html"      class="nav-link">FAQ</a>
       <a href="about.html"    class="nav-link">About</a>
       <a href="contact.html"  class="nav-link">Contact</a>
@@ -78,6 +98,7 @@
   <nav class="mob-nav">
     <a href="fleet.html"    class="mob-link">🚗 Fleet</a>
     <a href="routes.html"   class="mob-link">🗺️ Routes</a>
+    <a href="destinations.html" class="mob-link">📍 Destinations</a>
     <a href="faq.html"      class="mob-link">❓ FAQ</a>
     <a href="about.html"    class="mob-link">ℹ️ About Us</a>
     <a href="contact.html"  class="mob-link">📬 Contact</a>
@@ -98,13 +119,14 @@
 
 <div class="content">
   <div class="cat-bar">
-    <button class="cat-btn active">All Posts</button>
-    <button class="cat-btn">🗺️ Route Guides</button>
-    <button class="cat-btn">🛕 Pilgrimage</button>
-    <button class="cat-btn">🏖️ Leisure Travel</button>
-    <button class="cat-btn">💡 Cab Tips</button>
-    <button class="cat-btn">🏔️ Hill Stations</button>
-    <button class="cat-btn">✈️ Airport Travel</button>
+    <button class="cat-btn active" onclick="filterPosts('All',this)">All Posts</button>
+    <button class="cat-btn" onclick="filterPosts('Route Guide',this)">🗺️ Route Guides</button>
+    <button class="cat-btn" onclick="filterPosts('Pilgrimage',this)">🛕 Pilgrimage</button>
+    <button class="cat-btn" onclick="filterPosts('Leisure Travel',this)">🏖️ Leisure Travel</button>
+    <button class="cat-btn" onclick="filterPosts('Cab Tips',this)">💡 Cab Tips</button>
+    <button class="cat-btn" onclick="filterPosts('Hill Station',this)">🏔️ Hill Stations</button>
+    <button class="cat-btn" onclick="filterPosts('Airport Tips',this)">✈️ Airport Travel</button>
+    <button class="cat-btn" onclick="filterPosts('South India',this)">🌴 South India</button>
   </div>
 
   <!-- Featured -->
@@ -112,14 +134,14 @@
     <div class="featured-img" style="background:linear-gradient(135deg,#1a0960,#0a1f5c)">🏯</div>
     <div class="featured-body">
       <div class="post-tag">🌟 Featured</div>
-      <div class="featured-title"><a href="#">Delhi to Jaipur by Cab: The Complete 2026 Travel Guide</a></div>
+      <div class="featured-title"><a href="blog/delhi-to-jaipur-cab-guide.html">Delhi to Jaipur by Cab: The Complete 2026 Travel Guide</a></div>
       <p class="post-excerpt">The 281 km Delhi–Jaipur highway is one of India's most beautiful intercity drives. Discover the best pit stops, when to travel, what to expect on the road, and why a one-way cab is smarter than a bus or train for this iconic route.</p>
       <div class="post-meta">
-        <span>📅 January 2026</span>
+        <span>📅 Jun 18, 2026</span>
         <span>⏱ 8 min read</span>
         <span>👁 12,400 views</span>
       </div>
-      <a href="#" class="read-more">Read Full Guide →</a>
+      <a href="blog/delhi-to-jaipur-cab-guide.html" class="read-more">Read Full Guide →</a>
     </div>
   </div>
 
@@ -142,11 +164,11 @@
 
       <div class="sidebar-widget">
         <div class="widget-title">🔥 Popular Posts</div>
-        <div class="popular-post"><div class="pp-icon">🕌</div><div><div class="pp-title">Delhi to Agra: Taj Mahal Day Trip Guide</div><div class="pp-meta">233 km • 8,200 views</div></div></div>
-        <div class="popular-post"><div class="pp-icon">🏖️</div><div><div class="pp-title">Mumbai to Goa Road Trip: What to Expect</div><div class="pp-meta">590 km • 7,100 views</div></div></div>
-        <div class="popular-post"><div class="pp-icon">❄️</div><div><div class="pp-title">Delhi to Shimla Cab Guide: Best Season</div><div class="pp-meta">342 km • 6,500 views</div></div></div>
-        <div class="popular-post"><div class="pp-icon">☕</div><div><div class="pp-title">Bangalore to Coorg: Coffee Country Drive</div><div class="pp-meta">246 km • 5,800 views</div></div></div>
-        <div class="popular-post"><div class="pp-icon">🛕</div><div><div class="pp-title">Varanasi to Bodhgaya: Pilgrimage Cab Guide</div><div class="pp-meta">252 km • 4,900 views</div></div></div>
+        <a class="popular-post" href="blog/delhi-to-agra-cab-guide.html" style="text-decoration:none;color:inherit"><div class="pp-icon">🕌</div><div><div class="pp-title">Delhi to Agra: Taj Mahal Day Trip Guide</div><div class="pp-meta">233 km • 8,200 views</div></div></a>
+        <a class="popular-post" href="blog/mumbai-to-goa-road-trip.html" style="text-decoration:none;color:inherit"><div class="pp-icon">🏖️</div><div><div class="pp-title">Mumbai to Goa Road Trip: What to Expect</div><div class="pp-meta">590 km • 7,100 views</div></div></a>
+        <a class="popular-post" href="blog/delhi-to-shimla-cab-guide.html" style="text-decoration:none;color:inherit"><div class="pp-icon">❄️</div><div><div class="pp-title">Delhi to Shimla Cab Guide: Best Season</div><div class="pp-meta">342 km • 6,500 views</div></div></a>
+        <a class="popular-post" href="blog/bangalore-to-coorg-cab-guide.html" style="text-decoration:none;color:inherit"><div class="pp-icon">☕</div><div><div class="pp-title">Bangalore to Coorg: Coffee Country Drive</div><div class="pp-meta">252 km • 5,800 views</div></div></a>
+        <a class="popular-post" href="blog/varanasi-to-bodhgaya-pilgrimage-guide.html" style="text-decoration:none;color:inherit"><div class="pp-icon">🛕</div><div><div class="pp-title">Varanasi to Bodhgaya: Pilgrimage Cab Guide</div><div class="pp-meta">252 km • 4,900 views</div></div></a>
       </div>
 
       <div class="sidebar-widget">
@@ -207,6 +229,7 @@
     <div class="footer-col">
       <h4>Quick Links</h4>
       <ul>
+        <li><a href="destinations.html">Popular Destinations</a></li>
         <li><a href="about.html">About Us</a></li>
         <li><a href="blog.html">Travel Blog</a></li>
         <li><a href="faq.html">FAQs</a></li>
@@ -255,20 +278,26 @@
 
 <script>
 const posts = [
-  {icon:'🕌',tag:'Route Guide',bg:'#fff0e0,#ffe0c0',title:'Delhi to Agra: Complete Cab Travel Guide for 2026',excerpt:'The Agra highway is iconic. Here\'s everything — best departure time, road conditions, Taj entry tips and why a cab beats a train.',date:'Jan 10, 2026',read:'6 min',views:'8.2K'},
-  {icon:'🏖️',tag:'Leisure Travel',bg:'#e0f8ff,#c0eeff',title:'Mumbai to Goa Road Trip: Route, Stops & Cab Tips',excerpt:'590 km of coastal highway magic. We cover the NH66 coastal route, the best places to stop, and how to split cab costs for a group.',date:'Jan 8, 2026',read:'10 min',views:'7.1K'},
-  {icon:'❄️',tag:'Hill Station',bg:'#e8f4ff,#d0e8ff',title:'Delhi to Shimla: Best Time, Route & Cab Booking Guide',excerpt:'The 342 km Shimla drive is spectacular in every season. Tips on mountain road safety, snow chains, and the best scenic viewpoints.',date:'Jan 5, 2026',read:'8 min',views:'6.5K'},
-  {icon:'☕',tag:'Leisure Travel',bg:'#e0fff0,#c0eed8',title:'Bangalore to Coorg: India\'s Coffee Country by Cab',excerpt:'Coorg is 246 km from Bangalore and worth every kilometer. We share the best homestay villages to stop at and what to order.',date:'Jan 2, 2026',read:'7 min',views:'5.8K'},
-  {icon:'🛕',tag:'Pilgrimage',bg:'#fff8e0,#ffefc0',title:'Delhi to Haridwar & Rishikesh: Sacred Journey Guide',excerpt:'The twin pilgrimage cities on the Ganga. Best way to plan a 2-day trip from Delhi including both cities without burning a hole in your pocket.',date:'Dec 28, 2023',read:'9 min',views:'5.2K'},
-  {icon:'🏰',tag:'Route Guide',bg:'#f0e0ff,#e0c0ff',title:'Jaipur to Udaipur: A Royal Road Trip Through Rajasthan',excerpt:'421 km of royal Rajasthan. Ancient forts, desert landscapes and heritage hotels — all reachable by cab in under 7 hours.',date:'Dec 22, 2023',read:'8 min',views:'4.9K'},
-  {icon:'🌴',tag:'South India',bg:'#e0ffe8,#c0f0d0',title:'Kochi to Munnar: God\'s Own Country by Cab',excerpt:'130 km of Kerala\'s most breathtaking scenery. Spice gardens, tea estates and waterfalls — your complete Munnar cab itinerary.',date:'Dec 18, 2023',read:'7 min',views:'4.6K'},
-  {icon:'✈️',tag:'Airport Tips',bg:'#ffe8e0,#ffd0c0',title:'5 Tips for Booking Airport Cab Transfers in India',excerpt:'From IGI Delhi to CSIA Mumbai — how to book the right cab, what to confirm before departure, and how to handle flight delays.',date:'Dec 14, 2023',read:'5 min',views:'4.1K'},
-  {icon:'💰',tag:'Cab Tips',bg:'#e8e0ff,#d8c8ff',title:'How to Save Money on Outstation Cab Bookings',excerpt:'One-way vs round trip, group travel, advance booking discounts and coupon codes — your complete guide to cheaper intercity cabs.',date:'Dec 10, 2023',read:'6 min',views:'3.8K'},
+  {slug:'delhi-to-agra-cab-guide',icon:'🕌',tag:'Route Guide',bg:'#fff0e0,#ffe0c0',title:'Delhi to Agra: Complete Cab Travel Guide for 2026',excerpt:'The Agra highway is iconic. Here\'s everything — best departure time, road conditions, Taj entry tips and why a cab beats a train.',date:'Jun 10, 2026',read:'6 min',views:'8.2K'},
+  {slug:'mumbai-to-goa-road-trip',icon:'🏖️',tag:'Leisure Travel',bg:'#e0f8ff,#c0eeff',title:'Mumbai to Goa Road Trip: Route, Stops & Cab Tips',excerpt:'590 km of coastal highway magic. We cover the NH66 coastal route, the best places to stop, and how to split cab costs for a group.',date:'Jun 5, 2026',read:'10 min',views:'7.1K'},
+  {slug:'delhi-to-shimla-cab-guide',icon:'❄️',tag:'Hill Station',bg:'#e8f4ff,#d0e8ff',title:'Delhi to Shimla: Best Time, Route & Cab Booking Guide',excerpt:'The 342 km Shimla drive is spectacular in every season. Tips on mountain road safety, snow-season planning, and the best scenic viewpoints.',date:'May 28, 2026',read:'8 min',views:'6.5K'},
+  {slug:'bangalore-to-coorg-cab-guide',icon:'☕',tag:'Leisure Travel',bg:'#e0fff0,#c0eed8',title:'Bangalore to Coorg: India\'s Coffee Country by Cab',excerpt:'Coorg is around 250 km from Bangalore and worth every kilometer. We share the best homestay villages to stop at and what to order.',date:'May 20, 2026',read:'7 min',views:'5.8K'},
+  {slug:'delhi-haridwar-rishikesh-guide',icon:'🛕',tag:'Pilgrimage',bg:'#fff8e0,#ffefc0',title:'Delhi to Haridwar & Rishikesh: Sacred Journey Guide',excerpt:'The twin pilgrimage cities on the Ganga. Best way to plan a 2-day trip from Delhi including both cities without rushing either one.',date:'May 12, 2026',read:'9 min',views:'5.2K'},
+  {slug:'jaipur-to-udaipur-road-trip',icon:'🏰',tag:'Route Guide',bg:'#f0e0ff,#e0c0ff',title:'Jaipur to Udaipur: A Royal Road Trip Through Rajasthan',excerpt:'421 km of royal Rajasthan. Ancient forts, desert landscapes and heritage towns — all reachable by cab in under 8 hours.',date:'May 4, 2026',read:'8 min',views:'4.9K'},
+  {slug:'kochi-to-munnar-guide',icon:'🌴',tag:'South India',bg:'#e0ffe8,#c0f0d0',title:'Kochi to Munnar: God\'s Own Country by Cab',excerpt:'130 km of Kerala\'s most breathtaking scenery. Spice gardens, tea estates and waterfalls — your complete Munnar cab itinerary.',date:'Apr 26, 2026',read:'7 min',views:'4.6K'},
+  {slug:'varanasi-to-bodhgaya-pilgrimage-guide',icon:'🕉️',tag:'Pilgrimage',bg:'#fff4e0,#ffe4b8',title:'Varanasi to Bodhgaya: Pilgrimage Cab Guide',excerpt:'Two of the subcontinent\'s most sacred cities, 252 km apart. How to plan the drive from the Ganga\'s ghats to the site of the Buddha\'s enlightenment.',date:'Apr 18, 2026',read:'7 min',views:'4.4K'},
+  {slug:'airport-cab-transfer-tips',icon:'✈️',tag:'Airport Tips',bg:'#ffe8e0,#ffd0c0',title:'5 Tips for Booking Airport Cab Transfers in India',excerpt:'From IGI Delhi to CSMIA Mumbai — how to book the right cab, what to confirm before departure, and how to handle flight delays.',date:'Apr 10, 2026',read:'5 min',views:'4.1K'},
+  {slug:'save-money-outstation-cabs',icon:'💰',tag:'Cab Tips',bg:'#e8e0ff,#d8c8ff',title:'How to Save Money on Outstation Cab Bookings',excerpt:'One-way vs round trip, group travel, advance booking discounts and smarter timing — your complete guide to cheaper intercity cabs.',date:'Apr 2, 2026',read:'6 min',views:'3.8K'},
 ];
 
 function renderPosts(data) {
-  document.getElementById('blogGrid').innerHTML = data.map(p=>`
-    <div class="blog-card">
+  const grid = document.getElementById('blogGrid');
+  if (!data.length) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:50px;color:var(--gray-500)">No articles in this category yet.</div>';
+    return;
+  }
+  grid.innerHTML = data.map(p=>`
+    <a class="blog-card" href="blog/${p.slug}.html" style="text-decoration:none;color:inherit;display:block">
       <div class="blog-img" style="background:linear-gradient(135deg,${p.bg})">${p.icon}</div>
       <div class="blog-body">
         <div class="blog-tag">${p.tag}</div>
@@ -279,8 +308,14 @@ function renderPosts(data) {
           <span class="blog-read">Read →</span>
         </div>
       </div>
-    </div>
+    </a>
   `).join('');
+}
+
+function filterPosts(cat, btn) {
+  document.querySelectorAll('.cat-bar .cat-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderPosts(cat === 'All' ? posts : posts.filter(p=>p.tag === cat));
 }
 
 function loadMore() {

@@ -28,6 +28,15 @@
 - Home / Book: https://one-waybharat.com/
 - Fleet & Vehicles: https://one-waybharat.com/fleet.html
 - Popular Routes: https://one-waybharat.com/routes.html
+- Popular Destinations (city guides): https://one-waybharat.com/destinations.html
+  - Individual guides at https://one-waybharat.com/destinations/<city>.html
+    covering Manali, Shimla, Mussoorie, Nainital, Dharamshala, Rishikesh,
+    Haridwar, Ayodhya, Varanasi, Amritsar, Agra, Jaipur, Udaipur,
+    Chandigarh, Goa, Srinagar, Kochi, Darjeeling, Jodhpur, Jaisalmer,
+    Mysore, Ooty and Pushkar — each with local history and tourist
+    information.
+- Travel Blog (route guides & cab tips): https://one-waybharat.com/blog.html
+  - Individual posts at https://one-waybharat.com/blog/<slug>.html
 - About Us: https://one-waybharat.com/about.html
 - FAQs: https://one-waybharat.com/faq.html
 - Travel Blog: https://one-waybharat.com/blog.html
