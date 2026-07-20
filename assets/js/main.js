@@ -89,40 +89,57 @@ function swapLocs() {
 
 // ── Search — opens modal, pre-fills from hero widget ──
 function searchCabs() {
-  const pickupInput = document.getElementById('pickup');
-  const dropInput   = document.getElementById('drop');
-  if(!pickupInput || !dropInput) return;
-  const p = pickupInput.value.trim();
-  const d = dropInput.value.trim();
-  pickupInput.style.borderColor = '';
-  dropInput.style.borderColor   = '';
-  let hasError = false;
-  if (!p) { pickupInput.style.borderColor = 'rgba(244,123,0,.7)'; pickupInput.focus(); hasError = true; }
-  if (!d) { dropInput.style.borderColor   = 'rgba(244,123,0,.7)'; if (!hasError) dropInput.focus(); hasError = true; }
-  if (hasError) {
-    let msg = document.getElementById('search-error-msg');
-    if (!msg) {
-      msg = document.createElement('p');
-      msg.id = 'search-error-msg';
-      msg.className = 'u-error-msg';
-      const btn = document.querySelector('.search-btn');
-      if(btn) btn.insertAdjacentElement('afterend', msg);
+  try {
+    const pickupInput = document.getElementById('pickup');
+    const dropInput   = document.getElementById('drop');
+    if(!pickupInput || !dropInput) return;
+    const p = pickupInput.value.trim();
+    const d = dropInput.value.trim();
+    pickupInput.style.borderColor = '';
+    dropInput.style.borderColor   = '';
+    let hasError = false;
+    if (!p) { pickupInput.style.borderColor = 'rgba(244,123,0,.7)'; pickupInput.focus(); hasError = true; }
+    if (!d) { dropInput.style.borderColor   = 'rgba(244,123,0,.7)'; if (!hasError) dropInput.focus(); hasError = true; }
+    if (hasError) {
+      let msg = document.getElementById('search-error-msg');
+      if (!msg) {
+        msg = document.createElement('p');
+        msg.id = 'search-error-msg';
+        msg.className = 'u-error-msg';
+        const btn = document.querySelector('.search-btn');
+        if(btn) btn.insertAdjacentElement('afterend', msg);
+      }
+      msg.textContent = (!p && !d) ? 'Please enter both pickup and drop locations.'
+                      : !p ? 'Please enter a pickup location.'
+                      : 'Please enter a drop location.';
+      return;
     }
-    msg.textContent = (!p && !d) ? 'Please enter both pickup and drop locations.'
-                    : !p ? 'Please enter a pickup location.'
-                    : 'Please enter a drop location.';
-    return;
-  }
-  const msg = document.getElementById('search-error-msg');
-  if (msg) msg.remove();
+    // EDGE CASE FIX: identical pickup/drop for a one-way trip (round trip
+    // legitimately shares the pickup city, so it's exempt).
+    if (_heroTripType === 'oneway' && p.toLowerCase() === d.toLowerCase()) {
+      dropInput.style.borderColor = 'rgba(244,123,0,.7)';
+      let msg = document.getElementById('search-error-msg');
+      if (!msg) {
+        msg = document.createElement('p');
+        msg.id = 'search-error-msg';
+        msg.className = 'u-error-msg';
+        const btn = document.querySelector('.search-btn');
+        if(btn) btn.insertAdjacentElement('afterend', msg);
+      }
+      msg.textContent = 'Pickup and drop location cannot be the same.';
+      return;
+    }
+    const msg = document.getElementById('search-error-msg');
+    if (msg) msg.remove();
 
-  const pdateEl = document.getElementById('pdate');
-  const ptimeEl = document.getElementById('ptime');
-  const pickupDate = pdateEl ? pdateEl.value : '';
-  const pickupTime = ptimeEl ? ptimeEl.value : '';
-  if (pickupDate && pickupTime) {
-    const pickupDT = new Date(`${pickupDate}T${pickupTime}`);
-    if (pickupDT < new Date(Date.now() + 60 * 60 * 1000)) {
+    const pdateEl = document.getElementById('pdate');
+    const ptimeEl = document.getElementById('ptime');
+    const pickupDate = pdateEl ? pdateEl.value : '';
+    const pickupTime = ptimeEl ? ptimeEl.value : '';
+    // EDGE CASE FIX: reject a past pickup date outright (defense-in-depth
+    // alongside the <input min> attribute), not just a same-day time check.
+    const todayStr = _bkmLocalDateStr(new Date());
+    if (pickupDate && pickupDate < todayStr) {
       let errMsg = document.getElementById('search-error-msg');
       if (!errMsg) {
         errMsg = document.createElement('p');
@@ -131,32 +148,56 @@ function searchCabs() {
         const btn = document.querySelector('.search-btn');
         if(btn) btn.insertAdjacentElement('afterend', errMsg);
       }
-      errMsg.textContent = 'Pickup time must be at least 1 hour from now.';
+      errMsg.textContent = 'Pickup date cannot be in the past.';
       return;
     }
-  }
+    if (pickupDate && pickupTime) {
+      const pickupDT = new Date(`${pickupDate}T${pickupTime}`);
+      if (pickupDT < new Date(Date.now() + 60 * 60 * 1000)) {
+        let errMsg = document.getElementById('search-error-msg');
+        if (!errMsg) {
+          errMsg = document.createElement('p');
+          errMsg.id = 'search-error-msg';
+          errMsg.className = 'u-error-msg';
+          const btn = document.querySelector('.search-btn');
+          if(btn) btn.insertAdjacentElement('afterend', errMsg);
+        }
+        errMsg.textContent = 'Pickup time must be at least 1 hour from now.';
+        return;
+      }
+    }
 
-  const retDateEl = document.getElementById('rdate');
-  const retDate = retDateEl ? retDateEl.value : '';
-  BKM.S.pu      = p;
-  BKM.S.date    = pickupDate;
-  BKM.S.time    = pickupTime;
-  BKM.S.retdate = retDate;
-  BKM.S.trip    = _heroTripType; // carry trip type from hero widget into modal
-  if (pickupPlaceData && pickupPlaceData.lat) BKM._puData = pickupPlaceData;
-  BKM._preDistKm = 0;
+    const retDateEl = document.getElementById('rdate');
+    const retDate = retDateEl ? retDateEl.value : '';
+    BKM.S.pu      = p;
+    BKM.S.date    = pickupDate;
+    BKM.S.time    = pickupTime;
+    BKM.S.retdate = retDate;
+    BKM.S.trip    = _heroTripType; // carry trip type from hero widget into modal
+    if (pickupPlaceData && pickupPlaceData.lat) BKM._puData = pickupPlaceData;
+    BKM._preDistKm = 0;
 
-  if (_heroTripType === 'roundtrip') {
-    // Round trip: Drop field = return destination (defaults to pickup).
-    // Hero "To" value becomes Stop 1 automatically.
-    BKM.S.dr = p; // Drop = pickup (return to same city by default)
-    BKM.S.extraCities = d ? [d] : []; // Hero destination → Stop 1
-  } else {
-    BKM.S.dr = d;
-    if (dropPlaceData && dropPlaceData.lat) BKM._drData = dropPlaceData;
-    BKM.S.extraCities = [];
+    if (_heroTripType === 'roundtrip') {
+      // Round trip: Drop field = return destination (defaults to pickup).
+      // Hero "To" value becomes Stop 1 automatically.
+      BKM.S.dr = p; // Drop = pickup (return to same city by default)
+      BKM.S.extraCities = d ? [d] : []; // Hero destination → Stop 1
+    } else {
+      BKM.S.dr = d;
+      if (dropPlaceData && dropPlaceData.lat) BKM._drData = dropPlaceData;
+      BKM.S.extraCities = [];
+    }
+    bkmOpen({ prefill: true });
+  } catch (e) {
+    // FIX: previously an unexpected error here (e.g. a missing DOM element)
+    // would fail silently in the console with no feedback to the user.
+    console.error('searchCabs failed:', e);
+    if (typeof bkmToast === 'function') {
+      bkmToast('⚠️ Something went wrong opening the booking form. Please try again or WhatsApp us.');
+    } else {
+      alert('Something went wrong opening the booking form. Please try again or WhatsApp us.');
+    }
   }
-  bkmOpen({ prefill: true });
 }
 
 // ── Fare Calc ──────────────────────────────────────────
@@ -271,6 +312,10 @@ function renderDropdown(listEl, predictions, onPick) {
 async function fetchPredictionsProxy(query) {
   const res = await fetch(`/api/places?input=${encodeURIComponent(query)}&sessiontoken=${sessionToken}`);
   const data = await res.json();
+  // BUG FIX: a 5xx from the worker (e.g. GOOGLE_PLACES_API_KEY not configured)
+  // still returns valid JSON, so it silently looked identical to "no matches"
+  // and the user never learned autocomplete was actually down. Surface it.
+  if (!res.ok) throw new Error(data?.error || `Places proxy failed (${res.status})`);
   return data.predictions || [];
 }
 
@@ -330,6 +375,12 @@ function fetchDetailsSDK(placeId) {
   });
 }
 
+let _acFailCount = 0;
+function _bkmSetApiBanner(show){
+  const banner = document.getElementById('api-key-banner');
+  if (banner) banner.style.display = show ? 'flex' : 'none';
+}
+
 function attachAutocomplete(inputId, listId, onSelect) {
   const input  = document.getElementById(inputId);
   const listEl = document.getElementById(listId);
@@ -338,6 +389,7 @@ function attachAutocomplete(inputId, listId, onSelect) {
     if (query.length < 2) { listEl.innerHTML = ''; return; }
     try {
       const preds = IS_LOCAL ? await fetchPredictionsSDK(query) : await fetchPredictionsProxy(query);
+      _acFailCount = 0; _bkmSetApiBanner(false);
       renderDropdown(listEl, preds, async (p) => {
         input.value = p.main_text || p.description;
         input.style.borderColor = '';
@@ -347,7 +399,14 @@ function attachAutocomplete(inputId, listId, onSelect) {
           sessionToken = newSessionToken();
         } catch(e) { console.warn('Place detail error', e); }
       });
-    } catch(e) { console.warn('Autocomplete error', e); }
+    } catch(e) {
+      console.warn('Autocomplete error', e);
+      // FIX: after a couple of consecutive failures, tell the customer
+      // location search is down and that typing manually still works —
+      // rather than leaving them staring at a dropdown that never appears.
+      _acFailCount++;
+      if (_acFailCount >= 2) _bkmSetApiBanner(true);
+    }
   }, 280);
   input.addEventListener('input', () => suggest(input.value.trim()));
   document.addEventListener('click', e => {
@@ -358,8 +417,7 @@ function attachAutocomplete(inputId, listId, onSelect) {
 function initAutocomplete() {
   attachAutocomplete('pickup', 'pickup-list', d => { pickupPlaceData = d; });
   attachAutocomplete('drop',   'drop-list',   d => { dropPlaceData   = d; });
-  const banner = document.getElementById('api-key-banner');
-  if (banner) banner.style.display = 'none';
+  _bkmSetApiBanner(false);
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -667,6 +725,23 @@ async function _bkmFetchDistMultiStop(waypoints){
   } catch(e){ _bkmDistFallback(); }
 }
 
+function _bkmSetNextBtnLoading(isLoading){
+  const btn = document.getElementById('bkmBtnNext');
+  if(!btn) return;
+  if(isLoading){
+    btn.dataset.origLabel = btn.dataset.origLabel || btn.textContent;
+    btn.textContent = 'Searching…';
+    btn.disabled = true;
+    btn.style.opacity = '.65';
+    btn.style.pointerEvents = 'none';
+  } else {
+    btn.textContent = btn.dataset.origLabel || 'Search Cabs →';
+    btn.disabled = false;
+    btn.style.opacity = '';
+    btn.style.pointerEvents = '';
+  }
+}
+
 async function _bkmStep1Next(){
   const pu = (document.getElementById('bk-pu')||{}).value?.trim();
   const dr = (document.getElementById('bk-dr')||{}).value?.trim();
@@ -679,7 +754,26 @@ async function _bkmStep1Next(){
   if(!dr){ document.getElementById('bkfg-dr')?.classList.add('err'); ok=false; }
   if(!dt){ document.getElementById('bkfg-dt')?.classList.add('err'); ok=false; }
   if(!ok){ bkmToast('⚠️ Please fill all required fields'); return; }
+  // EDGE CASE FIX: block identical pickup & drop (case/whitespace-insensitive),
+  // but only for one-way trips — round trip legitimately starts/ends at the
+  // same city, and multi-stop routes are still allowed either way.
+  const isRoundTrip = BKM.S.trip === 'roundtrip';
+  const stopsForCompare = (BKM.S.extraCities||[]).filter(c=>c.trim());
+  if(!isRoundTrip && stopsForCompare.length===0 && pu.toLowerCase() === dr.toLowerCase()){
+    document.getElementById('bkfg-dr')?.classList.add('err');
+    bkmToast('⚠️ Pickup and drop location cannot be the same');
+    return;
+  }
+  // Date sanity check (defense-in-depth alongside the <input min> attribute,
+  // since a date value can still reach here without going through the picker).
+  const todayStr = _bkmLocalDateStr(new Date());
+  if(dt < todayStr){
+    document.getElementById('bkfg-dt')?.classList.add('err');
+    bkmToast('⚠️ Pickup date cannot be in the past');
+    return;
+  }
   if(BKM.S.trip==='roundtrip' && !ret){ bkmToast('⚠️ Please select a return date'); return; }
+  if(BKM.S.trip==='roundtrip' && ret < dt){ bkmToast('⚠️ Return date cannot be before pickup date'); return; }
   if(tm){
     const pickupDT = new Date(`${dt}T${tm}`);
     if(pickupDT < new Date(Date.now() + 60*60*1000)){ bkmToast('⚠️ Pickup time must be at least 1 hour from now'); return; }
@@ -689,26 +783,60 @@ async function _bkmStep1Next(){
   BKM.S.rettime = document.getElementById('bk-ret-tm')?.value || '';
   BKM.S.pax = (document.getElementById('bk-pax')||{}).value || '3–4 Passengers';
   BKM.S.retloc = '';
+  const manualBlock = document.getElementById('bkm-dist-manual');
+  if(manualBlock) manualBlock.style.display = 'none';
   if(!BKM.S.distKm || BKM.S.distKm === 0){
+    _bkmSetNextBtnLoading(true);
     const isRound = BKM.S.trip === 'roundtrip';
     const stops = (BKM.S.extraCities||[]).filter(c=>c.trim());
+    let waypoints;
     if(isRound){
       // RT: Pickup → [stops] → return destination (dr field)
       const returnDest = dr || pu;
-      const waypoints = [pu, ...stops, returnDest];
+      waypoints = [pu, ...stops, returnDest];
       if(waypoints.length > 2){ await _bkmFetchDistMultiStop(waypoints); }
       else { await _bkmFetchDist(pu, returnDest); }
     } else {
-      const waypoints = [pu, ...stops, dr];
+      waypoints = [pu, ...stops, dr];
       if(waypoints.length > 2){ await _bkmFetchDistMultiStop(waypoints); }
       else { await _bkmFetchDist(pu, dr); }
     }
+    BKM._lastWaypoints = waypoints;
+    _bkmSetNextBtnLoading(false);
   }
   if(!BKM.S.distKm || BKM.S.distKm === 0){
-    bkmToast('⚠️ Could not calculate route distance. Please check locations and try again.');
-    _bkmShowDist('Distance unavailable — please retry');
+    // FIX: previously this was a hard dead-end — the user had no way to
+    // proceed if the live distance API failed. Now we offer a manual
+    // fallback (type an approx. distance, confirmed later by phone) plus
+    // a retry option, so a Google/Distance-Matrix outage never fully
+    // blocks a booking.
+    bkmToast('⚠️ Could not fetch live route distance — enter it manually below or retry.');
+    _bkmShowDist('Distance unavailable');
+    if(manualBlock) manualBlock.style.display = 'block';
     return;
   }
+  _bkmGoStep(2);
+  _bkmBuildCabs();
+}
+
+async function _bkmRetryDist(){
+  BKM.S.distKm = 0;
+  await _bkmStep1Next();
+}
+
+function _bkmUseManualDist(){
+  const input = document.getElementById('bk-dist-manual-input');
+  const km = parseInt(input?.value, 10);
+  if(!km || km < 1 || km > 3000){
+    bkmToast('⚠️ Enter a valid distance between 1 and 3000 km');
+    return;
+  }
+  BKM.S.distKm = km;
+  BKM._manualDistFlag = true;
+  BKM.S.notes = (BKM.S.notes ? BKM.S.notes + ' ' : '') + '(Distance entered manually — please confirm exact fare with customer.)';
+  const manualBlock = document.getElementById('bkm-dist-manual');
+  if(manualBlock) manualBlock.style.display = 'none';
+  _bkmShowDist(`~${km} km (estimated — to be confirmed)`);
   _bkmGoStep(2);
   _bkmBuildCabs();
 }

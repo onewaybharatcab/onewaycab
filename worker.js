@@ -3164,6 +3164,7 @@ __name(pdfResponse, "pdfResponse");
 function jsonResponse(data, status = 200, allowOrigin = null) {
   const headers = {
     "Content-Type": "application/json",
+    "Cache-Control": "no-store",
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization"
   };

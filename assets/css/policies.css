@@ -521,3 +521,8 @@ p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
   .float-btn svg { width: 25px; height: 25px; }
   
 }
+
+/* ── PEACH THEME: gap missed by the original override pass ──
+   .ls (header logo subtitle) still used near-invisible faint white text
+   on the now-light header. */
+.ls { color: rgba(60,25,5,0.40) !important; }

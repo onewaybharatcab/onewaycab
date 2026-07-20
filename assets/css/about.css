@@ -517,6 +517,10 @@ nav a:hover { color: #F47B00 !important; background: rgba(244,123,0,0.10) !impor
 .cta-sec h2 { color: #1A0800 !important; }
 .cta-sec p { color: rgba(60,25,5,0.58) !important; }
 
+/* ── BUTTON TEXT FIX: .btn-p used var(--wh), which flips to dark brown in
+   this theme, giving low-contrast dark-on-orange text. Force white. ── */
+.btn-p { color: #fff !important; }
+
 /* ══════════════════ VIBRANT PEACH FOOTER ══════════════════ */
 /* ─── FOOTER COMPLETE REDESIGN ─── */
 

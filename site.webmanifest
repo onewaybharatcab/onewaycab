@@ -1,0 +1,25 @@
+{
+  "name": "One-Way Bhaarat — India's Premium One-Way Taxi Service",
+  "short_name": "One-Way Bhaarat",
+  "description": "Book premium one-way and round-trip intercity cabs across India. Transparent per-km fares, verified drivers.",
+  "start_url": "/index.html",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#FFF0E8",
+  "theme_color": "#F47B00",
+  "lang": "en-IN",
+  "icons": [
+    {
+      "src": "/assets/images/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/images/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

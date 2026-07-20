@@ -791,3 +791,11 @@ p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
   .hstat-highlight { grid-column: span 2; }
   .hero-badges { gap: 12px; }
 }
+
+/* ── PEACH THEME: gaps missed by the original override pass ──
+   .ls (header logo subtitle) still used near-invisible faint white text
+   on the now-light header. .btn-call and .btn-submit still used var(--wh),
+   which flips to dark brown, giving low-contrast dark-on-orange text. */
+.ls { color: rgba(60,25,5,0.40) !important; }
+.btn-call { color: #fff !important; }
+.btn-submit { color: #fff !important; }

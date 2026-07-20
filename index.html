@@ -45,17 +45,21 @@
 <meta name="description" content="Book one-way cabs across India from ₹16/km. Outstation taxi to 20,000+ locations. Verified drivers, transparent fares, instant WhatsApp confirmation.">
 <link rel="canonical" href="https://one-waybharat.com/">
 <link rel="alternate" hreflang="en-IN" href="https://one-waybharat.com/">
-<link rel="alternate" hreflang="hi-IN" href="https://one-waybharat.com/">
+<link rel="alternate" hreflang="en-IN" href="https://one-waybharat.com/">
 <link rel="alternate" hreflang="x-default" href="https://one-waybharat.com/">
 <meta property="og:type" content="website">
+<meta property="og:site_name" content="One-Way Bhaarat">
+<meta property="og:locale" content="en_IN">
 <meta property="og:title" content="One-Way Bhaarat – India's Premium One-Way Taxi Service">
 <meta property="og:description" content="Book premium one-way cabs across India. Starting ₹16/km. Verified drivers, transparent fares, 20,000+ locations.">
 <meta property="og:url" content="https://one-waybharat.com/">
-<meta property="og:image" content="https://one-waybharat.com/assets/images/tempo-traveller.webp">
+<meta property="og:image" content="https://one-waybharat.com/assets/images/og-default.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="One-Way Bhaarat – India's Premium One-Way Taxi Service">
 <meta name="twitter:description" content="Book premium one-way cabs across India. Starting ₹16/km. Verified drivers, transparent fares, 20,000+ locations.">
-<meta name="twitter:image" content="https://one-waybharat.com/assets/images/tempo-traveller.webp">
+<meta name="twitter:image" content="https://one-waybharat.com/assets/images/og-default.jpg">
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -63,12 +67,25 @@
   "name": "One-Way Bhaarat Pvt. Ltd.",
   "url": "https://one-waybharat.com/",
   "telephone": "+91-93557-57579",
+  "email": "onewaybharatcab@gmail.com",
+  "image": "https://one-waybharat.com/assets/images/logo.png",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "Shop No. 7, Radha Kunj 2",
+    "addressLocality": "Ghaziabad",
+    "addressRegion": "Uttar Pradesh",
+    "postalCode": "203207",
+    "addressCountry": "IN"
+  },
   "areaServed": "IN",
-  "priceRange": "₹16/km"
+  "priceRange": "₹16/km",
+  "sameAs": [
+    "https://www.facebook.com/profile.php?id=61590974556339",
+    "https://www.instagram.com/onewaybharat"
+  ]
 }
 </script>
-<title>One-Way Bhaarat Pvt. Ltd. | India's Premium One-Way Taxi Service</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23F47B00'/><text y='72' x='50' text-anchor='middle' font-size='60'>🚕</text></svg>" type="image/svg+xml">
+<title>One-Way Bhaarat | India's Premium One-Way Taxi Service</title>
 <!-- Google Places SDK loader -->
 <script defer src="./assets/js/places-loader.js"></script>
 
@@ -78,7 +95,12 @@
 <link rel="preconnect" href="https://maps.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Nunito:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
 <meta name="theme-color" content="#F47B00">
+<link rel="icon" href="./assets/images/favicon.svg" type="image/svg+xml">
+<link rel="alternate icon" href="./assets/images/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="./assets/images/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="./assets/images/favicon-16x16.png">
 <link rel="apple-touch-icon" href="./assets/images/apple-touch-icon.png">
+<link rel="manifest" href="./site.webmanifest">
 
 <link rel="stylesheet" href="./assets/css/main.css">
 
@@ -102,7 +124,7 @@
     ]
   },
   "sameAs": [
-    "https://www.facebook.com/onewaybharat",
+    "https://www.facebook.com/profile.php?id=61590974556339",
     "https://www.instagram.com/onewaybharat"
   ]
 }
@@ -270,6 +292,7 @@
       <a href="about.html"   class="nav-link">About</a>
       <a href="contact.html" class="nav-link">Contact</a>
       <a href="customer.html" class="nav-link">My Bookings</a>
+      <a href="partners.html" class="nav-link">Partners</a>
       <button type="button" class="nav-link nav-cta" onclick="bkmOpen()" style="cursor:pointer;font-family:'Nunito',sans-serif">🚕 Book Now</button>
       <a href="tel:+919355757579" class="nav-link nav-phone" style="color:rgba(255,255,255,.7)">📞 +91-93557 57579</a>
     </nav>
@@ -369,7 +392,7 @@
         <!-- API key missing banner (hidden when API loads) -->
         <div class="api-key-banner" id="api-key-banner" style="display:none">
           <span>⚠️</span>
-          <span><strong>Setup needed:</strong> Add your <a href="https://console.cloud.google.com" target="_blank">Google API key</a> to enable location autocomplete.</span>
+          <span id="api-key-banner-txt">Live location search is temporarily unavailable — you can still type your pickup and drop location manually below.</span>
         </div>
         <div class="trip-tabs" role="group" aria-label="Trip type">
           <button type="button" class="trip-tab active" aria-pressed="true" onclick="setTrip(this,'oneway')">↗ One Way</button>
@@ -771,6 +794,15 @@
 
         <div id="bkm-dist" class="bkm-dist"><span>📏</span><span id="bkm-dist-txt">Calculating…</span></div>
 
+        <div id="bkm-dist-manual" class="bkm-dist-manual" style="display:none">
+          <span>We couldn't fetch the live route distance right now. Enter an approx. distance in km and we'll confirm the exact fare by phone — or try again.</span>
+          <div class="bkm-dist-manual-row">
+            <input type="number" id="bk-dist-manual-input" min="1" max="3000" inputmode="numeric" placeholder="e.g. 250"/>
+            <button type="button" class="bkm-dist-manual-btn" onclick="_bkmUseManualDist()">Use this</button>
+            <button type="button" class="bkm-dist-manual-retry" onclick="_bkmRetryDist()">↻ Retry</button>
+          </div>
+        </div>
+
         <div class="bkm-fgrid">
           <div class="bkm-fg" id="bkfg-dt"><label>📅 Pickup Date *</label><input type="date" id="bk-dt"/><div class="bkm-errmsg">Select date</div></div>
           <div class="bkm-fg" id="bkfg-tm"><label>⏰ Pickup Time *</label><input type="time" id="bk-tm"/><div class="bkm-errmsg">Select time</div></div>
@@ -960,6 +992,7 @@
         <li><a href="destinations.html">Popular Destinations</a></li>
         <li><a href="about.html">About Us</a></li>
         <li><a href="blog.html">Travel Blog</a></li>
+        <li><a href="partners.html">B2B Partnerships</a></li>
         <li><a href="faq.html">FAQs</a></li>
         <li><a href="contact.html">Contact Us</a></li>
         <li><a href="customer.html">My Bookings</a></li>

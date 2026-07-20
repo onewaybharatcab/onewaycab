@@ -1151,6 +1151,12 @@ input:-webkit-autofill:focus {
 /* Distance badge */
 .bkm-dist{display:none;align-items:center;gap:8px;background:rgba(200,90,0,.08);border:1.5px solid rgba(200,90,0,.25);border-radius:8px;padding:9px 13px;margin-top:8px;font-size:.8rem;font-weight:700;color:var(--bk-accent)}
 .bkm-dist.show{display:flex}
+.bkm-dist-manual{background:rgba(200,90,0,.06);border:1.5px solid rgba(200,90,0,.22);border-radius:10px;padding:11px 13px;margin-top:8px;font-size:.78rem;font-weight:600;color:var(--bk-text);line-height:1.4}
+.bkm-dist-manual-row{display:flex;gap:8px;margin-top:8px}
+.bkm-dist-manual-row input{flex:1;min-width:0;min-height:44px;border:1.5px solid var(--bk-input-bdr);border-radius:8px;padding:0 12px;font-size:16px;font-weight:700;background:var(--bk-input-bg);color:var(--bk-text);outline:none;box-sizing:border-box}
+.bkm-dist-manual-btn,.bkm-dist-manual-retry{min-height:44px;padding:0 14px;border-radius:8px;font-size:.78rem;font-weight:800;cursor:pointer;border:none;white-space:nowrap}
+.bkm-dist-manual-btn{background:var(--bk-accent);color:#fff}
+.bkm-dist-manual-retry{background:transparent;border:1.5px solid var(--bk-accent);color:var(--bk-accent)}
 
 /* Live fare preview (Step 1 inline, like BRG image 2) */
 .bkm-live-fares{background:var(--bk-card);border:1.5px solid rgba(200,90,0,.2);border-radius:12px;overflow:hidden;margin-top:10px;display:none}
@@ -1471,6 +1477,25 @@ input:-webkit-autofill:focus {
   }
   .float-btn { width: 50px; height: 50px; }
   .float-btn svg { width: 22px; height: 22px; }
+
+  /* ── Mobile tap targets ──────────────────────────────────────────────
+     Guarantee a 48px minimum height on every interactive form control
+     (text inputs, native date/time pickers, selects, trip-type buttons)
+     so nothing on iOS/Android drops below the recommended tap size. */
+  .field-input,
+  .bkm-fg input,
+  .bkm-fg select,
+  #calcDist, #calcVehicle,
+  input[type="date"], input[type="time"], input[type="tel"],
+  input[type="email"], input[type="text"], input[type="number"],
+  select {
+    min-height: 48px;
+    box-sizing: border-box;
+  }
+  .trip-tab, .bkm-trip-btn, .search-btn, .bkm-btn-gold {
+    min-height: 48px;
+    box-sizing: border-box;
+  }
 }
 
 /* ── ≤620px : small phones ── */
