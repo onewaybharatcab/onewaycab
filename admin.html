@@ -14,17 +14,17 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="./assets/css/admin.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
 
 <!-- LOGIN SCREEN -->
-<!-- Colors here intentionally match the public site's "Warm Peach Theme"
-     (see main.css / shared-chrome.css :root) rather than the admin
-     dashboard's dark navy palette below (var(--nv) etc.) — this is a
-     login page, so it should look like the site's brand, not a different
-     dark-mode app. Hardcoded (not var()) since these don't exist in
-     admin.css and shouldn't be added there, as the rest of the dashboard
-     stays dark navy on purpose. -->
+<!-- Colors here are hardcoded (not var()) rather than reused from admin.css,
+     since the login screen was styled before the rest of the dashboard was
+     later converted to the same "Warm Peach Theme" too (see the "ADMIN
+     DASHBOARD — Component Overrides" section in admin.css). The dashboard
+     is NOT dark navy anymore — both login and dashboard now match the
+     public site's peach branding. -->
 <div id="loginScreen" style="position:fixed;inset:0;z-index:200;background:#FFF0E8;display:flex;align-items:center;justify-content:center;font-family:'Nunito',sans-serif">
   <form id="loginForm" style="background:#FFF8F0;border:1.5px solid rgba(180,90,0,.18);border-radius:var(--r20);padding:36px 32px;width:320px;text-align:center;box-shadow:0 20px 60px rgba(120,50,0,.18)">
     <div style="font-size:38px;margin-bottom:6px">🚕</div>
@@ -46,10 +46,12 @@
   <nav class="sb-nav">
     <div class="nav-sec">Main</div>
     <div class="ni act" onclick="showPanel('dashboard',this)"><span class="ni-ic">📊</span> Dashboard</div>
+    <div class="ni" onclick="showPanel('sos',this)" style="position:relative"><span class="ni-ic">🚨</span> SOS Alerts <span class="ni-badge" id="navSosBadge" style="background:#C0392B;display:none">0</span></div>
     <div class="ni" onclick="showPanel('bookings',this)"><span class="ni-ic">🗓️</span> Bookings <span class="ni-badge" id="navBookingBadge">0</span></div>
     <div class="nav-sec">Management</div>
     <div class="ni" onclick="showPanel('customers',this)"><span class="ni-ic">👤</span> Customers</div>
     <div class="ni" onclick="showPanel('drivers',this)"><span class="ni-ic">🚗</span> Drivers</div>
+    <div class="ni" onclick="showPanel('docverify',this)"><span class="ni-ic">🪪</span> Driver Verification</div>
     <div class="ni" onclick="showPanel('vehicles',this)"><span class="ni-ic">🚌</span> Vehicles</div>
     <div class="ni" onclick="showPanel('routes',this)"><span class="ni-ic">🗺️</span> Routes</div>
     <div class="nav-sec">Finance</div>
@@ -66,12 +68,12 @@
   <div class="sb-user">
     <div class="sb-av" id="sbAvatar">A</div>
     <div><div class="sb-un" id="sbUserName">Admin User</div><div class="sb-ur">Super Admin</div></div>
-    <button onclick="logout()" title="Log out" style="margin-left:auto;background:none;border:none;color:rgba(255,255,255,0.4);cursor:pointer;font-size:16px">⏻</button>
+    <button onclick="logout()" title="Log out" style="margin-left:auto;background:none;border:none;color:rgba(60,25,5,0.4);cursor:pointer;font-size:16px">⏻</button>
   </div>
 </aside>
 <div class="main">
   <div class="topbar">
-    <div class="tb-title" id="tbTitle">Dashboard <span style="font-size:11px;color:rgba(255,255,255,0.3);font-weight:400;margin-left:8px">Overview</span></div>
+    <div class="tb-title" id="tbTitle">Dashboard <span style="font-size:11px;color:rgba(60,25,5,0.3);font-weight:400;margin-left:8px">Overview</span></div>
     <div class="tb-right">
       <div class="tb-date" id="tbDate"></div>
       <button class="nb">🔔<div class="nb-dot"></div></button>
@@ -103,6 +105,13 @@
       <div class="tbl-wrap" id="recentTbl"></div>
     </div>
 
+    <!-- SOS ALERTS -->
+    <div class="panel" id="pn-sos">
+      <div class="sec-hdr"><div class="sec-title">🚨 SOS Alerts</div><button class="btn-sm btn-ol" onclick="loadSOS()">↻ Refresh</button></div>
+      <p style="font-size:12.5px;color:rgba(60,25,5,0.5);margin:-8px 0 16px">Alerts are saved here even if the WhatsApp notification fails to send — always check this list, not just WhatsApp.</p>
+      <div class="tbl-wrap" id="sosTbl"></div>
+    </div>
+
     <!-- BOOKINGS -->
     <div class="panel" id="pn-bookings">
       <div class="sec-hdr"><div class="sec-title">All Bookings (Duties)</div><button class="btn-sm btn-sf" onclick="openNewDutyModal()">+ New Duty</button></div>
@@ -123,6 +132,13 @@
         <div id="assignDutySummary" style="font-size:13px;color:rgba(255,255,255,0.7);margin-bottom:16px"></div>
         <label class="field-label">Select Driver</label>
         <select id="assignDriverSelect" class="finput" style="width:100%;margin-bottom:12px"></select>
+        <label class="field-label">Vehicle Type Being Sent (auto-filled from driver, editable)</label>
+        <select id="assignVehicleType" class="finput" style="width:100%;margin-bottom:12px">
+          <option>Sedan</option>
+          <option>Ertiga</option>
+          <option>Innova Crysta</option>
+          <option>Tempo Traveller</option>
+        </select>
         <label class="field-label">Vehicle Number (auto-filled from driver, editable)</label>
         <input id="assignVehicleNumber" class="finput" style="width:100%;box-sizing:border-box;margin-bottom:18px" placeholder="e.g. DL-01-AB-1234">
         <div id="assignError" style="color:#f87171;font-size:12px;margin-bottom:10px;display:none"></div>
@@ -149,7 +165,7 @@
       </div>
     </div>
 
-    <!-- DRIVERS -->
+        <!-- DRIVERS -->
     <div class="panel" id="pn-drivers">
       <div class="sec-hdr"><div class="sec-title">Driver Management</div><button class="btn-sm btn-sf" onclick="openNewDriverModal()">+ Add Driver</button></div>
       <div class="tbl-wrap">
@@ -161,14 +177,34 @@
       </div>
     </div>
 
-    <!-- NEW / EDIT DRIVER MODAL -->
+    <!-- DRIVER VERIFICATION (items 10, 11) -->
+    <div class="panel" id="pn-docverify">
+      <div class="sec-hdr"><div class="sec-title">🪪 Driver & Vehicle Verification</div><button class="btn-sm btn-ol" onclick="renderDocVerify()">↻ Refresh</button></div>
+      <div class="tbl-wrap">
+        <div id="docverifyTbl">Loading…</div>
+      </div>
+    </div>
+
+    <!-- DOCUMENT REVIEW MODAL -->
+    <div id="docReviewModal" class="modal-bg" style="display:none">
+      <div class="modal-card" style="max-width:640px">
+        <div class="modal-hdr"><span id="docReviewTitle">Review Documents</span> <span class="modal-x" onclick="closeDocReviewModal()">×</span></div>
+        <div id="docReviewBody" style="max-height:70vh;overflow-y:auto"></div>
+      </div>
+    </div>
     <div id="driverModal" class="modal-bg" style="display:none">
       <div class="modal-card">
         <div class="modal-hdr"><span id="driverModalTitle">Add Driver</span> <span class="modal-x" onclick="closeDriverModal()">×</span></div>
         <div class="modal-grid">
           <div><label class="field-label">Full Name</label><input id="drvName" class="finput" style="width:100%;box-sizing:border-box"></div>
           <div><label class="field-label">Phone (10 digits, used for login)</label><input id="drvPhone" class="finput" style="width:100%;box-sizing:border-box" maxlength="10"></div>
-          <div><label class="field-label">Vehicle Type</label><input id="drvVehType" class="finput" style="width:100%;box-sizing:border-box" placeholder="Sedan / Ertiga / Innova..."></div>
+          <div><label class="field-label">Vehicle Type</label><select id="drvVehType" class="finput" style="width:100%;box-sizing:border-box">
+            <option value="">Select type</option>
+            <option>Sedan</option>
+            <option>Ertiga</option>
+            <option>Innova Crysta</option>
+            <option>Tempo Traveller</option>
+          </select></div>
           <div><label class="field-label">Vehicle Number</label><input id="drvVehNum" class="finput" style="width:100%;box-sizing:border-box" placeholder="DL-01-AB-1234"></div>
           <div><label class="field-label" id="drvPassLabel">Set Password (6+ chars)</label><input id="drvPassword" type="text" class="finput" style="width:100%;box-sizing:border-box"></div>
           <div><label class="field-label">Active</label><select id="drvActive" class="finput" style="width:100%;box-sizing:border-box"><option value="true">Active</option><option value="false">Inactive</option></select></div>
@@ -182,7 +218,13 @@
       <div class="modal-card">
         <div class="modal-hdr"><span>Add Vehicle</span> <span class="modal-x" onclick="closeVehicleModal()">×</span></div>
         <div class="modal-grid">
-          <div><label class="field-label">Vehicle Name</label><input id="vehName" class="finput" style="width:100%;box-sizing:border-box" placeholder="Sedan, Ertiga, Innova Crysta..."></div>
+          <div><label class="field-label">Vehicle Name</label><select id="vehName" class="finput" style="width:100%;box-sizing:border-box">
+            <option value="">Select type</option>
+            <option>Sedan</option>
+            <option>Ertiga</option>
+            <option>Innova Crysta</option>
+            <option>Tempo Traveller</option>
+          </select></div>
           <div><label class="field-label">Capacity</label><input id="vehCapacity" class="finput" style="width:100%;box-sizing:border-box" placeholder="4+1, 6+1..."></div>
           <div><label class="field-label">Icon (emoji)</label><input id="vehIcon" class="finput" style="width:100%;box-sizing:border-box" placeholder="🚗" maxlength="4"></div>
           <div><label class="field-label">Notes</label><input id="vehNotes" class="finput" style="width:100%;box-sizing:border-box" placeholder="optional"></div>
@@ -260,7 +302,7 @@
     <!-- PRICING -->
     <div class="panel" id="pn-pricing">
       <div class="sec-hdr"><div class="sec-title">Fare & Pricing Management</div><button class="btn-sm btn-sf" onclick="savePricing()">💾 Save Changes</button></div>
-      <div style="margin:0 0 16px;font-size:13px;color:rgba(255,255,255,.45)">Note: these rates are saved here for record-keeping but are not yet wired into the live fare calculation on the public booking form.</div>
+      <div style="margin:0 0 16px;font-size:13px;color:rgba(60,25,5,.45)">These rates are now live — the public booking form fetches them from here. Changes take effect immediately after saving.</div>
       <div class="price-grid">
         <div class="price-section">
           <div class="ps-title">🔷 One Way Rates (₹/km)</div>
@@ -276,6 +318,18 @@
           <div class="rate-row"><span class="rate-lbl">🚙 Innova Crysta</span><input class="rate-inp" type="number" data-trip="roundTrip" data-vehicle="Innova Crysta" value="20"></div>
           <div class="rate-row"><span class="rate-lbl">🚌 Tempo Traveller</span><input class="rate-inp" type="number" data-trip="roundTrip" data-vehicle="Tempo Traveller" value="35"></div>
         </div>
+        <div class="price-section">
+          <div class="ps-title">📏 One Way KM Limit (item 18)</div>
+          <div style="font-size:11.5px;color:rgba(60,25,5,.5);margin-bottom:10px">Beyond "Included KM," the trip is billed at the Extra KM Rate instead of the base rate above. Defaults below are placeholders — please confirm the included-km numbers, only the two extra-km rates were specified.</div>
+          <div class="rate-row"><span class="rate-lbl">🚗 Sedan — Included KM</span><input class="rate-inp" type="number" data-limit-km="Sedan" value="300"></div>
+          <div class="rate-row"><span class="rate-lbl">🚗 Sedan — Extra KM Rate</span><input class="rate-inp" type="number" data-limit-rate="Sedan" value="16"></div>
+          <div class="rate-row"><span class="rate-lbl">🚐 Ertiga — Included KM</span><input class="rate-inp" type="number" data-limit-km="Ertiga" value="300"></div>
+          <div class="rate-row"><span class="rate-lbl">🚐 Ertiga — Extra KM Rate</span><input class="rate-inp" type="number" data-limit-rate="Ertiga" value="18"></div>
+          <div class="rate-row"><span class="rate-lbl">🚙 Innova — Included KM</span><input class="rate-inp" type="number" data-limit-km="Innova Crysta" value="300"></div>
+          <div class="rate-row"><span class="rate-lbl">🚙 Innova — Extra KM Rate</span><input class="rate-inp" type="number" data-limit-rate="Innova Crysta" value="24"></div>
+          <div class="rate-row"><span class="rate-lbl">🚌 Tempo — Included KM</span><input class="rate-inp" type="number" data-limit-km="Tempo Traveller" value="300"></div>
+          <div class="rate-row"><span class="rate-lbl">🚌 Tempo — Extra KM Rate</span><input class="rate-inp" type="number" data-limit-rate="Tempo Traveller" value="32"></div>
+        </div>
       </div>
       <div id="pricingStatus" style="margin-top:14px;font-size:13px"></div>
     </div>
@@ -289,7 +343,7 @@
     <!-- ROUTES -->
     <div class="panel" id="pn-routes">
       <div class="sec-hdr"><div class="sec-title">Route Management</div><button class="btn-sm btn-sf" onclick="openRouteModal()">+ Add Route</button></div>
-      <div style="margin:0 0 14px;font-size:13px;color:rgba(255,255,255,.45)">A reference list you manage — not yet wired to the live fare calculation on the booking form.</div>
+      <div style="margin:0 0 14px;font-size:13px;color:rgba(60,25,5,.45)">A reference list you manage — not yet wired to the live fare calculation on the booking form.</div>
       <div class="tbl-wrap"><div id="rtTbl"></div></div>
     </div>
 
@@ -308,7 +362,7 @@
     <!-- GST -->
     <div class="panel" id="pn-gst">
       <div class="sec-hdr"><div class="sec-title">GST Reports</div></div>
-      <div style="margin:0 0 14px;font-size:13px;color:rgba(255,255,255,.45)">A basic summary derived from booking records — not a GSTR-1-compliant filing export.</div>
+      <div style="margin:0 0 14px;font-size:13px;color:rgba(60,25,5,.45)">A basic summary derived from booking records — not a GSTR-1-compliant filing export.</div>
       <div class="stats-row" style="grid-template-columns:repeat(4,1fr)">
         <div class="sc"><div class="sc-icon ic-g">💰</div><div><div class="sc-lbl">Total Collected</div><div class="sc-val" id="gstCollected">₹0</div></div></div>
         <div class="sc"><div class="sc-icon ic-b">🧾</div><div><div class="sc-lbl">Total Fare Value</div><div class="sc-val" id="gstFareValue">₹0</div></div></div>
@@ -321,7 +375,7 @@
     <!-- COUPONS -->
     <div class="panel" id="pn-coupons">
       <div class="sec-hdr"><div class="sec-title">Coupon Management</div><button class="btn-sm btn-sf" onclick="openCouponModal()">+ Create Coupon</button></div>
-      <div style="margin:0 0 14px;font-size:13px;color:rgba(255,255,255,.45)">Coupons are stored here but not yet validated automatically at checkout.</div>
+      <div style="margin:0 0 14px;font-size:13px;color:rgba(60,25,5,.45)">Coupons are stored here but not yet validated automatically at checkout.</div>
       <div class="tbl-wrap"><div id="cpnTbl"></div></div>
     </div>
     <div class="panel" id="pn-analytics">
@@ -399,6 +453,8 @@ function enterApp(){
   loadDashboardStats();
   loadDuties();
   loadDrivers();
+  loadSOS();
+  setInterval(loadSOS, 30000); // safety alerts should surface without a manual refresh
 }
 
 function doLogout(){
@@ -416,6 +472,48 @@ function logout(){
 // ── Duties (bookings) — real data from the CRM ───────────────────────────
 let allDuties = [];
 let allDrivers = [];
+
+async function loadSOS(){
+  try{
+    const {alerts} = await api('/admin/sos-list');
+    const unresolved = alerts.filter(a=>!a.resolved);
+    const badge = document.getElementById('navSosBadge');
+    if(unresolved.length){
+      badge.textContent = unresolved.length;
+      badge.style.display = 'inline-block';
+    } else {
+      badge.style.display = 'none';
+    }
+    const wrap = document.getElementById('sosTbl');
+    if(!wrap) return;
+    if(!alerts.length){
+      wrap.innerHTML = '<div style="padding:60px;text-align:center"><div style="font-size:48px">🚨</div><div style="font-size:16px;color:rgba(60,25,5,0.4);margin-top:12px">No SOS alerts — good sign.</div></div>';
+      return;
+    }
+    wrap.innerHTML = `<table><thead><tr><th>Status</th><th>Driver</th><th>Trip</th><th>Location</th><th>Time</th><th></th></tr></thead><tbody>${alerts.map(a=>{
+      const mapsLink = (a.lat!=null && a.lng!=null) ? `<a href="https://maps.google.com/?q=${a.lat},${a.lng}" target="_blank" rel="noopener" style="color:var(--sf-600,#D46800);font-weight:700">📍 View on map</a>` : '<span style="color:rgba(60,25,5,0.4)">Not shared</span>';
+      const when = new Date(a.createdAt).toLocaleString('en-IN', {timeZone:'Asia/Kolkata'});
+      const statusBadge = a.resolved
+        ? '<span class="sbadge" style="background:rgba(30,142,90,.15);color:#1E8E5A">Resolved</span>'
+        : '<span class="sbadge" style="background:rgba(192,57,43,.15);color:#C0392B;font-weight:800">🚨 ACTIVE</span>';
+      return `<tr>
+        <td>${statusBadge}</td>
+        <td style="font-size:12px"><b>${escapeHtml(a.driverName)}</b><br><a href="tel:+91${escapeHtml(a.driverPhone)}" style="color:inherit">${escapeHtml(a.driverPhone)}</a></td>
+        <td style="font-size:12px">${a.dutyId ? escapeHtml(a.dutyId) : '<span style="color:rgba(60,25,5,0.4)">No active trip</span>'}</td>
+        <td style="font-size:12px">${mapsLink}</td>
+        <td style="font-size:11px;color:rgba(60,25,5,0.55)">${when}</td>
+        <td>${a.resolved ? '' : `<button class="btn-sm btn-ol" onclick="resolveSOS('${a.id}')">✓ Mark Resolved</button>`}</td>
+      </tr>`;
+    }).join('')}</tbody></table>`;
+  }catch(err){ console.error('loadSOS failed:', err.message); }
+}
+async function resolveSOS(sosId){
+  if(!confirm('Mark this SOS alert as resolved?')) return;
+  try{
+    await api('/admin/sos-resolve', {method:'POST', body: JSON.stringify({sosId})});
+    loadSOS();
+  }catch(err){ alert(err.message); }
+}
 
 async function loadDuties(){
   try{
@@ -454,14 +552,17 @@ function renderAllBookings(){
   el.innerHTML = '<table><thead><tr><th>Booking ID</th><th>Customer</th><th>Route</th><th>Date/Time</th><th>Fare</th><th>Driver</th><th>Status</th><th>Actions</th></tr></thead><tbody>' +
     items.map(d=>`<tr>
       <td><span style="font-size:11px;font-family:monospace;color:#93c5fd">${escapeHtml(d.id)}</span></td>
-      <td><div style="font-weight:700">${escapeHtml(d.name)}</div><div style="font-size:11px;color:rgba(255,255,255,0.6)">${escapeHtml(d.phone||'')}</div></td>
+      <td><div style="font-weight:700">${escapeHtml(d.name)}</div><div style="font-size:11px;color:rgba(60,25,5,0.6)">${escapeHtml(d.phone||'')}</div></td>
       <td style="font-weight:600;font-size:12px">${escapeHtml(dutyRoute(d))}</td>
-      <td style="font-size:12px;color:rgba(255,255,255,0.72)">${escapeHtml(d.date||'')} ${escapeHtml(d.time||'')}</td>
+      <td style="font-size:12px;color:rgba(60,25,5,0.72)">${escapeHtml(d.date||'')} ${escapeHtml(d.time||'')}</td>
       <td><div style="font-weight:700">₹${Number(d.fare||0).toLocaleString('en-IN')}</div></td>
-      <td style="font-size:12px">${d.driverName ? escapeHtml(d.driverName)+'<br><span style=\"color:rgba(255,255,255,0.5)\">'+escapeHtml(d.vehicleNumber||'')+'</span>' : '<span style=\"color:rgba(255,255,255,0.35)\">Unassigned</span>'}</td>
+      <td style="font-size:12px">${d.driverName ? escapeHtml(d.driverName)+'<br><span style=\"color:rgba(60,25,5,0.5)\">'+escapeHtml(d.vehicleNumber||'')+'</span>' : '<span style=\"color:rgba(60,25,5,0.35)\">Unassigned</span>'}</td>
       <td>${statusBadge(d.status)}</td>
       <td><div class="action-row">
         ${(d.status==='new'||d.status==='assigned') ? `<button class="ab ab-v" data-id="${escapeHtml(d.id)}" onclick="openAssignModal(this.dataset.id)">${d.status==='new'?'Assign':'Reassign'}</button>` : ''}
+        ${d.status==='assigned' ? `<button class="ab" style="background:rgba(30,142,90,.12);color:#1E8E5A" data-id="${escapeHtml(d.id)}" onclick="adminSetTripStatus(this.dataset.id,'ongoing')">▶ Start Trip</button>` : ''}
+        ${d.status==='ongoing' ? `<button class="ab" style="background:rgba(30,142,90,.12);color:#1E8E5A" data-id="${escapeHtml(d.id)}" onclick="adminSetTripStatus(this.dataset.id,'completed')">✓ End Trip</button>` : ''}
+        ${d.status==='completed' ? `<button class="ab" style="background:rgba(180,90,30,.12);color:#A85200" data-id="${escapeHtml(d.id)}" onclick="generateBillPdf(this.dataset.id)">🧾 Bill (PDF)</button>` : ''}
         ${d.status!=='cancelled' && d.status!=='completed' ? `<button class="ab ab-d" data-id="${escapeHtml(d.id)}" onclick="cancelDuty(this.dataset.id)">Cancel</button>` : ''}
       </div></td>
     </tr>`).join('') + '</tbody></table>';
@@ -474,9 +575,9 @@ function renderRecentBookings(){
   el.innerHTML = '<table><thead><tr><th>Booking ID</th><th>Customer</th><th>Route</th><th>Date</th><th>Fare</th><th>Status</th></tr></thead><tbody>' +
     recent.map(d=>`<tr>
       <td><span style="font-size:11px;font-family:monospace;color:#93c5fd">${escapeHtml(d.id)}</span></td>
-      <td><div style="font-weight:700">${escapeHtml(d.name)}</div><div style="font-size:11px;color:rgba(255,255,255,0.80)">${escapeHtml(d.phone||'')}</div></td>
+      <td><div style="font-weight:700">${escapeHtml(d.name)}</div><div style="font-size:11px;color:rgba(60,25,5,0.80)">${escapeHtml(d.phone||'')}</div></td>
       <td style="font-weight:600;font-size:12px">${escapeHtml(dutyRoute(d))}</td>
-      <td style="font-size:12px;color:rgba(255,255,255,0.72)">${escapeHtml(d.date||'')}</td>
+      <td style="font-size:12px;color:rgba(60,25,5,0.72)">${escapeHtml(d.date||'')}</td>
       <td style="font-weight:700">₹${Number(d.fare||0).toLocaleString('en-IN')}</td>
       <td>${statusBadge(d.status)}</td>
     </tr>`).join('') + '</tbody></table>';
@@ -493,6 +594,82 @@ function renderDashboardStats(){
 }
 
 function escapeHtml(s){ return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+async function adminSetTripStatus(dutyId, status){
+  const label = status==='ongoing' ? 'start' : 'end';
+  if(!confirm(`Mark this trip as ${status==='ongoing'?'started (ongoing)':'completed'}?`)) return;
+  try{
+    await api('/duty/status', {method:'POST', body: JSON.stringify({dutyId, status})});
+    showToast(`Trip ${label==='start'?'started':'completed'}`);
+    loadDuties();
+  }catch(err){ showToast(err.message, true); }
+}
+
+function generateBillPdf(dutyId){
+  const d = allDuties.find(x=>x.id===dutyId);
+  if(!d){ alert('Booking not found'); return; }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({unit:'pt', format:'a4'});
+  const orange = [244,123,0];
+  const dark = [26,8,0];
+  const gray = [110,110,118];
+  let y = 50;
+
+  doc.setFillColor(...orange);
+  doc.rect(0,0,595,8,'F');
+
+  doc.setFont('times','bold'); doc.setFontSize(20); doc.setTextColor(...dark);
+  doc.text('One-Way Bhaarat Pvt. Ltd.', 50, y); y+=18;
+  doc.setFont('helvetica','normal'); doc.setFontSize(9.5); doc.setTextColor(...gray);
+  doc.text('Shop No. 7, Radha Kunj 2, Ghaziabad, Uttar Pradesh - 203207', 50, y); y+=13;
+  doc.text('+91-93557 57579  |  onewaybharatcab@gmail.com  |  one-waybharat.com', 50, y); y+=30;
+
+  doc.setDrawColor(230,220,210); doc.line(50,y,545,y); y+=25;
+
+  doc.setFont('helvetica','bold'); doc.setFontSize(15); doc.setTextColor(...orange);
+  doc.text('TRIP BILL', 50, y);
+  doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(...gray);
+  doc.text('Booking ID: ' + (d.id||'-'), 545, y, {align:'right'}); y+=15;
+  doc.text('Date: ' + new Date().toLocaleDateString('en-IN'), 545, y, {align:'right'}); y+=30;
+
+  const row = (label, value, bold) => {
+    doc.setFont('helvetica', bold?'bold':'normal'); doc.setFontSize(10.5); doc.setTextColor(...dark);
+    doc.text(label, 50, y);
+    doc.text(String(value||'-'), 545, y, {align:'right'});
+    y += 20;
+  };
+
+  doc.setFont('helvetica','bold'); doc.setFontSize(11.5); doc.setTextColor(...orange);
+  doc.text('Passenger Details', 50, y); y+=18;
+  row('Name', d.name);
+  row('Phone', d.phone);
+  y+=8;
+
+  doc.setFont('helvetica','bold'); doc.setFontSize(11.5); doc.setTextColor(...orange);
+  doc.text('Trip Details', 50, y); y+=18;
+  row('Route', dutyRoute(d));
+  row('Date / Time', (d.date||'') + ' ' + (d.time||''));
+  row('Vehicle', [d.vehicleType, d.vehicleNumber].filter(Boolean).join(' - ') || '-');
+  row('Driver', d.driverName ? (d.driverName + ' (' + (d.driverPhone||'') + ')') : 'Not assigned');
+  y+=8;
+
+  doc.setFont('helvetica','bold'); doc.setFontSize(11.5); doc.setTextColor(...orange);
+  doc.text('Fare Summary', 50, y); y+=18;
+  const totalFare = Number(d.fare||0);
+  const advance = Number(d.advance||0);
+  const due = Math.max(0, totalFare - advance);
+  row('Total Fare', '\u20b9' + totalFare.toLocaleString('en-IN'));
+  row('Advance Paid Online', '\u20b9' + advance.toLocaleString('en-IN'));
+  doc.setDrawColor(230,220,210); doc.line(50,y-6,545,y-6);
+  row('Balance Collected by Driver', '\u20b9' + due.toLocaleString('en-IN'), true);
+  y += 20;
+
+  doc.setDrawColor(230,220,210); doc.line(50,y,545,y); y+=25;
+  doc.setFont('helvetica','italic'); doc.setFontSize(9); doc.setTextColor(...gray);
+  doc.text('This is a system-generated trip bill. For queries, contact +91-93557 57579.', 50, y);
+
+  doc.save(`OneWayBhaarat-Bill-${d.id}.pdf`);
+}
 
 async function cancelDuty(dutyId){
   if(!confirm('Cancel this duty? This cannot be undone.')) return;
@@ -540,18 +717,41 @@ function openAssignModal(dutyId){
   assignDutyId = dutyId;
   document.getElementById('assignError').style.display='none';
   document.getElementById('assignDutySummary').innerHTML =
-    `<b>${escapeHtml(duty.name)}</b> (${escapeHtml(duty.phone||'')})<br>${escapeHtml(dutyRoute(duty))}<br>${escapeHtml(duty.date||'')} ${escapeHtml(duty.time||'')} · ₹${Number(duty.fare||0).toLocaleString('en-IN')}`;
+    `<b>${escapeHtml(duty.name)}</b> (${escapeHtml(duty.phone||'')})<br>${escapeHtml(dutyRoute(duty))}<br>${escapeHtml(duty.date||'')} ${escapeHtml(duty.time||'')} · ₹${Number(duty.fare||0).toLocaleString('en-IN')}<br><span style="opacity:.7">Customer booked: ${escapeHtml(duty.vehicleType||'—')}</span>`;
   const select = document.getElementById('assignDriverSelect');
   const activeDrivers = allDrivers.filter(d=>d.active);
   if(!activeDrivers.length){
     select.innerHTML = '<option value="">No active drivers — add one first</option>';
   } else {
-    select.innerHTML = activeDrivers.map(d=>`<option value="${escapeHtml(d.phone)}" data-veh="${escapeHtml(d.vehicleNumber||'')}">${escapeHtml(d.name)} — ${escapeHtml(d.phone)} (${escapeHtml(d.vehicleType||'')})</option>`).join('');
+    select.innerHTML = activeDrivers.map(d=>`<option value="${escapeHtml(d.phone)}" data-veh="${escapeHtml(d.vehicleNumber||'')}" data-vehtype="${escapeHtml(d.vehicleType||'')}">${escapeHtml(d.name)} — ${escapeHtml(d.phone)} (${escapeHtml(d.vehicleType||'')})</option>`).join('');
   }
+  const vehTypeSelect = document.getElementById('assignVehicleType');
+  const mismatchWarn = () => {
+    const bookedType = (duty.vehicleType||'').trim().toLowerCase();
+    const assignedType = vehTypeSelect.value.trim().toLowerCase();
+    let warnEl = document.getElementById('assignVehMismatch');
+    if(bookedType && assignedType && bookedType !== assignedType){
+      if(!warnEl){
+        warnEl = document.createElement('div');
+        warnEl.id = 'assignVehMismatch';
+        warnEl.style.cssText = 'font-size:11.5px;color:#F5C400;margin:-6px 0 12px';
+        vehTypeSelect.insertAdjacentElement('afterend', warnEl);
+      }
+      warnEl.textContent = `⚠️ Customer booked ${duty.vehicleType} — the assignment/customer notification will correctly say ${vehTypeSelect.value} instead.`;
+      warnEl.style.display = 'block';
+    } else if(warnEl){
+      warnEl.style.display = 'none';
+    }
+  };
   select.onchange = ()=>{
     const opt = select.options[select.selectedIndex];
     document.getElementById('assignVehicleNumber').value = opt ? (opt.getAttribute('data-veh')||'') : '';
+    const vehType = opt ? (opt.getAttribute('data-vehtype')||'') : '';
+    if(vehType && [...vehTypeSelect.options].some(o=>o.value===vehType)) vehTypeSelect.value = vehType;
+    else if(duty.vehicleType) vehTypeSelect.value = duty.vehicleType;
+    mismatchWarn();
   };
+  vehTypeSelect.onchange = mismatchWarn;
   select.onchange();
   document.getElementById('assignModal').style.display='flex';
 }
@@ -561,9 +761,10 @@ async function confirmAssign(){
   const errEl = document.getElementById('assignError');
   const driverId = document.getElementById('assignDriverSelect').value;
   const vehicleNumber = document.getElementById('assignVehicleNumber').value.trim();
+  const vehicleType = document.getElementById('assignVehicleType').value;
   if(!driverId){ errEl.textContent='Select a driver'; errEl.style.display='block'; return; }
   try{
-    const data = await api('/duty/assign', {method:'POST', body: JSON.stringify({dutyId: assignDutyId, driverId, vehicleNumber})});
+    const data = await api('/duty/assign', {method:'POST', body: JSON.stringify({dutyId: assignDutyId, driverId, vehicleNumber, vehicleType})});
     closeAssignModal();
     const n = data.notifications || {};
     const sent = ['driver','customer','admin'].filter(k=>n[k]);
@@ -590,6 +791,90 @@ async function loadDrivers(){
   }
 }
 
+const DOC_META_ADMIN = {
+  aadhar:        {label:'Aadhar Card',         icon:'🪪'},
+  pan:           {label:'PAN Card',            icon:'🪪'},
+  police:        {label:'Police Verification', icon:'👮'},
+  rc:            {label:'Vehicle RC Book',     icon:'📋'},
+  insurance:     {label:'Vehicle Insurance',   icon:'🛡️'},
+  permit:        {label:'Vehicle Permit',      icon:'📄'},
+  fitness:       {label:'Fitness Certificate', icon:'📄'},
+  vehicle_photo: {label:'Vehicle Photo',       icon:'📷'}
+};
+
+async function renderDocVerify(){
+  const wrap = document.getElementById('docverifyTbl');
+  try{
+    const {drivers} = await api('/admin/docs');
+    if(!drivers.length){
+      wrap.innerHTML = '<div style="padding:60px;text-align:center"><div style="font-size:48px">🪪</div><div style="font-size:16px;color:rgba(60,25,5,0.4);margin-top:12px">No drivers yet.</div></div>';
+      return;
+    }
+    wrap.innerHTML = `<table><thead><tr><th>Driver</th><th>Uploaded</th><th>Verified</th><th>Pending</th><th>Rejected</th><th></th></tr></thead><tbody>${drivers.map(d=>`
+      <tr>
+        <td style="font-size:12px"><b>${escapeHtml(d.name)}</b><br>${escapeHtml(d.phone)}</td>
+        <td>${d.uploaded}/${d.total}</td>
+        <td style="color:#1E8E5A;font-weight:700">${d.verified}</td>
+        <td style="color:#D46800;font-weight:700">${d.pending}</td>
+        <td style="color:#C0392B;font-weight:700">${d.rejected}</td>
+        <td><button class="btn-sm btn-ol" onclick="openDocReview('${d.phone}','${escapeHtml(d.name)}')">Review</button></td>
+      </tr>`).join('')}</tbody></table>`;
+  }catch(err){
+    wrap.innerHTML = '<div class="empty-state"><div class="es-ic">⚠️</div><div class="es-tx">'+err.message+'</div></div>';
+  }
+}
+
+async function openDocReview(phone, name){
+  document.getElementById('docReviewTitle').textContent = `Review Documents — ${name}`;
+  const body = document.getElementById('docReviewBody');
+  body.innerHTML = 'Loading…';
+  document.getElementById('docReviewModal').style.display = 'flex';
+  try{
+    const {docs} = await api('/admin/docs?phone=' + encodeURIComponent(phone));
+    body.innerHTML = Object.keys(DOC_META_ADMIN).map(type=>{
+      const meta = DOC_META_ADMIN[type];
+      const entry = docs[type];
+      if(!entry){
+        return `<div style="padding:14px 0;border-bottom:1px solid rgba(60,25,5,0.08)"><b>${meta.icon} ${meta.label}</b><div style="font-size:12px;color:rgba(60,25,5,0.4);margin-top:4px">Not uploaded yet</div></div>`;
+      }
+      const preview = entry.mimeType === 'application/pdf'
+        ? `<a href="${entry.dataUrl}" target="_blank" rel="noopener" style="color:var(--sf-600,#D46800);font-weight:700;font-size:12px">📄 Open PDF</a>`
+        : `<img src="${entry.dataUrl}" style="max-width:100%;max-height:220px;border-radius:8px;border:1px solid rgba(60,25,5,0.1);margin-top:8px;cursor:zoom-in" onclick="window.open('${entry.dataUrl}','_blank')">`;
+      const statusColor = entry.status==='verified' ? '#1E8E5A' : entry.status==='rejected' ? '#C0392B' : '#D46800';
+      const statusText = entry.status==='verified' ? '✓ Verified' : entry.status==='rejected' ? '✗ Rejected' : '⏳ Pending review';
+      return `<div style="padding:14px 0;border-bottom:1px solid rgba(60,25,5,0.08)">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <b>${meta.icon} ${meta.label}</b>
+          <span style="color:${statusColor};font-weight:700;font-size:12px">${statusText}</span>
+        </div>
+        ${preview}
+        ${entry.status==='pending' ? `<div style="margin-top:10px;display:flex;gap:8px">
+          <button class="btn-sm" style="background:rgba(30,142,90,.12);color:#1E8E5A" onclick="reviewDoc('${phone}','${type}','verified')">✓ Approve</button>
+          <button class="btn-sm" style="background:rgba(192,57,43,.12);color:#C0392B" onclick="rejectDocPrompt('${phone}','${type}')">✗ Reject</button>
+        </div>` : ''}
+        ${entry.status==='rejected' && entry.reviewNote ? `<div style="font-size:11.5px;color:#C0392B;margin-top:6px">Reason: ${escapeHtml(entry.reviewNote)}</div>` : ''}
+      </div>`;
+    }).join('');
+  }catch(err){
+    body.innerHTML = '<div style="color:#C0392B">'+err.message+'</div>';
+  }
+}
+function closeDocReviewModal(){ document.getElementById('docReviewModal').style.display='none'; }
+
+async function reviewDoc(phone, docType, status, reviewNote){
+  try{
+    await api('/admin/docs/verify', {method:'POST', body: JSON.stringify({phone, docType, status, reviewNote: reviewNote||''})});
+    const name = document.getElementById('docReviewTitle').textContent.replace('Review Documents — ','');
+    openDocReview(phone, name);
+    renderDocVerify();
+  }catch(err){ alert(err.message); }
+}
+function rejectDocPrompt(phone, docType){
+  const note = prompt('Reason for rejection (shown to the driver):');
+  if(note===null) return;
+  reviewDoc(phone, docType, 'rejected', note);
+}
+
 function renderDrivers(){
   const search = (document.getElementById('searchDrivers')?.value||'').toLowerCase();
   const statusF = document.getElementById('filterDriverStatus')?.value||'';
@@ -607,7 +892,7 @@ function renderDrivers(){
       <td style="font-weight:700">${escapeHtml(d.name)}</td>
       <td style="font-size:12px">${escapeHtml(d.vehicleType||'—')} ${d.vehicleNumber? '· '+escapeHtml(d.vehicleNumber):''}</td>
       <td>${d.active ? '<span class="sbadge sb-act">Active</span>' : '<span class="sbadge sb-inact">Inactive</span>'}</td>
-      <td><div class="action-row"><button class="ab ab-e" data-phone="${escapeHtml(d.phone||'')}" onclick="openEditDriverModal(this.dataset.phone)">Edit</button></div></td>
+      <td><div class="action-row"><button class="ab ab-e" data-phone="${escapeHtml(d.phone||'')}" onclick="openEditDriverModal(this.dataset.phone)">Edit</button><button class="ab ab-d" data-phone="${escapeHtml(d.phone||'')}" onclick="deleteDriver(this.dataset.phone)">Delete</button></div></td>
     </tr>`).join('') + '</tbody></table>';
 }
 
@@ -623,6 +908,15 @@ function openNewDriverModal(){
   document.getElementById('drvActive').value='true';
   document.getElementById('drvError').style.display='none';
   document.getElementById('driverModal').style.display='flex';
+}
+async function deleteDriver(phone){
+  const d = allDrivers.find(x=>x.phone===phone);
+  if(!confirm(`Permanently delete driver "${d ? d.name : phone}"? This cannot be undone. (Drivers with an active duty can't be deleted — reassign or complete that trip first.)`)) return;
+  try{
+    await api('/driver/delete', {method:'POST', body: JSON.stringify({phone})});
+    showToast('Driver deleted');
+    loadDrivers();
+  }catch(err){ alert(err.message); }
 }
 function openEditDriverModal(phone){
   const d = allDrivers.find(x=>x.phone===phone);
@@ -674,17 +968,17 @@ function badge(s){const m={Confirmed:'sb-conf',Completed:'sb-comp',Pending:'sb-p
 
 async function renderCustomers(){
   const wrap=document.getElementById('custTbl');
-  wrap.innerHTML='<div style="padding:40px;text-align:center;color:rgba(255,255,255,.4)">Loading…</div>';
+  wrap.innerHTML='<div style="padding:40px;text-align:center;color:rgba(60,25,5,.4)">Loading…</div>';
   try{
     const {customers}=await api('/admin/customers');
-    if(!customers.length){wrap.innerHTML='<div style="padding:40px;text-align:center;color:rgba(255,255,255,.4)">No customers yet — they will appear here once bookings come in.</div>';return;}
-    wrap.innerHTML=`<table><thead><tr><th>Name</th><th>Mobile</th><th>Trips</th><th>Spent</th><th>First Seen</th><th>Last Seen</th></tr></thead><tbody>${customers.map(c=>`<tr><td style="font-weight:700">${escapeHtml(c.name||'—')}</td><td>${escapeHtml(c.phone)}</td><td style="font-weight:700;text-align:center">${c.trips}</td><td style="font-weight:700;color:var(--gr3)">₹${c.spent.toLocaleString('en-IN')}</td><td style="font-size:12px;color:rgba(255,255,255,.4)">${new Date(c.firstSeen).toLocaleDateString('en-IN')}</td><td style="font-size:12px;color:rgba(255,255,255,.4)">${new Date(c.lastSeen).toLocaleDateString('en-IN')}</td></tr>`).join('')}</tbody></table>`;
+    if(!customers.length){wrap.innerHTML='<div style="padding:40px;text-align:center;color:rgba(60,25,5,.4)">No customers yet — they will appear here once bookings come in.</div>';return;}
+    wrap.innerHTML=`<table><thead><tr><th>Name</th><th>Mobile</th><th>Trips</th><th>Spent</th><th>First Seen</th><th>Last Seen</th></tr></thead><tbody>${customers.map(c=>`<tr><td style="font-weight:700">${escapeHtml(c.name||'—')}</td><td>${escapeHtml(c.phone)}</td><td style="font-weight:700;text-align:center">${c.trips}</td><td style="font-weight:700;color:var(--gr3)">₹${c.spent.toLocaleString('en-IN')}</td><td style="font-size:12px;color:rgba(60,25,5,.4)">${new Date(c.firstSeen).toLocaleDateString('en-IN')}</td><td style="font-size:12px;color:rgba(60,25,5,.4)">${new Date(c.lastSeen).toLocaleDateString('en-IN')}</td></tr>`).join('')}</tbody></table>`;
   }catch(e){wrap.innerHTML=`<div style="padding:40px;text-align:center;color:#f87171">${escapeHtml(e.message)}</div>`;}
 }
 
 async function renderPayments(){
   const wrap=document.getElementById('payTbl');
-  wrap.innerHTML='<div style="padding:40px;text-align:center;color:rgba(255,255,255,.4)">Loading…</div>';
+  wrap.innerHTML='<div style="padding:40px;text-align:center;color:rgba(60,25,5,.4)">Loading…</div>';
   try{
     const {payments}=await api('/admin/payments');
     const collected=payments.reduce((s,p)=>s+p.amount,0);
@@ -693,8 +987,8 @@ async function renderPayments(){
     document.getElementById('payStatCollected').textContent='₹'+collected.toLocaleString('en-IN');
     document.getElementById('payStatPending').textContent='₹'+pending.toLocaleString('en-IN');
     document.getElementById('payStatRefunds').textContent='₹'+refunds.toLocaleString('en-IN');
-    if(!payments.length){wrap.innerHTML='<div style="padding:40px;text-align:center;color:rgba(255,255,255,.4)">No payments yet.</div>';return;}
-    wrap.innerHTML=`<table><thead><tr><th>Booking ID</th><th>Customer</th><th>Paid</th><th>Due</th><th>Date</th><th>Status</th></tr></thead><tbody>${payments.map(p=>`<tr><td style="font-size:11px;font-family:monospace;color:#93c5fd">${escapeHtml(p.bookingId)}</td><td style="font-weight:600">${escapeHtml(p.customerName||'—')}</td><td style="font-weight:700;color:var(--gr3)">₹${p.amount.toLocaleString('en-IN')}</td><td>${p.due>0?'₹'+p.due.toLocaleString('en-IN'):'—'}</td><td style="font-size:12px;color:rgba(255,255,255,.4)">${new Date(p.date).toLocaleDateString('en-IN')}</td><td>${badge(p.status)}</td></tr>`).join('')}</tbody></table>`;
+    if(!payments.length){wrap.innerHTML='<div style="padding:40px;text-align:center;color:rgba(60,25,5,.4)">No payments yet.</div>';return;}
+    wrap.innerHTML=`<table><thead><tr><th>Booking ID</th><th>Customer</th><th>Paid</th><th>Due</th><th>Date</th><th>Status</th></tr></thead><tbody>${payments.map(p=>`<tr><td style="font-size:11px;font-family:monospace;color:#93c5fd">${escapeHtml(p.bookingId)}</td><td style="font-weight:600">${escapeHtml(p.customerName||'—')}</td><td style="font-weight:700;color:var(--gr3)">₹${p.amount.toLocaleString('en-IN')}</td><td>${p.due>0?'₹'+p.due.toLocaleString('en-IN'):'—'}</td><td style="font-size:12px;color:rgba(60,25,5,.4)">${new Date(p.date).toLocaleDateString('en-IN')}</td><td>${badge(p.status)}</td></tr>`).join('')}</tbody></table>`;
   }catch(e){wrap.innerHTML=`<div style="padding:40px;text-align:center;color:#f87171">${escapeHtml(e.message)}</div>`;}
 }
 
@@ -740,11 +1034,11 @@ function renderBarChart(elId,data){
   const max=Math.max(1,...data.map(d=>d.count));
   el.innerHTML=data.map((d,i)=>`<div class="bar-wrap"><div class="bar-fill ${i===data.length-1?'sf':''}" style="height:${Math.round(d.count/max*110)}px" title="${d.count} booking${d.count===1?'':'s'}"></div><div class="bar-lbl">${d.month}</div></div>`).join('');
 }
-const DONUT_COLORS=['#F47B00','#1C3E6A','#E8BD3A','rgba(255,255,255,0.35)','rgba(255,255,255,0.15)'];
+const DONUT_COLORS=['#F47B00','#1C3E6A','#E8BD3A','rgba(60,25,5,0.35)','rgba(60,25,5,0.15)'];
 function renderDonut(elId,distribution){
   const el=document.getElementById(elId);
   if(!el)return;
-  if(!distribution.length){el.innerHTML='<div style="padding:30px;text-align:center;color:rgba(255,255,255,.4);font-size:13px">No bookings yet</div>';return;}
+  if(!distribution.length){el.innerHTML='<div style="padding:30px;text-align:center;color:rgba(60,25,5,.4);font-size:13px">No bookings yet</div>';return;}
   const top=distribution.slice(0,4);
   const otherCount=distribution.slice(4).reduce((s,d)=>s+d.count,0);
   const otherPercent=distribution.slice(4).reduce((s,d)=>s+d.percent,0);
@@ -761,13 +1055,13 @@ function renderDonut(elId,distribution){
   }).join('');
   const legend=top.map((d,i)=>`<div class="leg-item"><div class="leg-dot" style="background:${DONUT_COLORS[i]||DONUT_COLORS[DONUT_COLORS.length-1]}"></div><span class="leg-lbl">${escapeHtml(d.name)}</span><span class="leg-val">${d.percent}%</span></div>`).join('');
   const grandTotal=top.reduce((s,d)=>s+d.count,0);
-  el.innerHTML=`<svg width="110" height="110" viewBox="0 0 110 110"><circle cx="55" cy="55" r="42" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="18"/>${circles}<text x="55" y="59" text-anchor="middle" fill="#fff" font-size="14" font-weight="700" font-family="Cinzel,serif">${grandTotal}</text></svg><div class="legend">${legend}</div>`;
+  el.innerHTML=`<svg width="110" height="110" viewBox="0 0 110 110"><circle cx="55" cy="55" r="42" fill="none" stroke="rgba(60,25,5,0.06)" stroke-width="18"/>${circles}<text x="55" y="59" text-anchor="middle" fill="#1A0800" font-size="14" font-weight="700" font-family="Cinzel,serif">${grandTotal}</text></svg><div class="legend">${legend}</div>`;
 }
 
 async function renderAnalyticsPanel(){
   await loadAnalyticsCharts('barChartAnalytics','donutWrapAnalytics');
   const wrap=document.getElementById('analyticsTbl');
-  wrap.innerHTML='<div style="padding:40px;text-align:center;color:rgba(255,255,255,.4)">Loading…</div>';
+  wrap.innerHTML='<div style="padding:40px;text-align:center;color:rgba(60,25,5,.4)">Loading…</div>';
   try{
     const {monthlyBookings}=await api('/admin/analytics');
     wrap.innerHTML=`<table><thead><tr><th>Month</th><th>Bookings</th></tr></thead><tbody>${monthlyBookings.map(m=>`<tr><td style="font-weight:700">${m.month}</td><td style="text-align:center">${m.count}</td></tr>`).join('')}</tbody></table>`;
@@ -779,10 +1073,12 @@ function showPanel(name,navEl){
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('act'));
   document.getElementById('pn-'+name).classList.add('act');
   if(navEl){document.querySelectorAll('.ni').forEach(n=>n.classList.remove('act'));navEl.classList.add('act');}
-  const titles={dashboard:'Dashboard',bookings:'Bookings',customers:'Customers',drivers:'Drivers',vehicles:'Vehicles',routes:'Routes',payments:'Payments',refunds:'Refunds',tickets:'Support Tickets',gst:'GST Reports',coupons:'Coupons',pricing:'Pricing',analytics:'Analytics'};
+  const titles={dashboard:'Dashboard',sos:'SOS Alerts',bookings:'Bookings',customers:'Customers',drivers:'Drivers',docverify:'Driver Verification',vehicles:'Vehicles',routes:'Routes',payments:'Payments',refunds:'Refunds',tickets:'Support Tickets',gst:'GST Reports',coupons:'Coupons',pricing:'Pricing',analytics:'Analytics'};
   document.getElementById('tbTitle').textContent=titles[name]||name;
   if(name==='bookings'){renderAllBookings();}
   if(name==='drivers'){renderDrivers();}
+  if(name==='docverify'){renderDocVerify();}
+  if(name==='sos'){loadSOS();}
   if(name==='customers'){renderCustomers();}
   if(name==='payments'){renderPayments();}
   if(name==='pricing'){loadPricing();}
@@ -797,16 +1093,22 @@ function showPanel(name,navEl){
 }
 async function savePricing(){
   const statusEl=document.getElementById('pricingStatus');
-  statusEl.textContent='Saving…';statusEl.style.color='rgba(255,255,255,.5)';
-  const oneWay={},roundTrip={};
-  document.querySelectorAll('.rate-inp').forEach(inp=>{
+  statusEl.textContent='Saving…';statusEl.style.color='rgba(60,25,5,.5)';
+  const oneWay={},roundTrip={},oneWayLimits={};
+  document.querySelectorAll('.rate-inp[data-trip]').forEach(inp=>{
     const trip=inp.dataset.trip,veh=inp.dataset.vehicle,val=Number(inp.value);
     if(!trip||!veh||!val)return;
     (trip==='oneWay'?oneWay:roundTrip)[veh]=val;
   });
+  document.querySelectorAll('.rate-inp[data-limit-km]').forEach(inp=>{
+    const veh=inp.dataset.limitKm, km=Number(inp.value);
+    const rateInp=document.querySelector(`.rate-inp[data-limit-rate="${veh}"]`);
+    const rate=rateInp?Number(rateInp.value):0;
+    if(veh && km>0 && rate>0) oneWayLimits[veh]={includedKm:km, extraKmRate:rate};
+  });
   try{
-    await api('/settings/pricing',{method:'POST',body:JSON.stringify({oneWay,roundTrip})});
-    statusEl.textContent='✅ Saved. Note: not yet wired into the live booking-form fare calculation.';statusEl.style.color='var(--gr3)';
+    await api('/settings/pricing',{method:'POST',body:JSON.stringify({oneWay,roundTrip,oneWayLimits})});
+    statusEl.textContent='✅ Saved and live on the booking form.';statusEl.style.color='var(--gr3)';
   }catch(e){statusEl.textContent='❌ '+e.message;statusEl.style.color='#f87171';}
 }
 
@@ -814,11 +1116,21 @@ async function loadPricing(){
   try{
     const {pricing}=await api('/settings/pricing');
     if(!pricing)return;
-    document.querySelectorAll('.rate-inp').forEach(inp=>{
+    document.querySelectorAll('.rate-inp[data-trip]').forEach(inp=>{
       const trip=inp.dataset.trip,veh=inp.dataset.vehicle;
       const rates=trip==='oneWay'?pricing.oneWay:pricing.roundTrip;
       if(rates&&rates[veh]!=null)inp.value=rates[veh];
     });
+    if(pricing.oneWayLimits){
+      document.querySelectorAll('.rate-inp[data-limit-km]').forEach(inp=>{
+        const cfg=pricing.oneWayLimits[inp.dataset.limitKm];
+        if(cfg&&cfg.includedKm!=null)inp.value=cfg.includedKm;
+      });
+      document.querySelectorAll('.rate-inp[data-limit-rate]').forEach(inp=>{
+        const cfg=pricing.oneWayLimits[inp.dataset.limitRate];
+        if(cfg&&cfg.extraKmRate!=null)inp.value=cfg.extraKmRate;
+      });
+    }
   }catch(e){/* non-fatal — leave defaults showing */}
 }
 
@@ -836,11 +1148,11 @@ async function submitVehicle(){
 }
 async function renderVehicles(){
   const wrap=document.getElementById('vehTbl');
-  wrap.innerHTML='<div style="padding:40px;text-align:center;color:rgba(255,255,255,.4)">Loading…</div>';
+  wrap.innerHTML='<div style="padding:40px;text-align:center;color:rgba(60,25,5,.4)">Loading…</div>';
   try{
     const {vehicles}=await api('/vehicle/list');
-    if(!vehicles.length){wrap.innerHTML='<div style="padding:60px;text-align:center"><div style="font-size:48px">🚗</div><div style="font-size:16px;color:rgba(255,255,255,0.4);margin-top:12px">No vehicles yet — click "+ Add Vehicle" to create one.</div></div>';return;}
-    wrap.innerHTML=`<table><thead><tr><th></th><th>Name</th><th>Capacity</th><th>Notes</th><th></th></tr></thead><tbody>${vehicles.map(v=>`<tr><td style="font-size:22px">${escapeHtml(v.icon)}</td><td style="font-weight:700">${escapeHtml(v.name)}</td><td>${escapeHtml(v.capacity)}</td><td style="color:rgba(255,255,255,.5)">${escapeHtml(v.notes||'—')}</td><td><button class="btn-sm btn-ol" data-id="${escapeHtml(v.id)}" onclick="deleteVehicle(this.dataset.id)">Delete</button></td></tr>`).join('')}</tbody></table>`;
+    if(!vehicles.length){wrap.innerHTML='<div style="padding:60px;text-align:center"><div style="font-size:48px">🚗</div><div style="font-size:16px;color:rgba(60,25,5,0.4);margin-top:12px">No vehicles yet — click "+ Add Vehicle" to create one.</div></div>';return;}
+    wrap.innerHTML=`<table><thead><tr><th></th><th>Name</th><th>Capacity</th><th>Notes</th><th></th></tr></thead><tbody>${vehicles.map(v=>`<tr><td style="font-size:22px">${escapeHtml(v.icon)}</td><td style="font-weight:700">${escapeHtml(v.name)}</td><td>${escapeHtml(v.capacity)}</td><td style="color:rgba(60,25,5,.5)">${escapeHtml(v.notes||'—')}</td><td><button class="btn-sm btn-ol" data-id="${escapeHtml(v.id)}" onclick="deleteVehicle(this.dataset.id)">Delete</button></td></tr>`).join('')}</tbody></table>`;
   }catch(e){wrap.innerHTML=`<div style="padding:40px;text-align:center;color:#f87171">${escapeHtml(e.message)}</div>`;}
 }
 async function deleteVehicle(id){
@@ -862,11 +1174,11 @@ async function submitRoute(){
 }
 async function renderRoutes(){
   const wrap=document.getElementById('rtTbl');
-  wrap.innerHTML='<div style="padding:40px;text-align:center;color:rgba(255,255,255,.4)">Loading…</div>';
+  wrap.innerHTML='<div style="padding:40px;text-align:center;color:rgba(60,25,5,.4)">Loading…</div>';
   try{
     const {routes}=await api('/route/list');
-    if(!routes.length){wrap.innerHTML='<div style="padding:60px;text-align:center"><div style="font-size:48px">🗺️</div><div style="font-size:16px;color:rgba(255,255,255,0.4);margin-top:12px">No routes yet — click "+ Add Route" to create one.</div></div>';return;}
-    wrap.innerHTML=`<table><thead><tr><th>From</th><th>To</th><th>Distance</th><th>Notes</th><th></th></tr></thead><tbody>${routes.map(r=>`<tr><td style="font-weight:700">${escapeHtml(r.from)}</td><td style="font-weight:700">${escapeHtml(r.to)}</td><td>${r.distanceKm?r.distanceKm+' km':'—'}</td><td style="color:rgba(255,255,255,.5)">${escapeHtml(r.notes||'—')}</td><td><button class="btn-sm btn-ol" data-id="${escapeHtml(r.id)}" onclick="deleteRoute(this.dataset.id)">Delete</button></td></tr>`).join('')}</tbody></table>`;
+    if(!routes.length){wrap.innerHTML='<div style="padding:60px;text-align:center"><div style="font-size:48px">🗺️</div><div style="font-size:16px;color:rgba(60,25,5,0.4);margin-top:12px">No routes yet — click "+ Add Route" to create one.</div></div>';return;}
+    wrap.innerHTML=`<table><thead><tr><th>From</th><th>To</th><th>Distance</th><th>Notes</th><th></th></tr></thead><tbody>${routes.map(r=>`<tr><td style="font-weight:700">${escapeHtml(r.from)}</td><td style="font-weight:700">${escapeHtml(r.to)}</td><td>${r.distanceKm?r.distanceKm+' km':'—'}</td><td style="color:rgba(60,25,5,.5)">${escapeHtml(r.notes||'—')}</td><td><button class="btn-sm btn-ol" data-id="${escapeHtml(r.id)}" onclick="deleteRoute(this.dataset.id)">Delete</button></td></tr>`).join('')}</tbody></table>`;
   }catch(e){wrap.innerHTML=`<div style="padding:40px;text-align:center;color:#f87171">${escapeHtml(e.message)}</div>`;}
 }
 async function deleteRoute(id){
@@ -889,11 +1201,11 @@ async function submitCoupon(){
 }
 async function renderCoupons(){
   const wrap=document.getElementById('cpnTbl');
-  wrap.innerHTML='<div style="padding:40px;text-align:center;color:rgba(255,255,255,.4)">Loading…</div>';
+  wrap.innerHTML='<div style="padding:40px;text-align:center;color:rgba(60,25,5,.4)">Loading…</div>';
   try{
     const {coupons}=await api('/coupon/list');
-    if(!coupons.length){wrap.innerHTML='<div style="padding:60px;text-align:center"><div style="font-size:48px">🎫</div><div style="font-size:16px;color:rgba(255,255,255,0.4);margin-top:12px">No coupons yet — click "+ Create Coupon" to add one.</div></div>';return;}
-    wrap.innerHTML=`<table><thead><tr><th>Code</th><th>Discount</th><th>Expires</th><th>Status</th><th></th></tr></thead><tbody>${coupons.map(c=>`<tr><td style="font-weight:700;font-family:monospace;color:#93c5fd">${escapeHtml(c.code)}</td><td style="font-weight:700;color:var(--gr3)">${c.discountPercent}%</td><td style="color:rgba(255,255,255,.5)">${c.expiresAt||'—'}</td><td>${badge(c.active?'Active':'Inactive')}</td><td style="display:flex;gap:6px"><button class="btn-sm btn-ol" data-code="${escapeHtml(c.code)}" data-active="${!c.active}" onclick="toggleCoupon(this.dataset.code, this.dataset.active==='true')">${c.active?'Deactivate':'Activate'}</button><button class="btn-sm btn-ol" data-code="${escapeHtml(c.code)}" onclick="deleteCoupon(this.dataset.code)">Delete</button></td></tr>`).join('')}</tbody></table>`;
+    if(!coupons.length){wrap.innerHTML='<div style="padding:60px;text-align:center"><div style="font-size:48px">🎫</div><div style="font-size:16px;color:rgba(60,25,5,0.4);margin-top:12px">No coupons yet — click "+ Create Coupon" to add one.</div></div>';return;}
+    wrap.innerHTML=`<table><thead><tr><th>Code</th><th>Discount</th><th>Expires</th><th>Status</th><th></th></tr></thead><tbody>${coupons.map(c=>`<tr><td style="font-weight:700;font-family:monospace;color:#93c5fd">${escapeHtml(c.code)}</td><td style="font-weight:700;color:var(--gr3)">${c.discountPercent}%</td><td style="color:rgba(60,25,5,.5)">${c.expiresAt||'—'}</td><td>${badge(c.active?'Active':'Inactive')}</td><td style="display:flex;gap:6px"><button class="btn-sm btn-ol" data-code="${escapeHtml(c.code)}" data-active="${!c.active}" onclick="toggleCoupon(this.dataset.code, this.dataset.active==='true')">${c.active?'Deactivate':'Activate'}</button><button class="btn-sm btn-ol" data-code="${escapeHtml(c.code)}" onclick="deleteCoupon(this.dataset.code)">Delete</button></td></tr>`).join('')}</tbody></table>`;
   }catch(e){wrap.innerHTML=`<div style="padding:40px;text-align:center;color:#f87171">${escapeHtml(e.message)}</div>`;}
 }
 async function toggleCoupon(code,active){
@@ -919,12 +1231,12 @@ async function submitRefund(){
 }
 async function renderRefunds(){
   const wrap=document.getElementById('rfTbl');
-  wrap.innerHTML='<div style="padding:40px;text-align:center;color:rgba(255,255,255,.4)">Loading…</div>';
+  wrap.innerHTML='<div style="padding:40px;text-align:center;color:rgba(60,25,5,.4)">Loading…</div>';
   try{
     const {refunds}=await api('/refund/list');
-    if(!refunds.length){wrap.innerHTML='<div style="padding:60px;text-align:center"><div style="font-size:48px">↩️</div><div style="font-size:16px;color:rgba(255,255,255,0.4);margin-top:12px">No refund requests logged yet.</div></div>';return;}
+    if(!refunds.length){wrap.innerHTML='<div style="padding:60px;text-align:center"><div style="font-size:48px">↩️</div><div style="font-size:16px;color:rgba(60,25,5,0.4);margin-top:12px">No refund requests logged yet.</div></div>';return;}
     const statusLabel={pending:'Pending',processed:'Completed',rejected:'Cancelled'};
-    wrap.innerHTML=`<table><thead><tr><th>Booking ID</th><th>Customer</th><th>Amount</th><th>Reason</th><th>Status</th><th></th></tr></thead><tbody>${refunds.map(r=>`<tr><td style="font-family:monospace;color:#93c5fd">${escapeHtml(r.bookingId)}</td><td>${escapeHtml(r.customerName||'—')}</td><td style="font-weight:700;color:var(--gr3)">₹${r.amount.toLocaleString('en-IN')}</td><td style="color:rgba(255,255,255,.5)">${escapeHtml(r.reason||'—')}</td><td>${badge(statusLabel[r.status])}</td><td>${r.status==='pending'?`<select class="finput" style="padding:4px 8px;font-size:12px" onchange="updateRefundStatus('${r.id}',this.value)"><option value="">Mark as…</option><option value="processed">Processed</option><option value="rejected">Rejected</option></select>`:'—'}</td></tr>`).join('')}</tbody></table>`;
+    wrap.innerHTML=`<table><thead><tr><th>Booking ID</th><th>Customer</th><th>Amount</th><th>Reason</th><th>Status</th><th></th></tr></thead><tbody>${refunds.map(r=>`<tr><td style="font-family:monospace;color:#93c5fd">${escapeHtml(r.bookingId)}</td><td>${escapeHtml(r.customerName||'—')}</td><td style="font-weight:700;color:var(--gr3)">₹${r.amount.toLocaleString('en-IN')}</td><td style="color:rgba(60,25,5,.5)">${escapeHtml(r.reason||'—')}</td><td>${badge(statusLabel[r.status])}</td><td>${r.status==='pending'?`<select class="finput" style="padding:4px 8px;font-size:12px" onchange="updateRefundStatus('${r.id}',this.value)"><option value="">Mark as…</option><option value="processed">Processed</option><option value="rejected">Rejected</option></select>`:'—'}</td></tr>`).join('')}</tbody></table>`;
   }catch(e){wrap.innerHTML=`<div style="padding:40px;text-align:center;color:#f87171">${escapeHtml(e.message)}</div>`;}
 }
 async function updateRefundStatus(id,status){
@@ -935,17 +1247,17 @@ async function updateRefundStatus(id,status){
 // ── Support tickets ───────────────────────────────────────────────────────
 async function renderTickets(){
   const wrap=document.getElementById('tkTbl');
-  wrap.innerHTML='<div style="padding:40px;text-align:center;color:rgba(255,255,255,.4)">Loading…</div>';
+  wrap.innerHTML='<div style="padding:40px;text-align:center;color:rgba(60,25,5,.4)">Loading…</div>';
   try{
     const {tickets}=await api('/admin/tickets');
-    if(!tickets.length){wrap.innerHTML='<div style="padding:60px;text-align:center"><div style="font-size:48px">💬</div><div style="font-size:16px;color:rgba(255,255,255,0.4);margin-top:12px">No support tickets yet.</div></div>';return;}
+    if(!tickets.length){wrap.innerHTML='<div style="padding:60px;text-align:center"><div style="font-size:48px">💬</div><div style="font-size:16px;color:rgba(60,25,5,0.4);margin-top:12px">No support tickets yet.</div></div>';return;}
     const statusLabel={open:'Pending',in_progress:'Active',resolved:'Completed',closed:'Cancelled'};
     wrap.innerHTML=`<table><thead><tr><th>Ticket</th><th>Customer</th><th>Booking</th><th>Issue</th><th>Description</th><th>Status</th><th></th></tr></thead><tbody>${tickets.map(t=>`<tr>
       <td style="font-family:monospace;font-size:11px;color:#93c5fd">${escapeHtml(t.id)}</td>
-      <td>${escapeHtml(t.customerName||'—')}<br><span style="font-size:11px;color:rgba(255,255,255,.4)">+91 ${escapeHtml(t.phone)}</span></td>
+      <td>${escapeHtml(t.customerName||'—')}<br><span style="font-size:11px;color:rgba(60,25,5,.4)">+91 ${escapeHtml(t.phone)}</span></td>
       <td style="font-family:monospace;font-size:11px">${escapeHtml(t.bookingId||'—')}</td>
       <td>${escapeHtml(t.issueType)}</td>
-      <td style="max-width:260px;color:rgba(255,255,255,.6);font-size:12px">${escapeHtml(t.description)}</td>
+      <td style="max-width:260px;color:rgba(60,25,5,.6);font-size:12px">${escapeHtml(t.description)}</td>
       <td>${badge(statusLabel[t.status])}</td>
       <td><select class="finput" style="padding:4px 8px;font-size:12px" onchange="updateTicketStatus('${t.id}',this.value)">
         <option value="">Update…</option>
@@ -965,14 +1277,14 @@ async function updateTicketStatus(id,status){
 // ── GST summary ───────────────────────────────────────────────────────────
 async function renderGst(){
   const wrap=document.getElementById('gstTbl');
-  wrap.innerHTML='<div style="padding:40px;text-align:center;color:rgba(255,255,255,.4)">Loading…</div>';
+  wrap.innerHTML='<div style="padding:40px;text-align:center;color:rgba(60,25,5,.4)">Loading…</div>';
   try{
     const {summary,monthly}=await api('/admin/gst-summary');
     document.getElementById('gstCollected').textContent='₹'+summary.totalCollected.toLocaleString('en-IN');
     document.getElementById('gstFareValue').textContent='₹'+summary.totalFareValue.toLocaleString('en-IN');
     document.getElementById('gstPending').textContent='₹'+summary.totalPending.toLocaleString('en-IN');
     document.getElementById('gstTrips').textContent=summary.tripCount;
-    if(!monthly.length){wrap.innerHTML='<div style="padding:40px;text-align:center;color:rgba(255,255,255,.4)">No data yet.</div>';return;}
+    if(!monthly.length){wrap.innerHTML='<div style="padding:40px;text-align:center;color:rgba(60,25,5,.4)">No data yet.</div>';return;}
     wrap.innerHTML=`<table><thead><tr><th>Month</th><th>Trips</th><th>Collected</th></tr></thead><tbody>${monthly.map(m=>`<tr><td style="font-weight:700">${m.month}</td><td style="text-align:center">${m.trips}</td><td style="font-weight:700;color:var(--gr3)">₹${m.collected.toLocaleString('en-IN')}</td></tr>`).join('')}</tbody></table>`;
   }catch(e){wrap.innerHTML=`<div style="padding:40px;text-align:center;color:#f87171">${escapeHtml(e.message)}</div>`;}
 }

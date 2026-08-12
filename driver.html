@@ -18,15 +18,19 @@
 <body>
 
 <!-- LOGIN SCREEN -->
-<div id="loginScreen" style="position:fixed;inset:0;z-index:200;background:var(--nv);display:flex;align-items:center;justify-content:center;font-family:'Nunito',sans-serif">
-  <form id="loginForm" style="background:var(--nv3);border:1px solid rgba(255,255,255,0.08);border-radius:var(--r20);padding:36px 32px;width:320px;text-align:center">
+<!-- Colors here are hardcoded (not var()) to match admin.html's login screen and
+     the rest of the site's "Warm Peach Theme" — see driver.css's "DRIVER
+     DASHBOARD — Component Overrides" section for the same treatment applied
+     to the dashboard behind this login. -->
+<div id="loginScreen" style="position:fixed;inset:0;z-index:200;background:#FFF0E8;display:flex;align-items:center;justify-content:center;font-family:'Nunito',sans-serif">
+  <form id="loginForm" style="background:#FFF8F0;border:1.5px solid rgba(180,90,0,.18);border-radius:var(--r20);padding:36px 32px;width:320px;text-align:center;box-shadow:0 20px 60px rgba(120,50,0,.18)">
     <div style="font-size:38px;margin-bottom:6px">🚕</div>
-    <div style="font-family:'Cinzel',serif;font-weight:700;font-size:18px;color:#fff;margin-bottom:2px">One-Way Bhaarat</div>
-    <div style="font-size:12px;color:rgba(255,255,255,0.45);margin-bottom:22px">Driver Panel Login</div>
-    <input id="loginPhone" type="tel" placeholder="10-digit Phone Number" maxlength="10" autocomplete="username" required style="width:100%;box-sizing:border-box;padding:11px 14px;border-radius:var(--r6);border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:#fff;font-size:14px;margin-bottom:10px;font-family:'Nunito',sans-serif">
-    <input id="loginPass" type="password" placeholder="Password" autocomplete="current-password" required style="width:100%;box-sizing:border-box;padding:11px 14px;border-radius:var(--r6);border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:#fff;font-size:14px;margin-bottom:14px;font-family:'Nunito',sans-serif">
+    <div style="font-family:'Cinzel',serif;font-weight:700;font-size:18px;color:#2D1A00;margin-bottom:2px">One-Way Bhaarat</div>
+    <div style="font-size:12px;color:#7A5030;margin-bottom:22px">Driver Panel Login</div>
+    <input id="loginPhone" type="tel" placeholder="10-digit Phone Number" maxlength="10" autocomplete="username" required style="width:100%;box-sizing:border-box;padding:11px 14px;border-radius:var(--r6);border:1.5px solid rgba(180,90,0,.18);background:#fff;color:#2D1A00;font-size:14px;margin-bottom:10px;font-family:'Nunito',sans-serif">
+    <input id="loginPass" type="password" placeholder="Password" autocomplete="current-password" required style="width:100%;box-sizing:border-box;padding:11px 14px;border-radius:var(--r6);border:1.5px solid rgba(180,90,0,.18);background:#fff;color:#2D1A00;font-size:14px;margin-bottom:14px;font-family:'Nunito',sans-serif">
     <button type="submit" class="btn-sm btn-sf" style="width:100%;padding:11px;font-size:13px;justify-content:center">Log In</button>
-    <div id="loginError" style="color:#f87171;font-size:12px;margin-top:12px;display:none"></div>
+    <div id="loginError" style="color:#D64545;font-size:12px;margin-top:12px;display:none"></div>
   </form>
 </div>
 
@@ -36,7 +40,7 @@
     <div class="sb-av" id="sbAvatar">D</div>
     <div class="sb-name" id="sbName">Driver</div>
     <div class="sb-vehicle" id="sbVehicle">—</div>
-    <button onclick="logout()" style="margin-top:10px;background:none;border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.6);border-radius:var(--r6);padding:5px 12px;font-size:11px;cursor:pointer">⏻ Log Out</button>
+    <button onclick="logout()" style="margin-top:10px;background:none;border:1px solid rgba(60,25,5,0.18);color:rgba(60,25,5,0.55);border-radius:var(--r6);padding:5px 12px;font-size:11px;cursor:pointer">⏻ Log Out</button>
   </div>
   <nav class="sb-nav">
     <div class="ni act" onclick="showPanel('dashboard',this)"><span class="ni-ic">📊</span> Dashboard</div>
@@ -53,7 +57,7 @@
 <div class="main">
   <div class="topbar">
     <div class="tb-title" id="panelTitle">Driver Dashboard</div>
-    <button class="sos-btn" onclick="alert('🚨 SOS sent to One-Way Bhaarat control room with your live GPS location!')">🚨 SOS Alert</button>
+    <button class="sos-btn" id="sosBtn" onclick="sendSOS()">🚨 SOS Alert</button>
   </div>
   <div class="content">
 
@@ -76,7 +80,7 @@
 
     <!-- TRIPS -->
     <div class="panel" id="pn-trips">
-      <div class="sec-hdr"><div class="sec-title">All My Duties</div><span style="font-size:12px;color:rgba(255,255,255,.35)" id="tripsCountLbl"></span></div>
+      <div class="sec-hdr"><div class="sec-title">All My Duties</div><span style="font-size:12px;color:rgba(60,25,5,.45)" id="tripsCountLbl"></span></div>
       <div id="tripsListEl"></div>
     </div>
 
@@ -97,9 +101,9 @@
       <div class="tbl-wrap">
         <table><thead><tr><th>Date</th><th>Route</th><th>Amount</th><th>Mode</th></tr></thead>
         <tbody>
-          <tr><td style="color:rgba(255,255,255,.35);font-size:12px">Today</td><td style="font-weight:600">Delhi → Jaipur</td><td style="font-weight:700;color:var(--gr3)">₹4,406</td><td>Cash</td></tr>
-          <tr><td style="color:rgba(255,255,255,.35);font-size:12px">Yesterday</td><td style="font-weight:600">Delhi → Agra</td><td style="font-weight:700;color:var(--gr3)">₹3,510</td><td>UPI</td></tr>
-          <tr><td style="color:rgba(255,255,255,.35);font-size:12px">Jan 13</td><td style="font-weight:600">Delhi → Chandigarh</td><td style="font-weight:700;color:var(--gr3)">₹3,780</td><td>Cash</td></tr>
+          <tr><td style="color:rgba(60,25,5,.45);font-size:12px">Today</td><td style="font-weight:600">Delhi → Jaipur</td><td style="font-weight:700;color:var(--gr3)">₹4,406</td><td>Cash</td></tr>
+          <tr><td style="color:rgba(60,25,5,.45);font-size:12px">Yesterday</td><td style="font-weight:600">Delhi → Agra</td><td style="font-weight:700;color:var(--gr3)">₹3,510</td><td>UPI</td></tr>
+          <tr><td style="color:rgba(60,25,5,.45);font-size:12px">Jan 13</td><td style="font-weight:600">Delhi → Chandigarh</td><td style="font-weight:700;color:var(--gr3)">₹3,780</td><td>Cash</td></tr>
         </tbody></table>
       </div>
     </div>
@@ -110,40 +114,27 @@
       <div class="map-ph">
         <div class="mp-icon">🗺️</div>
         <p>Google Maps Navigation</p>
-        <small>Integrate Google Maps API for live turn-by-turn navigation</small>
+        <small></small>
         <button class="btn-sm btn-sf" onclick="alert('Opening Google Maps with current trip route...')">🗺️ Open Google Maps</button>
       </div>
-      <div style="background:var(--nv3);border:1px solid rgba(255,255,255,0.06);border-radius:var(--r20);padding:22px">
-        <div style="font-family:'Cinzel',serif;font-size:14px;color:var(--wh);margin-bottom:14px">Current Route Info</div>
+      <div style="background:rgba(255,255,255,0.80);border:1px solid rgba(60,25,5,0.09);border-radius:var(--r20);padding:22px">
+        <div style="font-family:'Cinzel',serif;font-size:14px;color:#1A0800;margin-bottom:14px">Current Route Info</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-          <div style="background:rgba(255,255,255,0.04);border-radius:var(--r12);padding:12px"><div style="font-size:9px;color:rgba(255,255,255,.3);margin-bottom:4px">FROM</div><div style="font-weight:700">Delhi, NCR</div></div>
-          <div style="background:rgba(255,255,255,0.04);border-radius:var(--r12);padding:12px"><div style="font-size:9px;color:rgba(255,255,255,.3);margin-bottom:4px">TO</div><div style="font-weight:700">Jaipur, Rajasthan</div></div>
-          <div style="background:rgba(255,255,255,0.04);border-radius:var(--r12);padding:12px"><div style="font-size:9px;color:rgba(255,255,255,.3);margin-bottom:4px">DISTANCE</div><div style="font-weight:700">281 km</div></div>
-          <div style="background:rgba(255,255,255,0.04);border-radius:var(--r12);padding:12px"><div style="font-size:9px;color:rgba(255,255,255,.3);margin-bottom:4px">ETA</div><div style="font-weight:700">5h 30m (NH48)</div></div>
+          <div style="background:rgba(60,25,5,0.05);border-radius:var(--r12);padding:12px"><div style="font-size:9px;color:rgba(60,25,5,.45);margin-bottom:4px">FROM</div><div style="font-weight:700;color:#1A0800">Delhi, NCR</div></div>
+          <div style="background:rgba(60,25,5,0.05);border-radius:var(--r12);padding:12px"><div style="font-size:9px;color:rgba(60,25,5,.45);margin-bottom:4px">TO</div><div style="font-weight:700;color:#1A0800">Jaipur, Rajasthan</div></div>
+          <div style="background:rgba(60,25,5,0.05);border-radius:var(--r12);padding:12px"><div style="font-size:9px;color:rgba(60,25,5,.45);margin-bottom:4px">DISTANCE</div><div style="font-weight:700;color:#1A0800">281 km</div></div>
+          <div style="background:rgba(60,25,5,0.05);border-radius:var(--r12);padding:12px"><div style="font-size:9px;color:rgba(60,25,5,.45);margin-bottom:4px">ETA</div><div style="font-weight:700;color:#1A0800">5h 30m (NH48)</div></div>
         </div>
       </div>
     </div>
 
     <!-- KYC -->
     <div class="panel" id="pn-kyc">
-      <div class="sec-hdr"><div class="sec-title">📄 KYC Documents</div></div>
-      <div style="background:var(--nv3);border:1px solid rgba(255,255,255,0.06);border-radius:var(--r28);padding:24px">
-        <div style="font-family:'Cinzel',serif;font-size:14px;color:var(--wh);margin-bottom:4px">Document Verification Status</div>
-        <div style="font-size:12px;color:rgba(255,255,255,.35);margin-bottom:16px">All documents must be verified to receive trip assignments.</div>
-        <div class="kyc-grid">
-          <div class="kyc-item verified"><div class="kyc-icon">🪪</div><div><div class="kyc-lbl">Aadhar Card</div><div class="kyc-status">✓ Verified</div></div></div>
-          <div class="kyc-item verified"><div class="kyc-icon">🪪</div><div><div class="kyc-lbl">PAN Card</div><div class="kyc-status">✓ Verified</div></div></div>
-          <div class="kyc-item verified"><div class="kyc-icon">🚗</div><div><div class="kyc-lbl">Driving License</div><div class="kyc-status">✓ Verified</div></div></div>
-          <div class="kyc-item verified"><div class="kyc-icon">📋</div><div><div class="kyc-lbl">Vehicle RC Book</div><div class="kyc-status">✓ Verified</div></div></div>
-          <div class="kyc-item verified"><div class="kyc-icon">🛡️</div><div><div class="kyc-lbl">Vehicle Insurance</div><div class="kyc-status">✓ Verified</div></div></div>
-          <div class="kyc-item pending"><div class="kyc-icon">📄</div><div><div class="kyc-lbl">Fitness Certificate</div><div class="kyc-status">⏳ Renewal Due</div></div></div>
-          <div class="kyc-item verified"><div class="kyc-icon">👮</div><div><div class="kyc-lbl">Police Verification</div><div class="kyc-status">✓ Verified</div></div></div>
-          <div class="kyc-item verified"><div class="kyc-icon">🏦</div><div><div class="kyc-lbl">Bank Account</div><div class="kyc-status">✓ Verified</div></div></div>
-        </div>
-        <div style="margin-top:18px;background:rgba(234,179,8,0.06);border:1px solid rgba(234,179,8,0.2);border-radius:var(--r12);padding:14px;font-size:12px;color:#fbbf24;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-          ⚠️ <span><strong>Fitness Certificate</strong> renewal due by Feb 28, 2024. Upload renewed certificate to avoid suspension.</span>
-          <button class="btn-sm" style="background:rgba(234,179,8,0.15);color:#fbbf24;border:1px solid rgba(234,179,8,0.25);flex-shrink:0" onclick="alert('Please visit our office with your renewed fitness certificate.')">Upload Now</button>
-        </div>
+      <div class="sec-hdr"><div class="sec-title">📄 KYC & Vehicle Documents</div></div>
+      <div style="background:rgba(255,255,255,0.80);border:1px solid rgba(60,25,5,0.09);border-radius:var(--r28);padding:24px">
+        <div style="font-family:'Cinzel',serif;font-size:14px;color:#1A0800;margin-bottom:4px">Document Verification Status</div>
+        <div style="font-size:12px;color:rgba(60,25,5,.50);margin-bottom:16px">All documents must be verified to receive trip assignments. Accepted: JPG, PNG or PDF, up to 5MB.</div>
+        <div class="kyc-grid" id="kycGrid">Loading…</div>
       </div>
     </div>
 
@@ -164,14 +155,24 @@
     <!-- PROFILE -->
     <div class="panel" id="pn-profile">
       <div class="sec-hdr"><div class="sec-title">👤 Driver Profile</div></div>
-      <div style="background:var(--nv3);border:1px solid rgba(255,255,255,0.06);border-radius:var(--r28);padding:24px">
+      <div style="background:rgba(255,255,255,0.80);border:1px solid rgba(60,25,5,0.09);border-radius:var(--r28);padding:24px">
         <div class="pform">
           <div class="field"><label>Full Name</label><input class="finput" id="profName" type="text" readonly style="opacity:.7;cursor:not-allowed"></div>
           <div class="field"><label>Mobile (Login)</label><input class="finput" id="profPhone" type="tel" readonly style="opacity:.7;cursor:not-allowed"></div>
           <div class="field"><label>Vehicle Type</label><input class="finput" id="profVehType" type="text" readonly style="opacity:.7;cursor:not-allowed"></div>
           <div class="field"><label>Vehicle Number</label><input class="finput" id="profVehNum" type="text" readonly style="opacity:.7;cursor:not-allowed"></div>
         </div>
-        <div style="margin-top:14px;font-size:12px;color:rgba(255,255,255,0.4)">To update your details or vehicle, please contact the office — your admin can edit these from the admin panel.</div>
+        <div style="margin-top:14px;font-size:12px;color:rgba(60,25,5,0.50)">To update your name, phone or vehicle, please contact the office — your admin can edit these from the admin panel.</div>
+      </div>
+
+      <div style="background:rgba(255,255,255,0.80);border:1px solid rgba(60,25,5,0.09);border-radius:var(--r28);padding:24px;margin-top:16px">
+        <div style="font-family:'Cinzel',serif;font-size:14px;color:#1A0800;margin-bottom:14px">🔑 Change Password</div>
+        <div class="pform">
+          <div class="field"><label>Current Password</label><input class="finput" id="pwCurrent" type="password" autocomplete="current-password"></div>
+          <div class="field"><label>New Password (6+ characters)</label><input class="finput" id="pwNew" type="password" autocomplete="new-password"></div>
+        </div>
+        <div id="pwMsg" style="font-size:12px;margin-top:10px;display:none"></div>
+        <button class="btn-sm btn-sf" style="margin-top:12px" onclick="changeDriverPassword()">Update Password</button>
       </div>
     </div>
 
@@ -345,6 +346,61 @@ async function completeTrip(dutyId){
   catch(err){ alert(err.message); }
 }
 
+async function changeDriverPassword(){
+  const cur = document.getElementById('pwCurrent').value;
+  const next = document.getElementById('pwNew').value;
+  const msg = document.getElementById('pwMsg');
+  msg.style.display = 'none';
+  if(!cur || !next){ msg.textContent='Fill in both fields.'; msg.style.color='#C0392B'; msg.style.display='block'; return; }
+  if(next.length < 6){ msg.textContent='New password must be at least 6 characters.'; msg.style.color='#C0392B'; msg.style.display='block'; return; }
+  try{
+    await api('/driver/change-password', {method:'POST', body: JSON.stringify({currentPassword: cur, newPassword: next})});
+    msg.textContent = '✅ Password updated.'; msg.style.color='#1E8E5A'; msg.style.display='block';
+    document.getElementById('pwCurrent').value = '';
+    document.getElementById('pwNew').value = '';
+  }catch(err){
+    msg.textContent = err.message; msg.style.color='#C0392B'; msg.style.display='block';
+  }
+}
+
+async function sendSOS(){
+  if(!confirm('🚨 This will immediately alert the control room with your location. Send SOS now?')) return;
+  const btn = document.getElementById('sosBtn');
+  const origText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '📍 Getting your location...';
+
+  const current = myDuties.find(d=>d.status==='ongoing') || myDuties.find(d=>d.status==='assigned');
+  const payload = { dutyId: current ? current.id : null };
+
+  const finish = async () => {
+    btn.textContent = '🚨 Sending SOS...';
+    try {
+      const res = await api('/driver/sos', {method:'POST', body: JSON.stringify(payload)});
+      if(res.notified){
+        alert('✅ SOS sent — the control room has been alerted with your location.');
+      } else {
+        alert('⚠️ SOS was logged, but we could not confirm the alert reached the control room over WhatsApp. Please also call +91-93557 57579 directly right now.');
+      }
+    } catch(err){
+      alert('❌ Could not send SOS (' + err.message + '). Please call +91-93557 57579 immediately.');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = origText;
+    }
+  };
+
+  if(navigator.geolocation){
+    navigator.geolocation.getCurrentPosition(
+      pos => { payload.lat = pos.coords.latitude; payload.lng = pos.coords.longitude; finish(); },
+      () => { finish(); }, // location denied/unavailable — still send the alert without it
+      { timeout: 5000 }
+    );
+  } else {
+    finish();
+  }
+}
+
 function showPanel(name,navEl){
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('act'));
   document.getElementById('pn-'+name).classList.add('act');
@@ -352,6 +408,67 @@ function showPanel(name,navEl){
   const titles={dashboard:'Driver Dashboard',trips:'My Trips',earnings:'Earnings',navigation:'Navigation',kyc:'KYC Documents',attendance:'Attendance',profile:'Driver Profile'};
   document.getElementById('panelTitle').textContent=titles[name]||name;
   if(name==='trips') renderTrips();
+  if(name==='kyc') loadKycDocs();
+}
+
+// ── KYC & vehicle document upload (items 10, 11, 12) ────────────────────────
+const DOC_META = {
+  aadhar:        {label:'Aadhar Card',         icon:'🪪', group:'Driver'},
+  pan:           {label:'PAN Card',            icon:'🪪', group:'Driver'},
+  police:        {label:'Police Verification', icon:'👮', group:'Driver'},
+  rc:            {label:'Vehicle RC Book',     icon:'📋', group:'Vehicle'},
+  insurance:     {label:'Vehicle Insurance',   icon:'🛡️', group:'Vehicle'},
+  permit:        {label:'Vehicle Permit',      icon:'📄', group:'Vehicle'},
+  fitness:       {label:'Fitness Certificate', icon:'📄', group:'Vehicle'},
+  vehicle_photo: {label:'Vehicle Photo',       icon:'📷', group:'Vehicle'}
+};
+const STATUS_META = {
+  missing:  {cls:'', text:'Not uploaded yet'},
+  pending:  {cls:'pending', text:'⏳ Pending review'},
+  verified: {cls:'verified', text:'✓ Verified'},
+  rejected: {cls:'rejected', text:'✗ Rejected — re-upload'}
+};
+
+async function loadKycDocs(){
+  const grid = document.getElementById('kycGrid');
+  try{
+    const {docs} = await api('/driver/docs/list');
+    grid.innerHTML = Object.keys(DOC_META).map(type=>{
+      const meta = DOC_META[type];
+      const entry = docs[type];
+      const status = entry ? entry.status : 'missing';
+      const sm = STATUS_META[status] || STATUS_META.missing;
+      const note = (status==='rejected' && entry.reviewNote) ? `<div style="font-size:10.5px;color:#C0392B;margin-top:2px">${escapeHtml(entry.reviewNote)}</div>` : '';
+      return `<div class="kyc-item ${sm.cls}" style="cursor:pointer" onclick="document.getElementById('docfile_${type}').click()">
+        <div class="kyc-icon">${meta.icon}</div>
+        <div>
+          <div class="kyc-lbl">${meta.label}</div>
+          <div class="kyc-status">${sm.text}</div>
+          ${note}
+          <div style="font-size:10px;color:var(--sf-600,#D46800);font-weight:700;margin-top:3px">${status==='missing'?'Tap to upload':'Tap to replace'}</div>
+        </div>
+        <input type="file" id="docfile_${type}" accept="image/jpeg,image/png,image/webp,application/pdf" style="display:none" onchange="uploadDoc('${type}', this.files[0])">
+      </div>`;
+    }).join('');
+  }catch(err){
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:20px;color:#C0392B;font-size:12.5px">Could not load documents: ${escapeHtml(err.message)}</div>`;
+  }
+}
+
+function uploadDoc(docType, file){
+  if(!file) return;
+  if(file.size > 5*1024*1024){ alert('That file is over 5MB — please choose a smaller image or scan.'); return; }
+  const reader = new FileReader();
+  reader.onload = async () => {
+    try{
+      await api('/driver/docs/upload', {method:'POST', body: JSON.stringify({docType, dataUrl: reader.result})});
+      loadKycDocs();
+    }catch(err){
+      alert('Upload failed: ' + err.message);
+    }
+  };
+  reader.onerror = () => alert('Could not read that file — please try again.');
+  reader.readAsDataURL(file);
 }
 
 // ── Boot ──────────────────────────────────────────────────────────────────

@@ -863,3 +863,10 @@ p, li, .body-text, .desc, .description { font-size: 15px; line-height: 1.85; }
 }
 
 
+
+/* ── PEACH THEME: .btn-sf used var(--wh), which flips to dark brown,
+   giving low-contrast dark-on-orange text on every saffron button
+   (login, save actions, etc.) across the dashboard. Force white. ── */
+.btn-sf { color: #fff !important; }
+.sb-av { color: #fff !important; }
+.cb-nav { color: #fff !important; }

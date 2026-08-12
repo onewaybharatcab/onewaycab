@@ -185,6 +185,27 @@ var worker_default = {
     if (url.pathname.includes("driver/update")) {
       return addSecurityHeaders(await withRateLimit(request, env, ctx, "driver-update", () => handleDriverUpdate(request, env, allowOrigin), allowOrigin))
     }
+    if (url.pathname.includes("driver/delete")) {
+      return addSecurityHeaders(await withRateLimit(request, env, ctx, "driver-delete", () => handleDriverDelete(request, env, allowOrigin), allowOrigin))
+    }
+    if (url.pathname.includes("driver/change-password")) {
+      return addSecurityHeaders(await withRateLimit(request, env, ctx, "driver-change-password", () => handleDriverChangePassword(request, env, allowOrigin), allowOrigin))
+    }
+    if (url.pathname.includes("driver/sos")) {
+      return addSecurityHeaders(await withRateLimit(request, env, ctx, "driver-sos", () => handleDriverSOS(request, env, allowOrigin), allowOrigin))
+    }
+    if (url.pathname.includes("driver/docs/upload")) {
+      return addSecurityHeaders(await withRateLimit(request, env, ctx, "driver-docs-upload", () => handleDriverDocsUpload(request, env, allowOrigin), allowOrigin))
+    }
+    if (url.pathname.includes("driver/docs/list")) {
+      return addSecurityHeaders(await withRateLimit(request, env, ctx, "driver-docs-list", () => handleDriverDocsList(request, env, allowOrigin), allowOrigin))
+    }
+    if (url.pathname.includes("admin/docs/verify")) {
+      return addSecurityHeaders(await withRateLimit(request, env, ctx, "admin-docs-verify", () => handleAdminDocsVerify(request, env, allowOrigin), allowOrigin))
+    }
+    if (url.pathname.includes("admin/docs")) {
+      return addSecurityHeaders(await withRateLimit(request, env, ctx, "admin-docs-list", () => handleAdminDocsList(request, env, allowOrigin), allowOrigin))
+    }
 
     // ── Admin: computed views (derived from existing duty records, no new storage) ──
     if (url.pathname.includes("admin/customers")) {
@@ -192,6 +213,12 @@ var worker_default = {
     }
     if (url.pathname.includes("admin/payments")) {
       return addSecurityHeaders(await withRateLimit(request, env, ctx, "admin-payments", () => handlePaymentsList(request, env, allowOrigin), allowOrigin))
+    }
+    if (url.pathname.includes("admin/sos-list")) {
+      return addSecurityHeaders(await withRateLimit(request, env, ctx, "admin-sos-list", () => handleSOSList(request, env, allowOrigin), allowOrigin))
+    }
+    if (url.pathname.includes("admin/sos-resolve")) {
+      return addSecurityHeaders(await withRateLimit(request, env, ctx, "admin-sos-resolve", () => handleSOSResolve(request, env, allowOrigin), allowOrigin))
     }
 
     // ── Admin: vehicles (simple reference list, admin-managed) ──────────────
@@ -249,6 +276,9 @@ var worker_default = {
 
     // ── Admin: settings (pricing rates + GST config — persisted, not yet wired
     // into the live public booking-form fare calculation) ───────────────────
+    if (url.pathname.includes("settings/pricing-public")) {
+      return addSecurityHeaders(await withRateLimit(request, env, ctx, "settings-pricing-public", () => handlePricingPublic(request, env, allowOrigin), allowOrigin))
+    }
     if (url.pathname.includes("settings/pricing")) {
       return addSecurityHeaders(await withRateLimit(request, env, ctx, "settings-pricing", () => handlePricingSettings(request, env, allowOrigin), allowOrigin))
     }
@@ -840,9 +870,18 @@ __name(computeDaysFromDates, "computeDaysFromDates");
 // client can't just send an arbitrary "days" number to shrink the fare
 // floor) and only falls back to the client-supplied `days` field when no
 // dates were sent at all.
-function computeExpectedFare({ vehicle, tripType, distKm, stops = 0, days = 1, date = null, retDate = null }) {
-  const v = FARE_VEHICLES[String(vehicle || "").toLowerCase()];
+function computeExpectedFare({ vehicle, tripType, distKm, stops = 0, days = 1, date = null, retDate = null, livePricing = null }) {
+  const vehicleKey = String(vehicle || "").toLowerCase();
+  const v = FARE_VEHICLES[vehicleKey];
   if (!v) return null;
+  // Live-configured rates (from the admin pricing panel) override the
+  // hardcoded defaults when present, keyed by display name (e.g. "Sedan").
+  const vehicleName = { sedan: "Sedan", ertiga: "Ertiga", innova: "Innova Crysta", tempo: "Tempo Traveller" }[vehicleKey];
+  const liveOw = livePricing?.oneWay?.[vehicleName];
+  const liveRt = livePricing?.roundTrip?.[vehicleName];
+  const ow = liveOw > 0 ? liveOw : v.ow;
+  const rt = liveRt > 0 ? liveRt : v.rt;
+
   const km = Math.max(0, Number(distKm) || 0);
   const stopCount = Math.max(0, Number(stops) || 0);
   const datesDayCount = computeDaysFromDates(date, retDate);
@@ -851,10 +890,20 @@ function computeExpectedFare({ vehicle, tripType, distKm, stops = 0, days = 1, d
   if (tripType === "roundtrip") {
     const packageKm = 250 * dayCount;
     const billedKm = Math.max(km, packageKm);
-    return Math.ceil(billedKm * v.rt) + dayCount * 300;
+    return Math.ceil(billedKm * rt) + dayCount * 300;
   }
-  const perKm = Math.ceil(km * v.ow);
-  const base = km < 100 ? Math.max(perKm, v.minFare) : perKm;
+  // item 18: apply the same km-limit tiered pricing the client now uses —
+  // without this, any one-way trip past the included-km threshold would
+  // compute a different (and likely lower) fare client-side than this
+  // server check expects, incorrectly rejecting a legitimate payment.
+  const limit = livePricing?.oneWayLimits?.[vehicleName];
+  let base;
+  if (limit && limit.includedKm > 0 && limit.extraKmRate > 0 && km > limit.includedKm) {
+    base = Math.ceil(limit.includedKm * ow + (km - limit.includedKm) * limit.extraKmRate);
+  } else {
+    const perKm = Math.ceil(km * ow);
+    base = km < 100 ? Math.max(perKm, v.minFare) : perKm;
+  }
   return stopCount ? Math.ceil(base * (1 + 0.15 * stopCount)) : base;
 }
 __name(computeExpectedFare, "computeExpectedFare");
@@ -943,6 +992,13 @@ async function handleCreateOrder(request, env, allowOrigin) {
   // trusting a client-supplied "days" number, which would otherwise let
   // someone shrink the fare floor by sending a lower day count than their
   // actual trip dates imply.
+  let livePricing = null;
+  try {
+    const rawPricing = env.CRM_KV ? await env.CRM_KV.get("settings:pricing") : null;
+    if (rawPricing) livePricing = JSON.parse(rawPricing);
+  } catch (err) {
+    console.warn("Could not load live pricing for fare check, using defaults:", err.message);
+  }
   const expectedFare = computeExpectedFare({
     vehicle: body.vehicle,
     tripType: body.tripType,
@@ -950,7 +1006,8 @@ async function handleCreateOrder(request, env, allowOrigin) {
     stops: body.stops,
     days: body.days,
     date: body.date,
-    retDate: body.retDate
+    retDate: body.retDate,
+    livePricing
   });
   if (expectedFare == null) {
     await rollbackWallet();
@@ -2183,7 +2240,16 @@ async function handleDutyStatus(request, env, allowOrigin) {
   }
 
   const wasAlreadyCompleted = duty.status === "completed";
+  const wasAlreadyCancelled = duty.status === "cancelled";
   duty.status = newStatus;
+
+  // Item 15: notify everyone involved the moment a trip is freshly
+  // cancelled — previously this silently updated status with no
+  // notification to the customer, driver, or admin at all.
+  if (newStatus === "cancelled" && !wasAlreadyCancelled) {
+    duty.cancelledBy = auth.session.role;
+    sendCancellationNotifications(env, duty).catch(err => console.error("Cancellation notify failed:", err.message));
+  }
 
   // Fire a Google-review request the moment a trip is freshly marked
   // completed (not on every subsequent status write once it's already
@@ -2281,6 +2347,7 @@ async function handleDutyAssign(request, env, allowOrigin) {
   const dutyId = String(body.dutyId || "");
   const driverId = validatePhone(body.driverId || body.driverPhone);
   const vehicleNumber = sanitizeString(body.vehicleNumber, 30);
+  const vehicleTypeOverride = sanitizeString(body.vehicleType, 60);
   if (!dutyId || !driverId) return jsonResponse({ error: "dutyId and driverId (driver phone) are required" }, 400, allowOrigin);
 
   const dutyRaw = await env.CRM_KV.get(`duty:${dutyId}`);
@@ -2295,7 +2362,12 @@ async function handleDutyAssign(request, env, allowOrigin) {
   duty.driverName = driver.name;
   duty.driverPhone = driverId;
   duty.vehicleNumber = vehicleNumber || driver.vehicleNumber || "";
-  duty.vehicleType = duty.vehicleType || driver.vehicleType || "";
+  // FIX (item 6): an explicit vehicle type chosen at assignment time (e.g.
+  // the admin is dispatching an Ertiga even though the customer booked a
+  // Sedan) must win. Previously this always fell back to duty.vehicleType
+  // (the ORIGINAL booking), so a substituted vehicle never showed up
+  // correctly in the driver/customer/admin notifications.
+  duty.vehicleType = vehicleTypeOverride || driver.vehicleType || duty.vehicleType || "";
   duty.status = "assigned";
   duty.assignedAt = Date.now();
   await env.CRM_KV.put(`duty:${dutyId}`, JSON.stringify(duty));
@@ -2332,7 +2404,17 @@ async function sendAssignmentNotifications(env, duty, driver) {
   const pickup = `${duty.from || "—"}${stops.length ? " → " + stops.join(" → ") : ""}`;
   const tripTiming = `${duty.date || "—"} ${duty.time || ""}`.trim();
   const vehicleLabel = [duty.vehicleType, duty.vehicleNumber].filter(Boolean).join(" · ") || "—";
-  const fareLabel = `₹${Number(duty.fare || 0).toLocaleString("en-IN")}`;
+  // FIX (items 4 & 6): "fareLabel" alone was being used to mean "amount due,"
+  // which is wrong once an advance has been paid online — and the admin
+  // template's Paid/Due slots were previously receiving vehicleLabel and the
+  // full fare instead of an actual paid/due breakdown (confirmed by a live
+  // message reading "Paid: ₹Sedan · Up14lt8113"). Compute both real figures.
+  const paidAmount = Number(duty.advance || 0);
+  const totalFare = Number(duty.fare || 0);
+  const dueAmount = Math.max(0, totalFare - paidAmount);
+  const paidLabel = paidAmount.toLocaleString("en-IN");
+  const dueLabel = `₹${dueAmount.toLocaleString("en-IN")}`;
+  const fareLabel = `₹${totalFare.toLocaleString("en-IN")}`;
 
   const send = async (to, templateName, parameters, label) => {
     const payload = {
@@ -2363,45 +2445,154 @@ async function sendAssignmentNotifications(env, duty, driver) {
   // 1) Driver — driverPhone is stored as the raw number (no country code prefix),
   // matching how it was saved from driverId. Prefix 91 for WhatsApp.
   const driverWaNum = toWaNum(duty.driverPhone);
-  if (!driverWaNum) { console.warn("Assignment: invalid driver phone:", duty.driverPhone); results.driver = false; }
-  results.driver = await send(driverWaNum, driverTemplate, [
-    { type: "text", text: String(duty.id) },
-    { type: "text", text: String(duty.name) },
-    { type: "text", text: localPhoneDigits(duty.phone) },
-    { type: "text", text: pickup },
-    { type: "text", text: duty.to || "—" },
-    { type: "text", text: tripTiming },
-    { type: "text", text: vehicleLabel },
-    { type: "text", text: fareLabel }
-  ], "Driver");
+  if (!driverWaNum) {
+    console.warn("Assignment: invalid driver phone:", duty.driverPhone);
+    results.driver = false;
+  } else {
+    results.driver = await send(driverWaNum, driverTemplate, [
+      { type: "text", text: String(duty.id) },
+      { type: "text", text: String(duty.name) },
+      { type: "text", text: localPhoneDigits(duty.phone) },
+      { type: "text", text: pickup },
+      { type: "text", text: duty.to || "—" },
+      { type: "text", text: tripTiming },
+      { type: "text", text: vehicleLabel },
+      { type: "text", text: `${dueLabel} due (₹${paidLabel} already paid online)` }
+    ], "Driver");
+  }
 
   // 2) Customer — gets driver + vehicle confirmation
   const customerWaNum = toWaNum(duty.phone);
-  if (!customerWaNum) { console.warn("Assignment: invalid customer phone:", duty.phone); results.customer = false; }
-  results.customer = await send(customerWaNum, customerTemplate, [
-    { type: "text", text: String(duty.id) },
-    { type: "text", text: String(duty.driverName) },
-    { type: "text", text: localPhoneDigits(duty.driverPhone) },
-    { type: "text", text: vehicleLabel },
-    { type: "text", text: pickup },
-    { type: "text", text: tripTiming }
-  ], "Customer");
+  if (!customerWaNum) {
+    console.warn("Assignment: invalid customer phone:", duty.phone);
+    results.customer = false;
+  } else {
+    results.customer = await send(customerWaNum, customerTemplate, [
+      { type: "text", text: String(duty.id) },
+      { type: "text", text: String(duty.driverName) },
+      { type: "text", text: localPhoneDigits(duty.driverPhone) },
+      { type: "text", text: vehicleLabel },
+      { type: "text", text: pickup },
+      { type: "text", text: tripTiming }
+    ], "Customer");
+    // FIX (item 5): if the dedicated 6-param assignment-confirmation template
+    // isn't approved/created on Meta yet, the send above fails silently and
+    // the customer never learns a driver was assigned. Fall back to the
+    // legacy 8-param "oneway_notification" template, which is already proven
+    // to work (it's what admin notifications use) rather than leaving the
+    // customer with nothing.
+    if (!results.customer) {
+      console.warn("Customer assignment template failed — retrying with legacy fallback template");
+      results.customer = await send(customerWaNum, "oneway_notification", [
+        { type: "text", text: String(duty.id) },
+        { type: "text", text: `Driver assigned: ${duty.driverName}` },
+        { type: "text", text: localPhoneDigits(duty.driverPhone) },
+        { type: "text", text: pickup },
+        { type: "text", text: duty.to || "—" },
+        { type: "text", text: vehicleLabel },
+        { type: "text", text: dueLabel },
+        { type: "text", text: tripTiming }
+      ], "Customer (fallback)");
+    }
+  }
 
   // 3) Admin — internal heads-up reusing the existing notification template
   results.admin = await send(adminNumber, adminTemplate, [
     { type: "text", text: String(duty.id) },
-    { type: "text", text: `Assigned: ${duty.driverName}` },
+    { type: "text", text: `Assigned: ${duty.driverName} (${vehicleLabel})` },
     { type: "text", text: localPhoneDigits(duty.driverPhone) },
     { type: "text", text: pickup },
     { type: "text", text: duty.to || "—" },
-    { type: "text", text: vehicleLabel },
-    { type: "text", text: fareLabel },
+    { type: "text", text: paidLabel },
+    { type: "text", text: dueLabel },
     { type: "text", text: tripTiming }
   ], "Admin");
 
   return results;
 }
 __name(sendAssignmentNotifications, "sendAssignmentNotifications");
+
+// ── Cancellation notifications (item 15) ─────────────────────────────────────
+// Uses the legacy "oneway_notification" 8-param template directly (the same
+// one proven to work for admin alerts) rather than a brand-new dedicated
+// template, since a newly-created template would need Meta approval before
+// it could send anything — this works immediately on deploy.
+async function sendCancellationNotifications(env, duty) {
+  const accessToken = env.WHATSAPP_ACCESS_TOKEN;
+  const phoneNumberId = env.WHATSAPP_PHONE_NUMBER_ID;
+  const adminNumber = env.ADMIN_WHATSAPP_NUMBER || "919355757579";
+  const results = { customer: false, driver: false, admin: false };
+  if (!accessToken || !phoneNumberId) {
+    console.warn("Cancellation: WhatsApp not configured, notifications skipped for", duty.id);
+    return results;
+  }
+
+  const stops = Array.isArray(duty.extraCities) ? duty.extraCities.filter(c => c) : [];
+  const pickup = `${duty.from || "—"}${stops.length ? " → " + stops.join(" → ") : ""}`;
+  const tripTiming = `${duty.date || "—"} ${duty.time || ""}`.trim();
+  const vehicleLabel = [duty.vehicleType, duty.vehicleNumber].filter(Boolean).join(" · ") || "—";
+  const cancelledByLabel = duty.cancelledBy === "driver" ? "the driver" : duty.cancelledBy === "customer" ? "the customer" : "One-Way Bhaarat";
+
+  async function send(to, params, label) {
+    if (!to) { console.warn(`Cancellation: no valid ${label} phone for`, duty.id); return false; }
+    try {
+      const res = await fetch(`https://graph.facebook.com/${WHATSAPP_API_VERSION}/${phoneNumberId}/messages`, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${accessToken}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messaging_product: "whatsapp", to,
+          type: "template",
+          template: { name: "oneway_notification", language: { code: "en" }, components: [{ type: "body", parameters: params }] }
+        })
+      });
+      const data = await res.json();
+      const ok = res.ok && !!data?.messages?.[0]?.id;
+      if (!ok) console.error(`Cancellation ${label} send failed — code:`, data?.error?.code, "| message:", data?.error?.message);
+      return ok;
+    } catch (err) {
+      console.error(`Cancellation ${label} send exception:`, err.message);
+      return false;
+    }
+  }
+
+  results.customer = await send(toWaNum(duty.phone), [
+    { type: "text", text: String(duty.id) },
+    { type: "text", text: `CANCELLED by ${cancelledByLabel}` },
+    { type: "text", text: localPhoneDigits(duty.phone) },
+    { type: "text", text: pickup },
+    { type: "text", text: duty.to || "—" },
+    { type: "text", text: "0" },
+    { type: "text", text: "₹0" },
+    { type: "text", text: tripTiming }
+  ], "customer");
+
+  if (duty.driverId && duty.driverPhone) {
+    results.driver = await send(toWaNum(duty.driverPhone), [
+      { type: "text", text: String(duty.id) },
+      { type: "text", text: `Trip CANCELLED — ${String(duty.name || "customer")}` },
+      { type: "text", text: localPhoneDigits(duty.phone) },
+      { type: "text", text: pickup },
+      { type: "text", text: duty.to || "—" },
+      { type: "text", text: vehicleLabel },
+      { type: "text", text: "₹0" },
+      { type: "text", text: tripTiming }
+    ], "driver");
+  }
+
+  results.admin = await send(toWaNum(adminNumber), [
+    { type: "text", text: String(duty.id) },
+    { type: "text", text: `CANCELLED by ${cancelledByLabel}: ${String(duty.name || "—")}` },
+    { type: "text", text: localPhoneDigits(duty.phone) },
+    { type: "text", text: pickup },
+    { type: "text", text: duty.to || "—" },
+    { type: "text", text: duty.driverName ? `Was assigned: ${duty.driverName}` : "Unassigned" },
+    { type: "text", text: "₹0" },
+    { type: "text", text: tripTiming }
+  ], "admin");
+
+  return results;
+}
+__name(sendCancellationNotifications, "sendCancellationNotifications");
 
 // ── Drivers ───────────────────────────────────────────────────────────────────
 async function handleDriverCreate(request, env, allowOrigin) {
@@ -2458,6 +2649,160 @@ async function handleDriverList(request, env, allowOrigin) {
 }
 __name(handleDriverList, "handleDriverList");
 
+// Admin permanently removes a driver record (item 9 — previously the only
+// option was deactivating; there was no way to actually delete a fake or
+// duplicate test entry). Blocks deletion if the driver has any non-final
+// duty currently assigned to them, so an in-progress trip's driver can't
+// vanish out from under it.
+async function handleDriverDelete(request, env, allowOrigin) {
+  const auth = await requireRole(env, request, "admin");
+  if (auth.error) return auth.error;
+  if (request.method !== "POST") return jsonResponse({ error: "Method not allowed" }, 405, allowOrigin);
+
+  let body;
+  try { body = await request.json(); } catch { return jsonResponse({ error: "Invalid JSON" }, 400, allowOrigin); }
+  const phone = validatePhone(body.phone || body.id);
+  if (!phone) return jsonResponse({ error: "Valid driver phone required" }, 400, allowOrigin);
+
+  const dutyIds = await readIndex(env, "duty-index");
+  for (const id of dutyIds) {
+    const raw = await env.CRM_KV.get(`duty:${id}`);
+    if (!raw) continue;
+    const duty = JSON.parse(raw);
+    if (duty.driverId === phone && duty.status !== "completed" && duty.status !== "cancelled") {
+      return jsonResponse({ error: `Cannot delete — this driver has an active duty (${duty.id}). Reassign or complete/cancel it first.` }, 409, allowOrigin);
+    }
+  }
+
+  await env.CRM_KV.delete(`driver:${phone}`);
+  await removeFromIndex(env, "driver-index", phone);
+
+  return jsonResponse({ ok: true }, 200, allowOrigin);
+}
+__name(handleDriverDelete, "handleDriverDelete");
+
+// ── Driver & vehicle document verification (items 10, 11, 12) ───────────────
+// Documents are stored as base64 directly in CRM_KV (the same KV namespace
+// already used for everything else) rather than a new R2 bucket — this needs
+// zero new Cloudflare infrastructure to work. Each driver has ONE
+// `docs:{phone}` record holding all 8 document slots. A single 5MB raw file
+// limit (client-enforced) keeps each upload comfortably inside KV's 25MB
+// per-value ceiling even after base64's ~33% size inflation.
+const DOC_TYPES = ["aadhar", "pan", "police", "rc", "insurance", "permit", "fitness", "vehicle_photo"];
+const MAX_DOC_BASE64_CHARS = 7_000_000; // ~5MB raw file
+
+async function handleDriverDocsUpload(request, env, allowOrigin) {
+  const auth = await requireRole(env, request, "driver");
+  if (auth.error) return auth.error;
+  if (request.method !== "POST") return jsonResponse({ error: "Method not allowed" }, 405, allowOrigin);
+
+  let body;
+  try { body = await request.json(); } catch { return jsonResponse({ error: "Invalid JSON" }, 400, allowOrigin); }
+
+  const docType = String(body.docType || "");
+  if (!DOC_TYPES.includes(docType)) return jsonResponse({ error: `docType must be one of: ${DOC_TYPES.join(", ")}` }, 400, allowOrigin);
+  const dataUrl = String(body.dataUrl || "");
+  const match = dataUrl.match(/^data:([\w/+.-]+);base64,(.+)$/s);
+  if (!match) return jsonResponse({ error: "dataUrl must be a base64 data URL (e.g. from a file input)" }, 400, allowOrigin);
+  const [, mimeType, base64] = match;
+  if (!/^image\/(jpeg|jpg|png|webp)$|^application\/pdf$/.test(mimeType)) {
+    return jsonResponse({ error: "Only JPEG, PNG, WEBP images or PDF files are allowed" }, 400, allowOrigin);
+  }
+  if (base64.length > MAX_DOC_BASE64_CHARS) return jsonResponse({ error: "File too large — please keep uploads under 5MB" }, 400, allowOrigin);
+
+  const phone = auth.session.id;
+  const raw = await env.CRM_KV.get(`docs:${phone}`);
+  const docs = raw ? JSON.parse(raw) : {};
+  docs[docType] = {
+    dataUrl,
+    mimeType,
+    uploadedAt: Date.now(),
+    status: "pending",
+    reviewNote: ""
+  };
+  await env.CRM_KV.put(`docs:${phone}`, JSON.stringify(docs));
+
+  return jsonResponse({ ok: true, docType, status: "pending" }, 200, allowOrigin);
+}
+__name(handleDriverDocsUpload, "handleDriverDocsUpload");
+
+async function handleDriverDocsList(request, env, allowOrigin) {
+  const auth = await requireRole(env, request, "driver");
+  if (auth.error) return auth.error;
+  const raw = await env.CRM_KV.get(`docs:${auth.session.id}`);
+  const docs = raw ? JSON.parse(raw) : {};
+  // Strip the actual file data for the list view (driver just needs status);
+  // full data is fetched per-document only when actually needed.
+  const summary = {};
+  for (const t of DOC_TYPES) {
+    summary[t] = docs[t] ? { status: docs[t].status, uploadedAt: docs[t].uploadedAt, reviewNote: docs[t].reviewNote } : null;
+  }
+  return jsonResponse({ docs: summary }, 200, allowOrigin);
+}
+__name(handleDriverDocsList, "handleDriverDocsList");
+
+async function handleAdminDocsList(request, env, allowOrigin) {
+  const auth = await requireRole(env, request, "admin");
+  if (auth.error) return auth.error;
+  const url = new URL(request.url);
+  const phone = validatePhone(url.searchParams.get("phone") || "");
+
+  if (phone) {
+    // Full detail for one driver, including the actual file data for viewing.
+    const raw = await env.CRM_KV.get(`docs:${phone}`);
+    return jsonResponse({ docs: raw ? JSON.parse(raw) : {} }, 200, allowOrigin);
+  }
+
+  // Summary across all drivers (for a verification queue view).
+  const driverIds = await readIndex(env, "driver-index");
+  const rows = [];
+  for (const id of driverIds) {
+    const driverRaw = await env.CRM_KV.get(`driver:${id}`);
+    if (!driverRaw) continue;
+    const driver = JSON.parse(driverRaw);
+    const docsRaw = await env.CRM_KV.get(`docs:${id}`);
+    const docs = docsRaw ? JSON.parse(docsRaw) : {};
+    const statuses = DOC_TYPES.map(t => docs[t]?.status || "missing");
+    rows.push({
+      phone: id,
+      name: driver.name,
+      uploaded: statuses.filter(s => s !== "missing").length,
+      verified: statuses.filter(s => s === "verified").length,
+      pending: statuses.filter(s => s === "pending").length,
+      rejected: statuses.filter(s => s === "rejected").length,
+      total: DOC_TYPES.length
+    });
+  }
+  return jsonResponse({ drivers: rows }, 200, allowOrigin);
+}
+__name(handleAdminDocsList, "handleAdminDocsList");
+
+async function handleAdminDocsVerify(request, env, allowOrigin) {
+  const auth = await requireRole(env, request, "admin");
+  if (auth.error) return auth.error;
+  if (request.method !== "POST") return jsonResponse({ error: "Method not allowed" }, 405, allowOrigin);
+
+  let body;
+  try { body = await request.json(); } catch { return jsonResponse({ error: "Invalid JSON" }, 400, allowOrigin); }
+  const phone = validatePhone(body.phone);
+  const docType = String(body.docType || "");
+  const status = String(body.status || "");
+  const reviewNote = sanitizeString(body.reviewNote, 200);
+  if (!phone || !DOC_TYPES.includes(docType)) return jsonResponse({ error: "Valid phone and docType required" }, 400, allowOrigin);
+  if (!["verified", "rejected"].includes(status)) return jsonResponse({ error: "status must be verified or rejected" }, 400, allowOrigin);
+
+  const raw = await env.CRM_KV.get(`docs:${phone}`);
+  const docs = raw ? JSON.parse(raw) : {};
+  if (!docs[docType]) return jsonResponse({ error: "Driver hasn't uploaded this document yet" }, 404, allowOrigin);
+  docs[docType].status = status;
+  docs[docType].reviewNote = reviewNote;
+  docs[docType].reviewedAt = Date.now();
+  await env.CRM_KV.put(`docs:${phone}`, JSON.stringify(docs));
+
+  return jsonResponse({ ok: true }, 200, allowOrigin);
+}
+__name(handleAdminDocsVerify, "handleAdminDocsVerify");
+
 // Admin edits a driver's details, optionally resets password, or
 // activates/deactivates them (disabled drivers can't log in or be assigned).
 async function handleDriverUpdate(request, env, allowOrigin) {
@@ -2491,6 +2836,156 @@ async function handleDriverUpdate(request, env, allowOrigin) {
   return jsonResponse({ driver: safeDriver }, 200, allowOrigin);
 }
 __name(handleDriverUpdate, "handleDriverUpdate");
+
+// ── Driver: self-service password change (item 13) ──────────────────────────
+async function handleDriverChangePassword(request, env, allowOrigin) {
+  const auth = await requireRole(env, request, "driver");
+  if (auth.error) return auth.error;
+  if (request.method !== "POST") return jsonResponse({ error: "Method not allowed" }, 405, allowOrigin);
+
+  let body;
+  try { body = await request.json(); } catch { return jsonResponse({ error: "Invalid JSON" }, 400, allowOrigin); }
+
+  const currentPassword = String(body.currentPassword || "");
+  const newPassword = String(body.newPassword || "");
+  if (!currentPassword || !newPassword) return jsonResponse({ error: "Current and new password are required" }, 400, allowOrigin);
+  if (newPassword.length < 6) return jsonResponse({ error: "New password must be 6+ characters" }, 400, allowOrigin);
+
+  const phone = auth.session.id;
+  const raw = await env.CRM_KV.get(`driver:${phone}`);
+  if (!raw) return jsonResponse({ error: "Driver not found" }, 404, allowOrigin);
+  const driver = JSON.parse(raw);
+
+  const ok = await verifyPassword(currentPassword, driver.salt, driver.hash);
+  if (!ok) return jsonResponse({ error: "Current password is incorrect" }, 401, allowOrigin);
+
+  const { hash, salt } = await hashPassword(newPassword);
+  driver.hash = hash;
+  driver.salt = salt;
+  await env.CRM_KV.put(`driver:${phone}`, JSON.stringify(driver));
+
+  return jsonResponse({ ok: true }, 200, allowOrigin);
+}
+__name(handleDriverChangePassword, "handleDriverChangePassword");
+
+// ── Driver: SOS alert (item 8) ───────────────────────────────────────────────
+// Previously the SOS button on driver.html was pure UI theatre — it showed
+// an alert() claiming help was on the way and sent absolutely nothing
+// anywhere. This is a real safety feature: it's authenticated (so we know
+// exactly which driver), it's persisted to KV regardless of whether the
+// WhatsApp send succeeds (so an alert is never silently lost), and it fires
+// an urgent WhatsApp message to the admin/control-room number with a live
+// location link when the browser provides one.
+async function handleDriverSOS(request, env, allowOrigin) {
+  const auth = await requireRole(env, request, "driver");
+  if (auth.error) return auth.error;
+  if (request.method !== "POST") return jsonResponse({ error: "Method not allowed" }, 405, allowOrigin);
+  if (!env.CRM_KV) return jsonResponse({ error: "CRM not configured" }, 500, allowOrigin);
+
+  let body = {};
+  try { body = await request.json(); } catch { /* body is optional — SOS must work even with no payload */ }
+
+  const phone = auth.session.id;
+  const driverRaw = await env.CRM_KV.get(`driver:${phone}`);
+  const driver = driverRaw ? JSON.parse(driverRaw) : { name: "Unknown driver", phone };
+
+  const lat = Number.isFinite(Number(body.lat)) ? Number(body.lat) : null;
+  const lng = Number.isFinite(Number(body.lng)) ? Number(body.lng) : null;
+  const dutyId = sanitizeString(body.dutyId, 40) || null;
+
+  const sosId = `${Date.now()}-${phone}`;
+  const record = {
+    id: sosId,
+    driverPhone: phone,
+    driverName: driver.name || "Unknown driver",
+    lat, lng,
+    dutyId,
+    createdAt: Date.now(),
+    resolved: false,
+    resolvedAt: null,
+    notified: false
+  };
+  await env.CRM_KV.put(`sos:${sosId}`, JSON.stringify(record));
+  await addToIndex(env, "sos-index", sosId);
+
+  // Best-effort WhatsApp alert — the SOS is already saved above regardless
+  // of whether this succeeds, so a WhatsApp/Meta outage never means the
+  // alert is lost, only that it wasn't pushed instantly.
+  const accessToken = env.WHATSAPP_ACCESS_TOKEN;
+  const phoneNumberId = env.WHATSAPP_PHONE_NUMBER_ID;
+  const adminNumber = env.ADMIN_WHATSAPP_NUMBER || "919355757579";
+  let notified = false;
+  if (accessToken && phoneNumberId) {
+    const mapsLink = (lat !== null && lng !== null)
+      ? `https://maps.google.com/?q=${lat},${lng}`
+      : "Location not shared by device";
+    const bodyText = `🚨 SOS ALERT 🚨\nDriver: ${driver.name || "Unknown"} (${phone})\n${dutyId ? `Booking: ${dutyId}\n` : ""}Location: ${mapsLink}\nTime: ${new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })}\n\nCall the driver immediately.`;
+    try {
+      const waRes = await fetch(`https://graph.facebook.com/${WHATSAPP_API_VERSION}/${phoneNumberId}/messages`, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${accessToken}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messaging_product: "whatsapp",
+          to: adminNumber,
+          type: "text",
+          text: { body: bodyText, preview_url: true }
+        })
+      });
+      const waData = await waRes.json();
+      notified = waRes.ok && !!waData?.messages?.[0]?.id;
+      if (!notified) console.error("SOS WhatsApp send failed — code:", waData?.error?.code, "| message:", waData?.error?.message);
+    } catch (err) {
+      console.error("SOS WhatsApp exception:", err.message);
+    }
+  } else {
+    console.warn("SOS raised but WhatsApp not configured — record saved, no notification sent:", sosId);
+  }
+
+  if (notified) {
+    record.notified = true;
+    await env.CRM_KV.put(`sos:${sosId}`, JSON.stringify(record));
+  }
+
+  return jsonResponse({ ok: true, sosId, notified }, 200, allowOrigin);
+}
+__name(handleDriverSOS, "handleDriverSOS");
+
+// ── Admin: view and resolve SOS alerts ───────────────────────────────────────
+async function handleSOSList(request, env, allowOrigin) {
+  const auth = await requireRole(env, request, "admin");
+  if (auth.error) return auth.error;
+  if (!env.CRM_KV) return jsonResponse({ error: "CRM not configured" }, 500, allowOrigin);
+
+  const ids = await readIndex(env, "sos-index");
+  const records = [];
+  for (const id of ids.slice(-100).reverse()) {
+    const raw = await env.CRM_KV.get(`sos:${id}`);
+    if (raw) records.push(JSON.parse(raw));
+  }
+  return jsonResponse({ alerts: records }, 200, allowOrigin);
+}
+__name(handleSOSList, "handleSOSList");
+
+async function handleSOSResolve(request, env, allowOrigin) {
+  const auth = await requireRole(env, request, "admin");
+  if (auth.error) return auth.error;
+  if (request.method !== "POST") return jsonResponse({ error: "Method not allowed" }, 405, allowOrigin);
+
+  let body;
+  try { body = await request.json(); } catch { return jsonResponse({ error: "Invalid JSON" }, 400, allowOrigin); }
+  const sosId = sanitizeString(body.sosId, 60);
+  if (!sosId) return jsonResponse({ error: "sosId required" }, 400, allowOrigin);
+
+  const raw = await env.CRM_KV.get(`sos:${sosId}`);
+  if (!raw) return jsonResponse({ error: "SOS record not found" }, 404, allowOrigin);
+  const record = JSON.parse(raw);
+  record.resolved = true;
+  record.resolvedAt = Date.now();
+  await env.CRM_KV.put(`sos:${sosId}`, JSON.stringify(record));
+
+  return jsonResponse({ ok: true }, 200, allowOrigin);
+}
+__name(handleSOSResolve, "handleSOSResolve");
 
 // ── Admin: Customers (computed view, derived from duty records) ─────────────
 // No separate customer storage — a "customer" is just the set of distinct
@@ -2892,9 +3387,24 @@ async function handlePricingSettings(request, env, allowOrigin) {
       return out;
     };
 
+    // item 18: per-vehicle one-way km-limit config — beyond includedKm,
+    // distance is billed at extraKmRate instead of the flat base rate.
+    const sanitizeLimits = (limits) => {
+      const out = {};
+      if (!limits || typeof limits !== "object") return out;
+      for (const [vehicle, cfg] of Object.entries(limits)) {
+        const key = sanitizeString(vehicle, 40);
+        const includedKm = Number(cfg?.includedKm);
+        const extraKmRate = Number(cfg?.extraKmRate);
+        if (key && includedKm > 0 && extraKmRate > 0) out[key] = { includedKm, extraKmRate };
+      }
+      return out;
+    };
+
     const pricing = {
       oneWay: sanitizeRates(body.oneWay),
       roundTrip: sanitizeRates(body.roundTrip),
+      oneWayLimits: sanitizeLimits(body.oneWayLimits),
       updatedAt: Date.now()
     };
     await env.CRM_KV.put("settings:pricing", JSON.stringify(pricing));
@@ -2904,6 +3414,24 @@ async function handlePricingSettings(request, env, allowOrigin) {
   return jsonResponse({ error: "Method not allowed" }, 405, allowOrigin);
 }
 __name(handlePricingSettings, "handlePricingSettings");
+
+// Public, unauthenticated pricing read — this is what actually connects the
+// admin pricing panel to the live booking widget (item 18). Previously
+// GET /settings/pricing required admin auth, so the public booking form had
+// no way to read saved rates at all and just used hardcoded defaults.
+async function handlePricingPublic(request, env, allowOrigin) {
+  if (!env.CRM_KV) return jsonResponse({ pricing: null }, 200, allowOrigin);
+  const raw = await env.CRM_KV.get("settings:pricing");
+  if (!raw) return jsonResponse({ pricing: null }, 200, allowOrigin);
+  try {
+    const pricing = JSON.parse(raw);
+    // Never expose anything beyond rates/limits from this public route.
+    return jsonResponse({ pricing: { oneWay: pricing.oneWay || {}, roundTrip: pricing.roundTrip || {}, oneWayLimits: pricing.oneWayLimits || {} } }, 200, allowOrigin);
+  } catch {
+    return jsonResponse({ pricing: null }, 200, allowOrigin);
+  }
+}
+__name(handlePricingPublic, "handlePricingPublic");
 
 // ── Admin: GST summary (basic report derived from existing duty records —
 // totals/counts only, NOT a GSTR-1-compliant filing export. Building that

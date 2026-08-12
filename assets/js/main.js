@@ -415,7 +415,13 @@ function attachAutocomplete(inputId, listId, onSelect) {
 }
 
 function initAutocomplete() {
-  attachAutocomplete('pickup', 'pickup-list', d => { pickupPlaceData = d; });
+  attachAutocomplete('pickup', 'pickup-list', d => {
+    pickupPlaceData = d;
+    // Auto-advance to Drop location once pickup is selected, so the user
+    // doesn't have to manually click into the next field.
+    const dropInput = document.getElementById('drop');
+    if (dropInput) setTimeout(() => dropInput.focus(), 50);
+  });
   attachAutocomplete('drop',   'drop-list',   d => { dropPlaceData   = d; });
   _bkmSetApiBanner(false);
 }
@@ -431,6 +437,30 @@ const BKM_VEHICLES = [
   {key:'innova', name:'Innova Crysta',   sub:'Toyota Innova Crysta',               icon:'🚙', seats:7,  badge:'Premium',  ow:30, rt:20, minFare:2000},
   {key:'tempo',  name:'Tempo Traveller', sub:'12-Seater Force / Mahindra',         icon:'🚌', seats:12, badge:'Group',    ow:42, rt:35, minFare:4000},
 ];
+// item 18: per-vehicle one-way km-limit config, keyed by vehicle name (matches
+// v.name above). Populated from the live admin-configured pricing below —
+// empty until that fetch resolves, at which point _bkmBuildCabs() picks it up
+// on its next render (it's read fresh from this object every call).
+let BKM_ONEWAY_LIMITS = {};
+
+// Fetch live rates + km-limits set in the admin panel and override the
+// hardcoded defaults above. Previously the admin pricing panel saved to a
+// route the public site had no way to read (admin-auth-only), so edits
+// there never reached real customers — this fetch is what actually
+// connects the two for the first time.
+(async function _bkmLoadLivePricing(){
+  try{
+    const res = await fetch('/api/settings/pricing-public');
+    if(!res.ok) return;
+    const { pricing } = await res.json();
+    if(!pricing) return;
+    BKM_VEHICLES.forEach(v => {
+      if(pricing.oneWay && pricing.oneWay[v.name] != null) v.ow = Number(pricing.oneWay[v.name]);
+      if(pricing.roundTrip && pricing.roundTrip[v.name] != null) v.rt = Number(pricing.roundTrip[v.name]);
+    });
+    if(pricing.oneWayLimits) BKM_ONEWAY_LIMITS = pricing.oneWayLimits;
+  }catch(e){ console.warn('Live pricing fetch failed, using defaults:', e.message); }
+})();
 
 const BKM = {
   S: {
@@ -861,20 +891,39 @@ function _bkmBuildCabs(){
   const noteEl = document.getElementById('bkmNote');
   if(noteEl){
     noteEl.innerHTML = isRound
-      ? '💡 Fare includes driver charges. Toll, parking &amp; state permit extra. Balance paid to driver after trip.'
-      : '💡 All inclusive — nothing extra except parking.';
+      ? `<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div><div style="font-weight:800;color:#1E8E5A;font-size:.72rem;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px">✓ Included</div>
+          <div style="font-size:.74rem;line-height:1.7;color:rgba(45,26,0,.75)">Base fare · Driver allowance · GST (5%) · State taxes</div></div>
+          <div><div style="font-weight:800;color:#C0392B;font-size:.72rem;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px">✗ Extra (pay driver directly)</div>
+          <div style="font-size:.74rem;line-height:1.7;color:rgba(45,26,0,.75)">Toll &amp; parking (actuals) · Interstate permit · Night charges (10pm–6am, if applicable)</div></div>
+        </div>`
+      : `<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div><div style="font-weight:800;color:#1E8E5A;font-size:.72rem;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px">✓ Included</div>
+          <div style="font-size:.74rem;line-height:1.7;color:rgba(45,26,0,.75)">Base fare · Driver allowance · Toll · State permit · GST &amp; taxes — all-inclusive</div></div>
+          <div><div style="font-weight:800;color:#C0392B;font-size:.72rem;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px">✗ Extra (pay driver directly)</div>
+          <div style="font-size:.74rem;line-height:1.7;color:rgba(45,26,0,.75)">Parking charges only</div></div>
+        </div>`;
   }
   const cabList = document.getElementById('bkmCabList');
   if(cabList) cabList.innerHTML = BKM_VEHICLES.map((v,i) => {
     const days=_bkmCalcDays();
-    let fare, billedKm, isMin=false;
+    let fare, billedKm, isMin=false, usingExtraKm=false, extraKmInfo=null;
     if(isRound){
       const packageKm = 250 * days;          // minimum guaranteed km
       billedKm = Math.max(km, packageKm);    // always bill at least packageKm
       const driverAllow = days * 300;
       fare = Math.ceil(billedKm * v.rt) + driverAllow;
     } else {
-      const perKm=Math.ceil(km*v.ow); const base=km<100?Math.max(perKm,v.minFare):perKm;
+      const limit = BKM_ONEWAY_LIMITS[v.name];
+      let base;
+      usingExtraKm = !!(limit && km > limit.includedKm);
+      if(usingExtraKm){
+        base = Math.ceil(limit.includedKm * v.ow + (km - limit.includedKm) * limit.extraKmRate);
+        extraKmInfo = {includedKm: limit.includedKm, extraKm: km - limit.includedKm, extraRate: limit.extraKmRate};
+      } else {
+        const perKm=Math.ceil(km*v.ow);
+        base = km<100 ? Math.max(perKm, v.minFare) : perKm;
+      }
       const stops=(S.extraCities||[]).filter(c=>c.trim()).length;
       fare=stops?Math.ceil(base*(1+0.15*stops)):base;
       billedKm=km;
@@ -910,6 +959,9 @@ function _bkmBuildCabs(){
         }</span>
         <span>${billedKm.toLocaleString('en-IN')} km billed = ₹${Math.ceil(billedKm*rate).toLocaleString('en-IN')}</span>
         <span>🧑 Driver allowance: +₹${driverAllow.toLocaleString('en-IN')}</span>
+      </div>`:''}
+      ${usingExtraKm?`<div class="bkm-rt-breakdown">
+        <span>📏 First ${extraKmInfo.includedKm.toLocaleString('en-IN')} km @ ₹${v.ow}/km, then ${extraKmInfo.extraKm.toLocaleString('en-IN')} extra km @ ₹${extraKmInfo.extraRate}/km</span>
       </div>`:''}
     </div>`;
   }).join('');

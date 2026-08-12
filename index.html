@@ -294,7 +294,7 @@
       <a href="customer.html" class="nav-link">My Bookings</a>
       <a href="partners.html" class="nav-link">Partners</a>
       <button type="button" class="nav-link nav-cta" onclick="bkmOpen()" style="cursor:pointer;font-family:'Nunito',sans-serif">🚕 Book Now</button>
-      <a href="tel:+919355757579" class="nav-link nav-phone" style="color:rgba(255,255,255,.7)">📞 +91-93557 57579</a>
+      <a href="tel:+919355757579" class="nav-link nav-phone" style="color:rgba(60,25,5,.7)">📞 +91-93557 57579</a>
     </nav>
 
     <!-- Mobile hamburger button (hidden on desktop) -->
@@ -348,14 +348,14 @@
   <div class="hero-inner">
     <!-- LEFT -->
     <div>
-      <div class="hero-eyebrow"><span class="eyebrow-dot"></span> One Destination, One Fare · One Way Bharat</div>
+      <div class="hero-eyebrow"><span class="eyebrow-dot"></span> One Destination, One Fare · One-Way Bhaarat</div>
       <h1 class="hero-headline">
         One-Way Cab<br>
         Across <span class="hl-accent">Bhaarat</span><br>
         In Style
       </h1>
       <p class="hero-sub">
-        Lock in one fare, hop in, and go — no return-trip markup, no last-minute "extra charges." Premium one-way cabs to 20,000+ cities, starting at ₹16/km.
+        Lock in one fare, hop in, and go — no return-trip markup, no last-minute "extra charges." Premium one-way cabs to 20,000+ cities, starting at ₹9/km.
       </p>
 
       <div class="hero-stats">
@@ -372,7 +372,7 @@
           <span class="hstat-label">Hidden Charges</span>
         </div>
         <div class="hstat">
-          <span class="hstat-num">₹16</span>
+          <span class="hstat-num">₹9</span>
           <span class="hstat-label">Starting /km</span>
         </div>
       </div>
@@ -717,6 +717,46 @@
   </div>
 </section>
 
+<!-- ─────────────────── BLOG TEASER ─────────────────── -->
+<section class="blog-teaser-section" style="background:var(--pc-900);padding:80px 6%">
+  <div class="sec-inner" style="max-width:1180px;margin:0 auto">
+    <div class="sec-center reveal" style="text-align:center;margin-bottom:44px">
+      <div class="sec-tag">✎ Travel Blog</div>
+      <h2 class="sec-title">Guides From the <span class="accent">Open Road</span></h2>
+      <p class="sec-sub" style="margin:0 auto">Route breakdowns, drive-time tips and city guides from the routes we book most.</p>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:22px">
+      <a href="blog/delhi-to-jaipur-cab-guide.html" class="why-card reveal reveal-delay-1" style="text-decoration:none;display:block;padding:0;overflow:hidden">
+        <div style="height:140px;background:linear-gradient(135deg,#fff0e0,#ffe0c0);display:flex;align-items:center;justify-content:center;font-size:52px">🏯</div>
+        <div style="padding:22px 22px 24px">
+          <div style="font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--sf-600);margin-bottom:8px">Route Guide</div>
+          <div class="why-title" style="margin-bottom:8px">Delhi to Jaipur by Cab: The Complete 2026 Travel Guide</div>
+          <p class="why-text" style="margin-bottom:0">The Pink City run on NH48: distance, drive time, the best pit stops, and everything you need to plan the trip.</p>
+        </div>
+      </a>
+      <a href="blog/delhi-to-agra-cab-guide.html" class="why-card reveal reveal-delay-2" style="text-decoration:none;display:block;padding:0;overflow:hidden">
+        <div style="height:140px;background:linear-gradient(135deg,#fff0e0,#ffe0c0);display:flex;align-items:center;justify-content:center;font-size:52px">🕌</div>
+        <div style="padding:22px 22px 24px">
+          <div style="font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--sf-600);margin-bottom:8px">Route Guide</div>
+          <div class="why-title" style="margin-bottom:8px">Delhi to Agra: Complete Cab Travel Guide for 2026</div>
+          <p class="why-text" style="margin-bottom:0">Best departure time, road conditions, Taj entry tips and why a cab beats a train.</p>
+        </div>
+      </a>
+      <a href="blog/mumbai-to-goa-road-trip.html" class="why-card reveal reveal-delay-3" style="text-decoration:none;display:block;padding:0;overflow:hidden">
+        <div style="height:140px;background:linear-gradient(135deg,#e0f8ff,#c0eeff);display:flex;align-items:center;justify-content:center;font-size:52px">🏖️</div>
+        <div style="padding:22px 22px 24px">
+          <div style="font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--sf-600);margin-bottom:8px">Leisure Travel</div>
+          <div class="why-title" style="margin-bottom:8px">Mumbai to Goa Road Trip: Route, Stops &amp; Cab Tips</div>
+          <p class="why-text" style="margin-bottom:0">590 km of coastal highway magic — the NH66 coastal route, stops and timing.</p>
+        </div>
+      </a>
+    </div>
+    <div style="text-align:center;margin-top:36px">
+      <a href="blog.html" class="btn-secondary" style="text-decoration:none">Read All Articles →</a>
+    </div>
+  </div>
+</section>
+
 <!-- ─────────────────── CTA ─────────────────── -->
 <section class="cta-section">
   <div class="cta-inner reveal">
@@ -842,9 +882,20 @@
             <span class="km">📏 <span id="bkrs-km">—</span></span>
           </div>
         </div>
-        <p style="font-size:.75rem;color:rgba(255,255,255,.4);margin-bottom:12px;font-weight:600">Select your preferred cab:</p>
+        <p style="font-size:.75rem;color:rgba(45,26,0,.55);margin-bottom:12px;font-weight:600">Select your preferred cab:</p>
         <div class="bkm-cab-list" id="bkmCabList"></div>
-        <div class="bkm-note" id="bkmNote">💡 Fare includes driver charges. Toll, parking &amp; state permit extra. Balance paid to driver after trip.</div>
+        <div class="bkm-note" id="bkmNote" style="display:block;padding:12px 14px">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+            <div>
+              <div style="font-weight:800;color:#1E8E5A;font-size:.72rem;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px">✓ Included</div>
+              <div style="font-size:.74rem;line-height:1.7;color:rgba(45,26,0,.75)">Base fare · Driver allowance · GST (5%) · State taxes</div>
+            </div>
+            <div>
+              <div style="font-weight:800;color:#C0392B;font-size:.72rem;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px">✗ Extra (pay driver directly)</div>
+              <div style="font-size:.74rem;line-height:1.7;color:rgba(45,26,0,.75)">Toll &amp; parking (actuals) · Interstate permit · Night charges (10pm–6am, if applicable)</div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- ── STEP 3: PASSENGER DETAILS ── -->
@@ -892,7 +943,7 @@
                 10% Advance<span id="ppAdv10">₹0</span>
               </button>
               <button type="button" class="bkm-pay-opt" id="ppOptCustom" onclick="bkmSelectPayOpt('custom')">
-                Custom Amount<span style="font-size:.7rem;font-weight:500;color:rgba(255,255,255,.4)">Enter amount</span>
+                Custom Amount<span style="font-size:.7rem;font-weight:500;color:rgba(45,26,0,.5)">Enter amount</span>
               </button>
               <button type="button" class="bkm-pay-opt" id="ppOptFull" onclick="bkmSelectPayOpt('full')">
                 Full Fare<span id="ppFull">₹0</span>
@@ -913,6 +964,9 @@
               <div id="bkmCustomErr" class="bkm-custom-err"></div>
             </div>
             <div id="bkmPaySummary" class="bkm-pay-summary"></div>
+            <div style="font-size:.72rem;text-align:center;color:rgba(45,26,0,.55);margin-bottom:8px">
+              By paying, you agree to our <a href="terms.html" target="_blank" rel="noopener" style="color:#c85a00;font-weight:700">Terms &amp; Conditions</a> and <a href="cancellation.html" target="_blank" rel="noopener" style="color:#c85a00;font-weight:700">Cancellation Policy</a>.
+            </div>
             <button type="button" class="bkm-btn-pay" onclick="bkmTriggerRazorpay()">🔒 PAY NOW</button>
           </div>
 
@@ -933,7 +987,7 @@
         <button type="button" class="bkm-btn-outline" id="bkmBtnBack" style="display:none" onclick="bkmBack()">← Back</button>
         <button type="button" class="bkm-btn-gold" id="bkmBtnNext" onclick="bkmNext()">Search Cabs →</button>
       </div>
-      <div class="bkm-note-foot">🔒 Secure booking · 24×7 Support: <a href="tel:+919355757579" style="color:#c85a00;font-weight:700">+91-93557 57579</a></div>
+      <div class="bkm-note-foot">🔒 Secure booking · 24×7 Support: <a href="tel:+919355757579" style="color:#c85a00;font-weight:700">+91-93557 57579</a> · <a href="terms.html" target="_blank" rel="noopener" style="color:#c85a00;font-weight:700">Terms &amp; Conditions</a></div>
     </div>
 
   </div>
@@ -950,7 +1004,7 @@
     <!-- Brand -->
     <div class="footer-brand">
       <span class="fb-name">🚕 One-Way Bhaarat</span>
-      <p>One Destination, One Fare. One Way Bharat.</p>
+      <p>One Destination, One Fare. One-Way Bhaarat.</p>
       <div class="footer-contact-row"><span class="ic">📍</span><span>Shop No. 7, Radha Kunj 2, Ghaziabad, Uttar Pradesh – 203207</span></div>
       <div class="footer-contact-row"><span class="ic">📞</span><a href="tel:+919355757579">+91-93557 57579</a></div>
       <div class="footer-contact-row"><span class="ic">✉️</span><a href="mailto:onewaybharatcab@gmail.com">onewaybharatcab@gmail.com</a></div>
@@ -962,14 +1016,8 @@
         <a href="https://www.instagram.com/onewaybharat?igsh=b3F4cGJsY3JwMW9i" class="footer-social-btn ig" title="Instagram" aria-label="Instagram" target="_blank" rel="noopener">
           <svg viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M12 2.16c3.2 0 3.58.01 4.85.07 3.25.15 4.77 1.69 4.92 4.92.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.15 3.23-1.66 4.77-4.92 4.92-1.27.06-1.64.07-4.85.07s-3.58-.01-4.85-.07c-3.26-.15-4.77-1.7-4.92-4.92-.06-1.27-.07-1.65-.07-4.85s.01-3.58.07-4.85C2.38 3.92 3.9 2.38 7.15 2.23 8.42 2.17 8.8 2.16 12 2.16zM12 0C8.74 0 8.33.01 7.05.07 2.7.27.27 2.7.07 7.05.01 8.33 0 8.74 0 12s.01 3.67.07 4.95c.2 4.35 2.62 6.78 6.98 6.98C8.33 23.99 8.74 24 12 24s3.67-.01 4.95-.07c4.35-.2 6.78-2.62 6.98-6.98.06-1.28.07-1.69.07-4.95s-.01-3.67-.07-4.95c-.2-4.35-2.62-6.78-6.98-6.98C15.67.01 15.26 0 12 0zm0 5.84a6.16 6.16 0 1 0 0 12.32 6.16 6.16 0 0 0 0-12.32zm0 10.16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.41-10.4a1.44 1.44 0 1 1-2.88 0 1.44 1.44 0 0 1 2.88 0z"/></svg>
         </a>
-        <a href="#" class="footer-social-btn li" title="LinkedIn" aria-label="LinkedIn" target="_blank" rel="noopener">
-          <svg viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.34V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.38-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.07 2.07 0 1 1 0-4.13 2.07 2.07 0 0 1 0 4.13zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.73v20.54C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.73V1.73C24 .77 23.2 0 22.22 0z"/></svg>
-        </a>
         <a href="https://x.com/onewayBharat" class="footer-social-btn x" title="X (Twitter)" aria-label="X (Twitter)" target="_blank" rel="noopener">
           <svg viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M18.9 2H22l-7.2 8.23L23.3 22h-6.9l-5.4-7.06L4.6 22H1.5l7.7-8.8L1 2h7l4.9 6.5L18.9 2zm-2.4 18h1.9L7.6 4H5.6l10.9 16z"/></svg>
-        </a>
-        <a href="#" class="footer-social-btn yt" title="YouTube" aria-label="YouTube" target="_blank" rel="noopener">
-          <svg viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M23.5 6.19a3.02 3.02 0 0 0-2.12-2.14C19.51 3.5 12 3.5 12 3.5s-7.51 0-9.38.55A3.02 3.02 0 0 0 .5 6.19 31.6 31.6 0 0 0 0 12a31.6 31.6 0 0 0 .5 5.81 3.02 3.02 0 0 0 2.12 2.14C4.49 20.5 12 20.5 12 20.5s7.51 0 9.38-.55a3.02 3.02 0 0 0 2.12-2.14A31.6 31.6 0 0 0 24 12a31.6 31.6 0 0 0-.5-5.81zM9.6 15.5V8.5l6.2 3.5-6.2 3.5z"/></svg>
         </a>
       </div>
     </div>
@@ -1002,10 +1050,11 @@
     <div class="footer-col">
       <h4>Legal</h4>
       <ul>
-        <li><a href="policies.html">Terms & Conditions</a></li>
-        <li><a href="policies.html">Privacy Policy</a></li>
-        <li><a href="policies.html">Cancellation Policy</a></li>
-        <li><a href="policies.html">Refund Policy</a></li>
+        <li><a href="terms.html">Terms & Conditions</a></li>
+        <li><a href="privacy.html">Privacy Policy</a></li>
+        <li><a href="cancellation.html">Cancellation Policy</a></li>
+        <li><a href="refund.html">Refund Policy</a></li>
+        <li><a href="policies.html">All Policies</a></li>
         <li><a href="customer.html">My Account</a></li>
       </ul>
     </div>
@@ -1018,8 +1067,8 @@
       Proudly Made in India
     </div>
     <div class="fb-links">
-      <a href="policies.html">Privacy</a>
-      <a href="policies.html">Terms</a>
+      <a href="privacy.html">Privacy</a>
+      <a href="terms.html">Terms</a>
       <a href="sitemap.xml">Sitemap</a>
     </div>
   </div>
