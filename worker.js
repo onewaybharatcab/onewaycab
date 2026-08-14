@@ -34,12 +34,12 @@ function addSecurityHeaders(response) {
   h.set("X-Content-Type-Options",  "nosniff");
   h.set("X-Frame-Options",         "DENY");
   h.set("Referrer-Policy",         "strict-origin-when-cross-origin");
-  h.set("Permissions-Policy",      "camera=(), microphone=(), geolocation=()");
+  h.set("Permissions-Policy",      "camera=(), microphone=(), geolocation=(self)");
   h.set("Strict-Transport-Security","max-age=31536000; includeSubDomains; preload");
   h.set(
     "Content-Security-Policy",
     "default-src 'self'; " +
-    "script-src 'self' https://checkout.razorpay.com https://maps.googleapis.com https://fonts.googleapis.com; " +
+    "script-src 'self' https://checkout.razorpay.com https://maps.googleapis.com https://fonts.googleapis.com https://cdnjs.cloudflare.com; " +
     "style-src 'self' https://fonts.googleapis.com; " +
     "font-src https://fonts.gstatic.com; " +
     "img-src 'self' data: https:; " +
