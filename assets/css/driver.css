@@ -669,7 +669,7 @@ footer::after {
   animation: footerShimmer 5s linear infinite;
 }
 .footer-brand p {
-  font-size: 13.5px; color: rgba(255, 210, 160, 0.90);
+  font-size: 13.5px; color: #FFD9B3; font-weight: 500;
   line-height: 1.90; margin-bottom: 22px;
 }
 
@@ -798,6 +798,7 @@ footer, footer p, footer span, footer a, footer li,
 .footer-trust-badge, .fb-copy, .fb-made, .fb-links a {
   color: rgba(255, 210, 160, 0.88) !important;
 }
+.footer-brand p { color: #FFD9B3 !important; font-weight: 500 !important; }
 .footer-brand .fb-name {
   -webkit-text-fill-color: transparent !important;
 }

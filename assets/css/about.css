@@ -532,7 +532,7 @@ nav a:hover { color: #F47B00 !important; background: rgba(244,123,0,0.10) !impor
 /* ── Brand Column ── */
 
 .footer-brand p {
-  font-size: 13.5px; color: rgba(255, 210, 160, 0.90);
+  font-size: 13.5px; color: #FFD9B3; font-weight: 500;
   line-height: 1.90; margin-bottom: 22px;
 }
 

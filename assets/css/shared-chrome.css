@@ -297,7 +297,7 @@ footer, footer p, footer span, footer a, footer li {
   margin-bottom: 12px; display: block;
   animation: footerShimmer 5s linear infinite;
 }
-.footer-brand p { font-size: 13.5px; color: rgba(255, 210, 160, 0.90); line-height: 1.90; margin-bottom: 22px; }
+.footer-brand p { font-size: 13.5px; color: #FFD9B3; font-weight: 500; line-height: 1.90; margin-bottom: 22px; }
 
 .footer-contact-row {
   display: flex; align-items: flex-start; gap: 10px;

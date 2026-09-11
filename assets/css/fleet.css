@@ -407,7 +407,7 @@ ul li { color: rgba(60,25,5,0.58) !important; }
 /* ── Brand Column ── */
 
 .footer-brand p {
-  font-size: 13.5px; color: rgba(255, 210, 160, 0.90);
+  font-size: 13.5px; color: #FFD9B3; font-weight: 500;
   line-height: 1.90; margin-bottom: 22px;
 }
 

@@ -605,7 +605,7 @@ footer::after {
   animation: footerBorderShimmer 4s linear infinite;
 }
 .footer-brand p {
-  font-size: 13px; color: rgba(255,220,180,0.80);
+  font-size: 13px; color: #FFD9B3; font-weight: 500;
   line-height: 1.85; margin-bottom: 22px;
 }
 .footer-contact-row {
