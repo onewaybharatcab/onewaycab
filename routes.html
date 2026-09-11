@@ -1040,6 +1040,7 @@
     </div>
     <a href="index.html#book" class="btn-fb">Book Now →</a>
   </div>
+
   <div id="routeContainer"></div>
 </div>
 
@@ -1183,6 +1184,26 @@ const allRoutes=[
 
 let activeR='all', searchQ='';
 
+const HILL_CITIES=['shimla','manali','mussoorie','dehradun','ooty','coorg','munnar','mahabaleshwar','lonavala','pachmarhi','nainital','darjeeling','siliguri','shillong','rishikesh','kanha','hampi'];
+function isHill(name){const n=name.toLowerCase();return HILL_CITIES.some(h=>n.includes(h));}
+function slugifyName(name){return name.trim().toLowerCase().replace(/\s+/g,'-');}
+function routeSlug(f,t){return `${slugifyName(f)}-to-${slugifyName(t)}-cab`;}
+const DUR_OVERRIDES={
+  'delhi-to-agra-cab':'3–4 hrs','delhi-to-chandigarh-cab':'~5 hrs','delhi-to-mathura-cab':'~3 hrs',
+  'delhi-to-jaisalmer-cab':'13–14 hrs','jaipur-to-jodhpur-cab':'6 hrs','bangalore-to-mysore-cab':'3 hrs',
+  'bangalore-to-ooty-cab':'6–7 hrs','coimbatore-to-ooty-cab':'3 hrs','jaipur-to-pushkar-cab':'3 hrs',
+  'jaipur-to-udaipur-cab':'7–8 hrs','kochi-to-munnar-cab':'3.5–4 hrs','varanasi-to-bodhgaya-cab':'5–6 hrs',
+  'pune-to-goa-cab':'9–10 hrs'
+};
+function estDuration(d,f,t){
+  const slug=routeSlug(f,t);
+  if(DUR_OVERRIDES[slug]) return DUR_OVERRIDES[slug];
+  const speed=(isHill(f)||isHill(t))?45:52, hrs=d/speed;
+  if(hrs<1.5){const h=Math.round(hrs*2)/2; return `~${h}${h===Math.trunc(h)?'':''} hrs`.replace('.0','');}
+  let lo=Math.max(1,Math.round(hrs-0.5)), hi=Math.round(hrs+0.5);
+  if(lo===hi) hi+=1;
+  return `${lo}–${hi} hrs`;
+}
 function renderRoutes(){
   const c=document.getElementById('routeContainer'); c.innerHTML='';
   let regions=allRoutes;
@@ -1195,9 +1216,9 @@ function renderRoutes(){
     s.innerHTML=`<div class="region-hdr"><span class="region-icon">${reg.icon}</span><span class="region-name">${reg.name}</span><span class="region-count">${routes.length} routes</span></div>
     ${reg.desc?`<p class="region-desc">${reg.desc}</p>`:''}
     <div class="routes-grid">${routes.map(r=>`
-      <a class="rcard" href="index.html?from=${encodeURIComponent(r.f)}&to=${encodeURIComponent(r.t)}#book">
+      <a class="rcard" href="${routeSlug(r.f,r.t)}">
         <div class="remoji">${r.ic}</div>
-        <div class="rinfo"><div class="rname">${r.f} → ${r.t}</div><div class="rmeta">${r.d} km · Sedan · ~${Math.round(r.d/60)}h ${Math.round((r.d/60%1)*60)}m</div></div>
+        <div class="rinfo"><div class="rname">${r.f} → ${r.t}</div><div class="rmeta">${r.d} km · Sedan · ${estDuration(r.d,r.f,r.t)}</div></div>
         <div class="rprice"><div class="rpv">₹${r.p.toLocaleString('en-IN')}</div><div class="rpd">${r.d} km</div></div>
       </a>`).join('')}</div>`;
     c.appendChild(s);
